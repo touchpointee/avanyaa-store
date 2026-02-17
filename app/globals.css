@@ -1,0 +1,70 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 210 40% 99%;
+    --foreground: 222 47% 11%;
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 11%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 11%;
+    /* Logo blue: #1e3a5f – deep blue from Avanyaa logo */
+    --primary: 212 30% 94%;
+    --primary-foreground: 212 51% 24%;
+    --primary-solid: 212 51% 24%;
+    --ring: 212 51% 24%;
+    --secondary: 210 20% 96%;
+    --secondary-foreground: 222 47% 11%;
+    --muted: 210 20% 96%;
+    --muted-foreground: 215 16% 47%;
+    --accent: 270 60% 96%;
+    --accent-foreground: 270 60% 30%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 214 32% 91%;
+    --input: 214 32% 91%;
+    --radius: 0.75rem;
+    --radius-sm: 0.5rem;
+    --radius-lg: 1rem;
+    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+    --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground antialiased;
+    overflow-x: hidden;
+  }
+  html {
+    scroll-behavior: smooth;
+    overflow-x: hidden;
+  }
+}
+
+/* Hide scrollbar for horizontal scroll (category chips) */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+/* Touch-friendly tap targets on mobile */
+@media (max-width: 768px) {
+  button:not(.size-icon), a[href], [role="button"] {
+    min-height: 44px;
+  }
+  button.size-icon, .size-icon {
+    min-width: 44px;
+    min-height: 44px;
+  }
+}
