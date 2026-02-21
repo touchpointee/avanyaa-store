@@ -22,7 +22,7 @@ export default function BottomNav() {
 
   return (
     <nav
-      className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-border shadow-soft-lg safe-area-pb"
+      className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-card border-t border-border shadow-md safe-area-pb"
       style={{ paddingBottom: 'max(env(safe-area-inset-bottom, 0), 8px)' }}
       aria-label="Mobile navigation"
     >

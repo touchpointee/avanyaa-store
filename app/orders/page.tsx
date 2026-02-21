@@ -63,7 +63,7 @@ export default function OrdersPage() {
       <div className="container mx-auto px-4 py-16 pb-24 md:pb-16">
         <div className="space-y-4">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="h-32 rounded-2xl bg-muted animate-pulse" />
+            <div key={i} className="h-32 rounded-xl border border-border bg-card shadow animate-pulse" />
           ))}
         </div>
       </div>
@@ -74,15 +74,15 @@ export default function OrdersPage() {
     return (
       <div className="container mx-auto px-4 py-16 md:py-20 pb-24 md:pb-20">
         <div className="text-center space-y-5 max-w-sm mx-auto">
-          <div className="w-20 h-20 mx-auto rounded-2xl bg-brand-light flex items-center justify-center">
-            <Package className="h-10 w-10 text-primary" />
+          <div className="w-20 h-20 mx-auto rounded-xl bg-muted border border-border flex items-center justify-center">
+            <Package className="h-10 w-10 text-muted-foreground" />
           </div>
-          <h1 className="text-2xl font-bold">No Orders Yet</h1>
+          <h1 className="font-heading text-2xl font-semibold tracking-tight">No orders yet</h1>
           <p className="text-muted-foreground text-sm">
             Start shopping to see your orders here
           </p>
-          <Button className="rounded-xl w-full" size="lg" asChild>
-            <Link href="/products">Start Shopping</Link>
+          <Button className="rounded-lg w-full" size="lg" asChild>
+            <Link href="/products">Shop now</Link>
           </Button>
         </div>
       </div>
@@ -91,15 +91,15 @@ export default function OrdersPage() {
 
   return (
     <div className="container mx-auto px-4 py-6 md:py-8 pb-24 md:pb-8">
-      <h1 className="text-2xl md:text-3xl font-bold mb-6">My Orders</h1>
+      <h1 className="font-heading text-2xl md:text-3xl font-semibold mb-6 tracking-tight">My Orders</h1>
 
       <div className="space-y-4">
         {orders.map((order) => (
-          <Card key={order._id} className="rounded-2xl border-border shadow-soft overflow-hidden">
+          <Card key={order._id} className="rounded-xl border border-border shadow overflow-hidden">
             <CardHeader>
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
-                  <CardTitle className="text-lg">Order #{order.orderId}</CardTitle>
+                  <CardTitle className="font-heading text-lg">Order #{order.orderId}</CardTitle>
                   <p className="text-sm text-muted-foreground mt-1">
                     {new Date(order.createdAt).toLocaleDateString('en-US', {
                       year: 'numeric',
@@ -108,7 +108,7 @@ export default function OrdersPage() {
                     })}
                   </p>
                 </div>
-                <Badge className={getStatusColor(order.status)}>
+                <Badge className={`${getStatusColor(order.status)} rounded-lg`}>
                   {order.status.toUpperCase()}
                 </Badge>
               </div>
@@ -147,11 +147,11 @@ export default function OrdersPage() {
                 ))}
               </div>
 
-              <Separator />
+              <Separator className="bg-border" />
 
               {/* Delivery Address */}
               <div>
-                <h4 className="font-semibold mb-2">Delivery Address</h4>
+                <h4 className="font-heading font-semibold mb-2 text-sm uppercase tracking-wide text-muted-foreground">Delivery Address</h4>
                 <p className="text-sm text-muted-foreground">
                   {order.address.fullName}<br />
                   {order.address.street}<br />
@@ -160,12 +160,12 @@ export default function OrdersPage() {
                 </p>
               </div>
 
-              <Separator />
+              <Separator className="bg-border" />
 
               {/* Total */}
               <div className="flex justify-between items-center">
                 <span className="font-semibold">Total Amount</span>
-                <span className="text-xl font-bold">
+                <span className="text-xl font-semibold">
                   {formatPrice(order.totalAmount)}
                 </span>
               </div>

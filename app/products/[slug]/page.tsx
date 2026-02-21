@@ -122,10 +122,10 @@ export default function ProductDetailPage() {
 
   if (loading) {
     return (
-      <div className="container mx-auto px-4 py-8">
-        <div className="grid md:grid-cols-2 gap-6">
-          <div className="aspect-[3/4] rounded-2xl bg-muted animate-pulse" />
-          <div className="space-y-4">
+      <div className="container mx-auto px-4 py-8 md:py-10">
+        <div className="grid md:grid-cols-2 gap-6 md:gap-8">
+          <div className="aspect-[4/5] rounded-xl bg-muted animate-pulse border border-border" />
+          <div className="space-y-5">
             <div className="h-6 w-32 rounded-lg bg-muted animate-pulse" />
             <div className="h-8 w-3/4 rounded-lg bg-muted animate-pulse" />
             <div className="h-10 w-1/2 rounded-lg bg-muted animate-pulse" />
@@ -145,11 +145,11 @@ export default function ProductDetailPage() {
     : 0;
 
   return (
-    <div className="container mx-auto px-4 py-6 pb-28 md:pb-8">
+    <div className="container mx-auto px-4 py-6 md:py-10 pb-28 md:pb-10">
       <div className="grid md:grid-cols-2 gap-6 md:gap-8 items-start">
-        {/* Images - fixed size container, no overlay; same proportions as product card */}
+        {/* Images */}
         <div className="space-y-3 w-full max-w-md md:max-w-full">
-          <div className="relative w-full aspect-[4/5] max-h-[400px] md:max-h-[420px] rounded-xl overflow-hidden bg-muted shadow-soft border border-border">
+          <div className="relative w-full aspect-[4/5] max-h-[400px] md:max-h-[420px] rounded-xl overflow-hidden bg-muted shadow border border-border">
             <Image
               src={product.images[selectedImage]}
               alt={product.name}
@@ -159,7 +159,7 @@ export default function ProductDetailPage() {
               sizes="(max-width: 768px) 100vw, 50vw"
             />
             {discountPercent > 0 && (
-              <Badge className="absolute top-2 left-2 rounded-full bg-rose-500 text-xs">
+              <Badge className="absolute top-2 left-2 rounded-md bg-primary text-primary-foreground text-xs font-semibold">
                 -{discountPercent}%
               </Badge>
             )}
@@ -185,13 +185,13 @@ export default function ProductDetailPage() {
         {/* Product Info */}
         <div className="space-y-5">
           {product.category && (
-            <Badge variant="secondary" className="rounded-full capitalize">
+            <Badge variant="secondary" className="rounded-lg capitalize border-border">
               {product.category}
             </Badge>
           )}
-          <h1 className="text-2xl md:text-3xl font-bold">{product.name}</h1>
+          <h1 className="font-heading text-2xl md:text-3xl font-semibold tracking-tight">{product.name}</h1>
           <div className="flex items-center gap-3">
-            <span className="text-2xl font-bold">{formatPrice(product.price)}</span>
+            <span className="text-2xl font-semibold">{formatPrice(product.price)}</span>
             {product.compareAtPrice && (
               <span className="text-lg text-muted-foreground line-through">
                 {formatPrice(product.compareAtPrice)}
@@ -199,22 +199,22 @@ export default function ProductDetailPage() {
             )}
           </div>
 
-          <Separator />
+          <Separator className="bg-border" />
 
           <div>
-            <h3 className="font-semibold mb-2">Description</h3>
-            <p className="text-muted-foreground text-sm">{product.description}</p>
+            <h3 className="font-heading font-semibold mb-2 text-sm uppercase tracking-wide text-muted-foreground">Description</h3>
+            <p className="text-muted-foreground text-sm leading-relaxed">{product.description}</p>
           </div>
 
           <div>
-            <h3 className="font-semibold mb-3">Select Size</h3>
+            <h3 className="font-heading font-semibold mb-3 text-sm uppercase tracking-wide text-muted-foreground">Select Size</h3>
             <div className="flex flex-wrap gap-2">
               {product.sizes.map((size) => (
                 <Button
                   key={size}
                   variant={selectedSize === size ? 'default' : 'outline'}
                   size="sm"
-                  className="rounded-xl min-w-[44px]"
+                  className="rounded-lg min-w-[44px] border-border"
                   onClick={() => setSelectedSize(size)}
                 >
                   {size}
@@ -224,10 +224,10 @@ export default function ProductDetailPage() {
           </div>
 
           <div>
-            <h3 className="font-semibold mb-2">Colors</h3>
+            <h3 className="font-heading font-semibold mb-2 text-sm uppercase tracking-wide text-muted-foreground">Colors</h3>
             <div className="flex flex-wrap gap-2">
               {product.colors.map((color) => (
-                <Badge key={color} variant="outline" className="rounded-lg">
+                <Badge key={color} variant="outline" className="rounded-lg border-border">
                   {color}
                 </Badge>
               ))}
@@ -236,9 +236,9 @@ export default function ProductDetailPage() {
 
           <div>
             {product.stock > 0 ? (
-              <Badge variant="secondary" className="rounded-full">In Stock ({product.stock})</Badge>
+              <Badge variant="secondary" className="rounded-lg border-border">In Stock ({product.stock})</Badge>
             ) : (
-              <Badge variant="destructive" className="rounded-full">Out of Stock</Badge>
+              <Badge variant="destructive" className="rounded-lg">Out of Stock</Badge>
             )}
           </div>
 
@@ -247,17 +247,17 @@ export default function ProductDetailPage() {
             <Button
               onClick={handleAddToCart}
               disabled={product.stock === 0}
-              className="flex-1 rounded-xl h-12"
+              className="flex-1 rounded-lg h-12"
               size="lg"
             >
               <ShoppingCart className="mr-2 h-5 w-5" />
-              Add to Cart
+              Add to bag
             </Button>
             <Button
               onClick={handleToggleWishlist}
               variant="outline"
               size="lg"
-              className="rounded-xl h-12"
+              className="rounded-lg h-12 border-border"
             >
               <Heart className={`h-5 w-5 ${isInWishlist ? 'fill-rose-500 text-rose-500' : ''}`} />
             </Button>
@@ -266,24 +266,24 @@ export default function ProductDetailPage() {
       </div>
 
       {/* Sticky bottom CTA - Mobile only */}
-      <div className="md:hidden fixed bottom-16 left-0 right-0 z-40 p-4 bg-white border-t border-border shadow-soft-lg safe-area-pb">
+      <div className="md:hidden fixed bottom-16 left-0 right-0 z-40 p-4 bg-card border-t border-border shadow-lg safe-area-pb">
         <div className="container mx-auto flex gap-3">
           <Button
             onClick={handleToggleWishlist}
             variant="outline"
             size="lg"
-            className="rounded-xl shrink-0 h-12 px-4"
+            className="rounded-lg shrink-0 h-12 px-4 border-border"
           >
             <Heart className={`h-5 w-5 ${isInWishlist ? 'fill-rose-500 text-rose-500' : ''}`} />
           </Button>
           <Button
             onClick={handleAddToCart}
             disabled={product.stock === 0}
-            className="flex-1 rounded-xl h-12 text-base font-semibold"
+            className="flex-1 rounded-lg h-12 text-base font-semibold"
             size="lg"
           >
             <ShoppingCart className="mr-2 h-5 w-5" />
-            Add to Cart · {formatPrice(product.price)}
+            Add to bag · {formatPrice(product.price)}
           </Button>
         </div>
       </div>

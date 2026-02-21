@@ -16,15 +16,15 @@ export default function CartPage() {
     return (
       <div className="container mx-auto px-4 py-16 md:py-20 pb-24 md:pb-20">
         <div className="text-center space-y-5 max-w-sm mx-auto">
-          <div className="w-20 h-20 mx-auto rounded-2xl bg-brand-light flex items-center justify-center">
-            <ShoppingCart className="h-10 w-10 text-primary" />
+          <div className="w-20 h-20 mx-auto rounded-xl bg-muted border border-border flex items-center justify-center">
+            <ShoppingCart className="h-10 w-10 text-muted-foreground" />
           </div>
-          <h1 className="text-2xl font-bold">Your Cart is Empty</h1>
+          <h1 className="font-heading text-2xl font-semibold tracking-tight">Your cart is empty</h1>
           <p className="text-muted-foreground text-sm">
             Add some beautiful dresses to your cart
           </p>
-          <Button className="rounded-xl w-full" size="lg" asChild>
-            <Link href="/products">Continue Shopping</Link>
+          <Button className="rounded-lg w-full" size="lg" asChild>
+            <Link href="/products">Shop now</Link>
           </Button>
         </div>
       </div>
@@ -33,12 +33,12 @@ export default function CartPage() {
 
   return (
     <div className="container mx-auto px-4 py-6 md:py-8 pb-24 md:pb-8">
-      <h1 className="text-2xl md:text-3xl font-bold mb-6">Shopping Cart</h1>
+      <h1 className="font-heading text-2xl md:text-3xl font-semibold mb-6 tracking-tight">Shopping Cart</h1>
 
       <div className="grid lg:grid-cols-3 gap-6 lg:gap-8">
         <div className="lg:col-span-2 space-y-4">
           {items.map((item) => (
-            <Card key={`${item.productId}-${item.size}`} className="rounded-2xl border-border shadow-soft overflow-hidden">
+            <Card key={`${item.productId}-${item.size}`} className="rounded-xl border border-border shadow overflow-hidden">
               <CardContent className="p-4">
                 <div className="flex flex-col sm:flex-row gap-4">
                   <div className="relative w-full h-52 max-w-[140px] sm:max-w-none sm:w-24 sm:h-32 rounded-xl overflow-hidden bg-muted shrink-0 mx-auto sm:mx-0">
@@ -89,10 +89,10 @@ export default function CartPage() {
         </div>
 
         <div className="lg:col-span-1">
-          <Card className="rounded-2xl border-border shadow-soft sticky top-20 overflow-hidden">
+          <Card className="rounded-xl border border-border shadow sticky top-20 overflow-hidden">
             <CardContent className="p-5 space-y-4">
-              <h2 className="text-lg font-bold">Order Summary</h2>
-              <Separator />
+              <h2 className="font-heading text-lg font-semibold tracking-tight">Order Summary</h2>
+              <Separator className="bg-border" />
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Subtotal</span>
@@ -103,19 +103,19 @@ export default function CartPage() {
                   <span className="text-green-600 font-medium">FREE</span>
                 </div>
               </div>
-              <Separator />
-              <div className="flex justify-between text-lg font-bold">
+              <Separator className="bg-border" />
+              <div className="flex justify-between text-lg font-semibold">
                 <span>Total</span>
                 <span className="text-primary">{formatPrice(getTotalPrice())}</span>
               </div>
-              <p className="text-xs text-muted-foreground rounded-lg bg-primary/10 p-2.5">
-                💵 Pay by <strong>Cash on Delivery (COD)</strong> when you receive your order.
+              <p className="text-xs text-muted-foreground rounded-lg bg-muted border border-border p-2.5">
+                Pay by <strong>Cash on Delivery (COD)</strong> when you receive your order.
               </p>
-              <Button className="w-full rounded-xl h-12 text-base font-semibold" size="lg" asChild>
-                <Link href="/checkout">Proceed to Checkout</Link>
+              <Button className="w-full rounded-lg h-12 text-base font-semibold" size="lg" asChild>
+                <Link href="/checkout">Proceed to checkout</Link>
               </Button>
-              <Button variant="outline" className="w-full rounded-xl" asChild>
-                <Link href="/products">Continue Shopping</Link>
+              <Button variant="outline" className="w-full rounded-lg border-border" asChild>
+                <Link href="/products">Continue shopping</Link>
               </Button>
             </CardContent>
           </Card>

@@ -85,10 +85,10 @@ export default function SignUpPage() {
   };
 
   return (
-    <div className="container mx-auto px-4 py-20">
-      <Card className="max-w-md mx-auto rounded-2xl border-border shadow-soft overflow-hidden">
+    <div className="container mx-auto px-4 py-12 md:py-20">
+      <Card className="max-w-md mx-auto rounded-xl border border-border shadow overflow-hidden">
         <CardHeader className="text-center">
-          <CardTitle className="text-3xl font-bold">Create Account</CardTitle>
+          <CardTitle className="font-heading text-3xl font-semibold tracking-tight">Create account</CardTitle>
           <CardDescription>Sign up to get started</CardDescription>
         </CardHeader>
         <CardContent>
@@ -104,6 +104,7 @@ export default function SignUpPage() {
                   setFormData({ ...formData, name: e.target.value })
                 }
                 required
+                className="rounded-lg border-border"
               />
             </div>
 
@@ -118,6 +119,7 @@ export default function SignUpPage() {
                   setFormData({ ...formData, email: e.target.value })
                 }
                 required
+                className="rounded-lg border-border"
               />
             </div>
 
@@ -132,6 +134,7 @@ export default function SignUpPage() {
                   setFormData({ ...formData, password: e.target.value })
                 }
                 required
+                className="rounded-lg border-border"
               />
             </div>
 
@@ -146,18 +149,19 @@ export default function SignUpPage() {
                   setFormData({ ...formData, confirmPassword: e.target.value })
                 }
                 required
+                className="rounded-lg border-border"
               />
             </div>
 
-            <Button type="submit" className="w-full" disabled={loading}>
+            <Button type="submit" className="w-full rounded-lg" disabled={loading}>
               {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Create Account
+              Create account
             </Button>
           </form>
 
           <div className="mt-6 text-center text-sm">
             <span className="text-muted-foreground">Already have an account? </span>
-            <Link href="/auth/signin" className="text-primary hover:underline">
+            <Link href="/auth/signin" className="text-primary font-medium hover:underline">
               Sign in
             </Link>
           </div>

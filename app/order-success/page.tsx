@@ -24,30 +24,30 @@ function OrderSuccessContent() {
 
   return (
     <div className="container mx-auto px-4 py-16 md:py-20 pb-24 md:pb-20">
-      <Card className="max-w-2xl mx-auto rounded-2xl border-border shadow-soft overflow-hidden">
+      <Card className="max-w-2xl mx-auto rounded-xl border border-border shadow overflow-hidden">
         <CardContent className="p-8 md:p-12 text-center space-y-6">
-          <div className="w-20 h-20 mx-auto rounded-2xl bg-brand-light flex items-center justify-center">
+          <div className="w-20 h-20 mx-auto rounded-xl bg-muted border border-border flex items-center justify-center">
             <CheckCircle2 className="h-12 w-12 text-primary" />
           </div>
           <div className="space-y-2">
-            <h1 className="text-2xl md:text-3xl font-bold">Order Placed Successfully!</h1>
+            <h1 className="font-heading text-2xl md:text-3xl font-semibold tracking-tight">Order placed successfully</h1>
             <p className="text-muted-foreground text-sm">
               Thank you for your order. We&apos;ll send you a confirmation email shortly.
             </p>
           </div>
-          <div className="bg-primary/10 p-4 rounded-xl">
+          <div className="bg-muted border border-border p-4 rounded-lg">
             <p className="text-sm text-muted-foreground mb-1">Order ID</p>
-            <p className="text-lg font-mono font-bold">{orderId}</p>
+            <p className="text-lg font-mono font-semibold">{orderId}</p>
           </div>
           <p className="text-sm text-muted-foreground">
-            Track your order in <Link href="/orders" className="text-primary font-medium">My Orders</Link>.
+            Track your order in <Link href="/orders" className="text-primary font-medium hover:underline">My Orders</Link>.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center pt-4">
-            <Button className="rounded-xl w-full sm:w-auto" asChild>
-              <Link href="/orders">View Orders</Link>
+            <Button className="rounded-lg w-full sm:w-auto" asChild>
+              <Link href="/orders">View orders</Link>
             </Button>
-            <Button variant="outline" className="rounded-xl w-full sm:w-auto" asChild>
-              <Link href="/products">Continue Shopping</Link>
+            <Button variant="outline" className="rounded-lg w-full sm:w-auto border-border" asChild>
+              <Link href="/products">Continue shopping</Link>
             </Button>
           </div>
         </CardContent>

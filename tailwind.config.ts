@@ -19,7 +19,8 @@ const config = {
     },
     extend: {
       fontFamily: {
-        sans: ["var(--font-poppins)", "var(--font-inter)", "system-ui", "sans-serif"],
+        sans: ["var(--font-sans)", "system-ui", "sans-serif"],
+        heading: ["var(--font-heading)", "var(--font-sans)", "serif"],
       },
       boxShadow: {
         soft: "0 2px 15px -3px rgb(0 0 0 / 0.07), 0 4px 6px -4px rgb(0 0 0 / 0.05)",
@@ -65,8 +66,13 @@ const config = {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
+        footer: {
+          DEFAULT: "hsl(var(--footer-bg))",
+          border: "hsl(var(--footer-border))",
+        },
       },
       borderRadius: {
+        xl: "var(--radius-xl)",
         lg: "var(--radius-lg)",
         md: "var(--radius)",
         sm: "var(--radius-sm)",

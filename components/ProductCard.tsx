@@ -27,7 +27,8 @@ export default function ProductCard({ product }: ProductCardProps) {
 
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
-    
+    e.stopPropagation();
+
     if (product.stock === 0) {
       toast({
         title: 'Out of stock',
@@ -54,6 +55,7 @@ export default function ProductCard({ product }: ProductCardProps) {
 
   const handleToggleWishlist = async (e: React.MouseEvent) => {
     e.preventDefault();
+    e.stopPropagation();
     setIsWishlistLoading(true);
 
     // Toggle locally first for immediate feedback
@@ -94,10 +96,12 @@ export default function ProductCard({ product }: ProductCardProps) {
     ? Math.round(((product.compareAtPrice - product.price) / product.compareAtPrice) * 100)
     : 0;
 
+  const secondaryImage = product.images?.[1];
+
   return (
     <Link href={`/products/${product.slug}`} className="group block h-full">
-      <div className="h-full flex flex-col overflow-hidden rounded-lg border border-border bg-card shadow-soft transition-all duration-300 hover:shadow-soft-lg hover:border-primary/20">
-        {/* Image - compact fixed aspect (4/5), same on all cards */}
+      <div className="h-full flex flex-col overflow-hidden rounded-xl border border-border bg-card shadow transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5">
+        {/* Image - fixed aspect 4/5, secondary on hover if available */}
         <div className="relative aspect-[4/5] w-full shrink-0 overflow-hidden bg-muted/50">
           <Image
             src={product.images[0]}
@@ -106,42 +110,64 @@ export default function ProductCard({ product }: ProductCardProps) {
             className="object-cover object-top transition-transform duration-300 group-hover:scale-105"
             sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
           />
-          {/* Wishlist Button */}
+          {secondaryImage && (
+            <Image
+              src={secondaryImage}
+              alt=""
+              aria-hidden
+              fill
+              className="object-cover object-top opacity-0 group-hover:opacity-100 transition-opacity duration-300 absolute inset-0"
+              sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+            />
+          )}
+          {/* Wishlist - top right */}
           <button
             onClick={handleToggleWishlist}
             disabled={isWishlistLoading}
-            className="absolute top-1.5 right-1.5 rounded-full bg-white/95 p-1.5 shadow-soft transition-transform hover:scale-110 active:scale-95"
+            className="absolute top-2 right-2 z-10 rounded-lg bg-card/95 p-2 shadow border border-border transition-transform hover:scale-105 active:scale-95"
           >
             <Heart
-              className={`h-3.5 w-3.5 ${
+              className={`h-4 w-4 ${
                 isInWishlist ? 'fill-rose-500 text-rose-500' : 'text-muted-foreground'
               }`}
             />
           </button>
-          {/* Discount Badge */}
           {discountPercent > 0 && (
-            <span className="absolute top-1.5 left-1.5 rounded-full bg-rose-500 px-2 py-0.5 text-[10px] font-bold text-white shadow-soft">
+            <span className="absolute top-2 left-2 rounded-md bg-primary text-primary-foreground px-2 py-0.5 text-xs font-semibold shadow">
               -{discountPercent}%
             </span>
           )}
           {product.stock === 0 && (
             <div className="absolute inset-0 flex items-center justify-center bg-black/40">
-              <span className="rounded-lg bg-white px-3 py-1.5 text-xs font-semibold">
+              <span className="rounded-lg bg-card px-3 py-1.5 text-sm font-medium border border-border">
                 Out of Stock
               </span>
             </div>
           )}
+          {/* Quick add on hover (desktop) */}
+          {product.stock > 0 && (
+            <div className="absolute bottom-0 left-0 right-0 p-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 md:block hidden">
+              <Button
+                onClick={handleAddToCart}
+                className="w-full rounded-lg h-10 text-sm font-medium shadow"
+                size="sm"
+              >
+                <ShoppingCart className="mr-2 h-4 w-4" />
+                Add to bag
+              </Button>
+            </div>
+          )}
         </div>
-        {/* Content - compact padding, button at bottom */}
-        <div className="flex flex-1 flex-col p-2.5 md:p-3">
-          <h3 className="font-semibold text-xs md:text-sm line-clamp-2 group-hover:text-primary transition-colors">
+        {/* Content */}
+        <div className="flex flex-1 flex-col p-3 md:p-4">
+          <h3 className="font-heading font-semibold text-sm md:text-base line-clamp-2 group-hover:text-primary transition-colors tracking-tight">
             {product.name}
           </h3>
           {product.category && (
-            <p className="mt-0.5 text-[10px] md:text-xs text-muted-foreground capitalize">{product.category}</p>
+            <p className="mt-1 text-xs text-muted-foreground capitalize">{product.category}</p>
           )}
-          <div className="mt-1 flex items-center gap-1.5 flex-wrap">
-            <span className="text-sm font-bold text-foreground">{formatPrice(product.price)}</span>
+          <div className="mt-2 flex items-center gap-2 flex-wrap">
+            <span className="text-sm font-semibold text-foreground">{formatPrice(product.price)}</span>
             {product.compareAtPrice && (
               <span className="text-xs text-muted-foreground line-through">
                 {formatPrice(product.compareAtPrice)}
@@ -151,11 +177,11 @@ export default function ProductCard({ product }: ProductCardProps) {
           <Button
             onClick={handleAddToCart}
             disabled={product.stock === 0}
-            className="mt-auto w-full rounded-lg h-9 text-xs font-medium"
+            className="mt-auto w-full rounded-lg h-10 text-sm font-medium md:hidden"
             size="sm"
           >
-            <ShoppingCart className="mr-1.5 h-3.5 w-3.5" />
-            Add to Cart
+            <ShoppingCart className="mr-2 h-4 w-4" />
+            Add to bag
           </Button>
         </div>
       </div>

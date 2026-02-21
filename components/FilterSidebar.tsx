@@ -6,12 +6,20 @@ import { Separator } from '@/components/ui/separator';
 import { SlidersHorizontal } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
+export interface CategoryOption {
+  _id: string;
+  name: string;
+  slug?: string;
+}
+
 interface FilterSidebarProps {
   onFilterChange: (filters: FilterState) => void;
   /** When true, used inside a drawer (e.g. mobile) - shows Apply button and compact layout */
   inDrawer?: boolean;
   /** Optional initial state (e.g. when opening mobile drawer to show current filters) */
   initialFilters?: FilterState;
+  /** Categories from API; if not provided, fetched from /api/categories */
+  categories?: CategoryOption[];
 }
 
 export interface FilterState {
@@ -21,15 +29,6 @@ export interface FilterState {
   sizes: string[];
   colors: string[];
 }
-
-const CATEGORIES = [
-  { id: 'casual', label: 'Casual' },
-  { id: 'formal', label: 'Formal' },
-  { id: 'party', label: 'Party' },
-  { id: 'ethnic', label: 'Ethnic' },
-  { id: 'summer', label: 'Summer' },
-  { id: 'winter', label: 'Winter' },
-];
 
 const COLORS = [
   { name: 'Black', hex: '#1a1a1a' },
@@ -61,8 +60,10 @@ function FilterSection({
   );
 }
 
-export default function FilterSidebar({ onFilterChange, inDrawer, initialFilters }: FilterSidebarProps) {
+export default function FilterSidebar({ onFilterChange, inDrawer, initialFilters, categories: categoriesProp }: FilterSidebarProps) {
   const [sizes, setSizes] = useState<string[]>([]);
+  const [categoriesFetched, setCategoriesFetched] = useState<CategoryOption[]>([]);
+  const categories = categoriesProp ?? categoriesFetched;
   const [filters, setFilters] = useState<FilterState>(initialFilters ?? {
     category: [],
     minPrice: 0,
@@ -105,6 +106,14 @@ export default function FilterSidebar({ onFilterChange, inDrawer, initialFilters
       .then((data) => setSizes(data.map((s: { name: string }) => s.name)))
       .catch(() => setSizes([]));
   }, []);
+
+  useEffect(() => {
+    if (categoriesProp) return;
+    fetch('/api/categories')
+      .then((r) => r.json())
+      .then((data) => setCategoriesFetched(Array.isArray(data) ? data : []))
+      .catch(() => setCategoriesFetched([]));
+  }, [categoriesProp]);
 
   const handleReset = () => {
     const resetFilters: FilterState = {
@@ -149,25 +158,27 @@ export default function FilterSidebar({ onFilterChange, inDrawer, initialFilters
 
       <Separator />
 
-      <FilterSection title="Category">
-        <div className="flex flex-wrap gap-2">
-          {CATEGORIES.map((category) => (
-            <button
-              key={category.id}
-              type="button"
-              onClick={() => handleCategoryChange(category.id)}
-              className={cn(
-                'rounded-full px-4 py-2 text-sm font-medium transition-colors touch-manipulation',
-                filters.category.includes(category.id)
-                  ? 'bg-primary text-primary-foreground shadow-soft'
-                  : 'bg-muted/80 text-muted-foreground hover:bg-muted hover:text-foreground'
-              )}
-            >
-              {category.label}
-            </button>
-          ))}
-        </div>
-      </FilterSection>
+      {categories.length > 0 && (
+        <FilterSection title="Category">
+          <div className="flex flex-wrap gap-2">
+            {categories.map((cat) => (
+              <button
+                key={cat._id}
+                type="button"
+                onClick={() => handleCategoryChange(cat._id)}
+                className={cn(
+                  'rounded-full px-4 py-2 text-sm font-medium transition-colors touch-manipulation',
+                  filters.category.includes(cat._id)
+                    ? 'bg-primary text-primary-foreground shadow-soft'
+                    : 'bg-muted/80 text-muted-foreground hover:bg-muted hover:text-foreground'
+                )}
+              >
+                {cat.name}
+              </button>
+            ))}
+          </div>
+        </FilterSection>
+      )}
 
       {sizes.length > 0 && (
         <>

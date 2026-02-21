@@ -141,16 +141,16 @@ export default function CheckoutPage() {
 
   return (
     <div className="container mx-auto px-4 py-6 md:py-8 pb-24 md:pb-8">
-      <h1 className="text-2xl md:text-3xl font-bold mb-6">Checkout</h1>
+      <h1 className="font-heading text-2xl md:text-3xl font-semibold mb-2 tracking-tight">Checkout</h1>
       <p className="text-sm text-muted-foreground mb-6">
         Guest checkout · Pay by <strong>Cash on Delivery (COD)</strong> when you receive your order.
       </p>
 
       <div className="grid lg:grid-cols-3 gap-6 lg:gap-8">
         <form onSubmit={handleSubmit} className="lg:col-span-2 space-y-6">
-          <Card className="rounded-2xl border-border shadow-soft overflow-hidden">
+          <Card className="rounded-xl border border-border shadow overflow-hidden">
             <CardHeader>
-              <CardTitle className="text-lg">Delivery Information</CardTitle>
+              <CardTitle className="font-heading text-lg">Delivery Information</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid md:grid-cols-2 gap-4">
@@ -162,6 +162,7 @@ export default function CheckoutPage() {
                     value={formData.fullName}
                     onChange={handleInputChange}
                     required
+                    className="rounded-lg border-border"
                   />
                 </div>
                 <div className="space-y-2">
@@ -173,6 +174,7 @@ export default function CheckoutPage() {
                     value={formData.phone}
                     onChange={handleInputChange}
                     required
+                    className="rounded-lg border-border"
                   />
                 </div>
               </div>
@@ -186,6 +188,7 @@ export default function CheckoutPage() {
                   value={formData.email}
                   onChange={handleInputChange}
                   required
+                  className="rounded-lg border-border"
                 />
               </div>
 
@@ -197,6 +200,7 @@ export default function CheckoutPage() {
                   value={formData.street}
                   onChange={handleInputChange}
                   required
+                  className="rounded-lg border-border"
                 />
               </div>
 
@@ -209,6 +213,7 @@ export default function CheckoutPage() {
                     value={formData.city}
                     onChange={handleInputChange}
                     required
+                    className="rounded-lg border-border"
                   />
                 </div>
                 <div className="space-y-2">
@@ -219,6 +224,7 @@ export default function CheckoutPage() {
                     value={formData.state}
                     onChange={handleInputChange}
                     required
+                    className="rounded-lg border-border"
                   />
                 </div>
                 <div className="space-y-2">
@@ -229,18 +235,19 @@ export default function CheckoutPage() {
                     value={formData.zipCode}
                     onChange={handleInputChange}
                     required
+                    className="rounded-lg border-border"
                   />
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="rounded-2xl border-border shadow-soft overflow-hidden">
+          <Card className="rounded-xl border border-border shadow overflow-hidden">
             <CardHeader>
-              <CardTitle className="text-lg">Payment Method</CardTitle>
+              <CardTitle className="font-heading text-lg">Payment Method</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="flex items-center gap-3 p-4 rounded-xl border border-border bg-primary/10">
+              <div className="flex items-center gap-3 p-4 rounded-lg border border-border bg-muted/50">
                 <div className="flex-1">
                   <p className="font-semibold">Cash on Delivery (COD)</p>
                   <p className="text-sm text-muted-foreground">
@@ -255,18 +262,18 @@ export default function CheckoutPage() {
           <Button
             type="submit"
             size="lg"
-            className="w-full rounded-xl h-12 text-base font-semibold"
+            className="w-full rounded-lg h-12 text-base font-semibold"
             disabled={loading}
           >
             {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Place Order
+            Place order
           </Button>
         </form>
 
         <div className="lg:col-span-1">
-          <Card className="rounded-2xl border-border shadow-soft sticky top-20 overflow-hidden">
+          <Card className="rounded-xl border border-border shadow sticky top-20 overflow-hidden">
             <CardHeader>
-              <CardTitle className="text-lg">Order Summary</CardTitle>
+              <CardTitle className="font-heading text-lg">Order Summary</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               {/* Items */}
@@ -285,7 +292,7 @@ export default function CheckoutPage() {
                 ))}
               </div>
 
-              <Separator />
+              <Separator className="bg-border" />
 
               <div className="space-y-2">
                 <div className="flex justify-between">
@@ -294,13 +301,13 @@ export default function CheckoutPage() {
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Shipping</span>
-                  <span className="text-green-600">FREE</span>
+                  <span className="text-green-600 font-medium">FREE</span>
                 </div>
               </div>
 
-              <Separator />
+              <Separator className="bg-border" />
 
-              <div className="flex justify-between text-lg font-bold">
+              <div className="flex justify-between text-lg font-semibold">
                 <span>Total</span>
                 <span>{formatPrice(getTotalPrice())}</span>
               </div>

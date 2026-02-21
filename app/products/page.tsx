@@ -3,7 +3,7 @@
 import { Suspense, useEffect, useState } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import ProductCard from '@/components/ProductCard';
-import FilterSidebar, { FilterState } from '@/components/FilterSidebar';
+import FilterSidebar, { FilterState, type CategoryOption } from '@/components/FilterSidebar';
 import Pagination from '@/components/Pagination';
 import { ProductWithId, PaginatedResponse } from '@/types';
 import { Button } from '@/components/ui/button';
@@ -44,9 +44,20 @@ function ProductsContent() {
   
   const [sort, setSort] = useState('newest');
   const [filterDialogOpen, setFilterDialogOpen] = useState(false);
+  const [categories, setCategories] = useState<CategoryOption[]>([]);
+
+  useEffect(() => {
+    fetch('/api/categories')
+      .then((r) => r.json())
+      .then((data) => setCategories(Array.isArray(data) ? data : []))
+      .catch(() => {});
+  }, []);
 
   const activeFilterCount =
     filters.category.length + filters.sizes.length + filters.colors.length;
+  const categoryLabels: Record<string, string> = Object.fromEntries(
+    categories.map((c) => [c._id, c.name])
+  );
 
   const removeCategory = (id: string) => {
     handleFilterChange({
@@ -66,14 +77,6 @@ function ProductsContent() {
       colors: filters.colors.filter((c) => c !== color),
     });
   };
-  const categoryLabels: Record<string, string> = {
-    casual: 'Casual',
-    formal: 'Formal',
-    party: 'Party',
-    ethnic: 'Ethnic',
-    summer: 'Summer',
-    winter: 'Winter',
-  };
 
   useEffect(() => {
     fetchProducts();
@@ -91,16 +94,15 @@ function ProductsContent() {
     const search = searchParams.get('search');
     if (search) params.set('search', search);
 
-    // Add category from URL or filters
+    // Add category from URL or filters (category IDs from API)
     const urlCategoryId = searchParams.get('categoryId');
     const urlCategory = searchParams.get('category');
     if (urlCategoryId) {
       params.set('categoryId', urlCategoryId);
-    } else {
-      const categories = urlCategory ? [urlCategory] : filters.category;
-      if (categories.length > 0) {
-        params.set('category', categories[0]);
-      }
+    } else if (urlCategory) {
+      params.set('category', urlCategory);
+    } else if (filters.category.length > 0) {
+      params.set('categoryId', filters.category[0]);
     }
 
     // Add featured from URL
@@ -149,7 +151,7 @@ function ProductsContent() {
 
   return (
     <div className="container mx-auto px-4 py-6 md:py-8">
-      <h1 className="text-2xl md:text-3xl font-bold mb-6">
+      <h1 className="font-heading text-2xl md:text-3xl font-semibold mb-6 tracking-tight">
         {isBigSize ? 'Big Size' : 'Shop Dresses'}
       </h1>
       {isBigSize && (
@@ -160,8 +162,8 @@ function ProductsContent() {
 
       <div className="flex flex-col gap-6">
         <div className="w-full min-w-0">
-          <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
-            <p className="text-sm text-muted-foreground">
+          <div className="flex flex-wrap items-center justify-between gap-4 mb-4">
+            <p className="text-sm text-muted-foreground font-medium">
               {loading ? 'Loading...' : `${pagination.total} products`}
             </p>
             <div className="flex items-center gap-2">
@@ -170,7 +172,7 @@ function ProductsContent() {
                   <Button
                     variant="outline"
                     size="sm"
-                    className="rounded-xl h-10 gap-2"
+                    className="rounded-lg h-10 gap-2"
                   >
                     <SlidersHorizontal className="h-4 w-4" />
                     Filters
@@ -184,6 +186,7 @@ function ProductsContent() {
                 <BottomSheetContent>
                   {filterDialogOpen && (
                     <FilterSidebar
+                      categories={categories}
                       initialFilters={filters}
                       inDrawer
                       onFilterChange={(newFilters) => {
@@ -195,7 +198,7 @@ function ProductsContent() {
                 </BottomSheetContent>
               </BottomSheet>
               <Select value={sort} onValueChange={handleSortChange}>
-                <SelectTrigger className="w-full sm:w-[180px] rounded-xl h-10">
+                <SelectTrigger className="w-full sm:w-[180px] rounded-lg h-10 border-border">
                   <SelectValue placeholder="Sort by" />
                 </SelectTrigger>
                 <SelectContent>
@@ -210,12 +213,12 @@ function ProductsContent() {
 
           {activeFilterCount > 0 && (
             <div className="flex flex-wrap items-center gap-2 mb-4">
-              <span className="text-xs text-muted-foreground mr-1">Active:</span>
+              <span className="text-xs text-muted-foreground mr-1 font-medium">Active:</span>
               {filters.category.map((id) => (
                 <button
                   key={id}
                   onClick={() => removeCategory(id)}
-                  className="inline-flex items-center gap-1 rounded-full bg-primary/15 px-3 py-1 text-xs font-medium text-primary hover:bg-primary/25"
+                  className="inline-flex items-center gap-1 rounded-lg bg-muted px-3 py-1.5 text-xs font-medium text-foreground border border-border hover:bg-muted/80"
                 >
                   {categoryLabels[id] ?? id} <X className="h-3 w-3" />
                 </button>
@@ -224,7 +227,7 @@ function ProductsContent() {
                 <button
                   key={size}
                   onClick={() => removeSize(size)}
-                  className="inline-flex items-center gap-1 rounded-full bg-primary/15 px-3 py-1 text-xs font-medium text-primary hover:bg-primary/25"
+                  className="inline-flex items-center gap-1 rounded-lg bg-muted px-3 py-1.5 text-xs font-medium text-foreground border border-border hover:bg-muted/80"
                 >
                   Size {size} <X className="h-3 w-3" />
                 </button>
@@ -233,7 +236,7 @@ function ProductsContent() {
                 <button
                   key={color}
                   onClick={() => removeColor(color)}
-                  className="inline-flex items-center gap-1 rounded-full bg-primary/15 px-3 py-1 text-xs font-medium text-primary hover:bg-primary/25"
+                  className="inline-flex items-center gap-1 rounded-lg bg-muted px-3 py-1.5 text-xs font-medium text-foreground border border-border hover:bg-muted/80"
                 >
                   {color} <X className="h-3 w-3" />
                 </button>
@@ -242,14 +245,14 @@ function ProductsContent() {
           )}
 
           {loading && (
-            <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-6">
+            <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
               {[...Array(8)].map((_, i) => (
-                <div key={i} className="rounded-lg overflow-hidden border border-border bg-card">
+                <div key={i} className="rounded-xl overflow-hidden border border-border bg-card shadow">
                   <div className="aspect-[4/5] bg-muted animate-pulse" />
-                  <div className="p-2.5 md:p-3 space-y-2">
+                  <div className="p-3 md:p-4 space-y-2">
                     <div className="h-3 w-3/4 rounded bg-muted animate-pulse" />
                     <div className="h-3 w-1/2 rounded bg-muted animate-pulse" />
-                    <div className="h-9 rounded-lg bg-muted animate-pulse" />
+                    <div className="h-10 rounded-lg bg-muted animate-pulse" />
                   </div>
                 </div>
               ))}
@@ -258,7 +261,7 @@ function ProductsContent() {
 
           {!loading && products.length > 0 && (
             <>
-              <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-6">
+              <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
                 {products.map((product) => (
                   <ProductCard key={product._id} product={product} />
                 ))}
@@ -274,9 +277,9 @@ function ProductsContent() {
           )}
 
           {!loading && products.length === 0 && (
-            <div className="text-center py-16 rounded-2xl bg-muted/40">
-              <p className="text-muted-foreground mb-4">No products found</p>
-              <Button className="rounded-xl" onClick={() => window.location.reload()}>
+            <div className="text-center py-16 rounded-xl border border-border bg-card shadow">
+              <p className="text-muted-foreground mb-4 font-medium">No products found</p>
+              <Button className="rounded-lg" onClick={() => window.location.reload()}>
                 Clear Filters
               </Button>
             </div>

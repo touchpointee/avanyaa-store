@@ -10,9 +10,11 @@ import { ProductWithId } from '@/types';
 function FeaturedCategories({ categories }: { categories: HomepageCategory[] }) {
   if (categories.length === 0) return null;
   return (
-    <section className="py-8 md:py-12 bg-muted/50">
+    <section className="py-10 md:py-14 bg-muted/40">
       <div className="container mx-auto px-4">
-        <h2 className="text-xl md:text-2xl font-bold mb-6 md:mb-8 text-foreground">Shop by Category</h2>
+        <h2 className="font-heading text-2xl md:text-3xl font-semibold mb-8 md:mb-10 text-foreground tracking-tight">
+          Shop by Category
+        </h2>
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 md:gap-6">
           {categories.map((cat) => (
             <Link
@@ -20,7 +22,7 @@ function FeaturedCategories({ categories }: { categories: HomepageCategory[] }) 
               href={`/products?categoryId=${cat._id}`}
               className="group block"
             >
-              <div className="aspect-[3/4] rounded-lg border border-border bg-card overflow-hidden transition-all duration-300 hover:shadow-soft-lg hover:border-primary/30 shadow-soft">
+              <div className="aspect-[3/4] rounded-xl border border-border bg-card overflow-hidden transition-all duration-300 hover:shadow-md hover:border-primary/20 shadow">
                 {cat.image ? (
                   <div className="relative w-full h-full">
                     <Image
@@ -29,12 +31,12 @@ function FeaturedCategories({ categories }: { categories: HomepageCategory[] }) 
                       fill
                       className="object-cover transition-transform duration-300 group-hover:scale-105"
                     />
-                    <div className="absolute inset-0 bg-black/20 flex items-end justify-center pb-4">
-                      <span className="font-semibold text-white drop-shadow-lg text-sm text-center px-2">{cat.name}</span>
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent flex items-end justify-center pb-4">
+                      <span className="font-semibold text-white drop-shadow text-sm text-center px-2">{cat.name}</span>
                     </div>
                   </div>
                 ) : (
-                  <div className="w-full h-full p-4 flex flex-col items-center justify-center gap-2 bg-brand-light">
+                  <div className="w-full h-full p-4 flex flex-col items-center justify-center gap-2 bg-muted">
                     <span className="font-semibold text-primary text-center text-sm">{cat.name}</span>
                   </div>
                 )}
@@ -58,17 +60,17 @@ function ProductSection({
 }) {
   if (products.length === 0) return null;
   return (
-    <section className="py-8 md:py-12 bg-muted/50">
+    <section className="py-10 md:py-14 bg-muted/40">
       <div className="container mx-auto px-4">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
-          <h2 className="text-xl md:text-2xl font-bold text-foreground">{title}</h2>
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-8">
+          <h2 className="font-heading text-2xl md:text-3xl font-semibold text-foreground tracking-tight">{title}</h2>
           {viewAllHref && (
-            <Button variant="outline" size="sm" className="rounded-full border-primary/40 text-primary hover:bg-primary/10 w-fit shrink-0" asChild>
+            <Button variant="outline" size="sm" className="rounded-lg w-fit shrink-0" asChild>
               <Link href={viewAllHref}>View All</Link>
             </Button>
           )}
         </div>
-        <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-6">
+        <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
           {products.map((product) => (
             <ProductCard key={product._id} product={product} />
           ))}
@@ -83,17 +85,17 @@ function PromoBanner({ banners }: { banners: HomepageBanner[] }) {
   if (promo.length === 0) return null;
   const b = promo[0];
   return (
-    <section className="py-6 md:py-8">
+    <section className="py-10 md:py-14">
       <div className="container mx-auto px-4">
-        <Link href={b.link || '#'} className="block rounded-2xl overflow-hidden shadow-soft">
-          <div className="relative h-40 md:h-56 rounded-2xl overflow-hidden bg-muted">
+        <Link href={b.link || '#'} className="block rounded-2xl overflow-hidden shadow-md">
+          <div className="relative h-44 md:h-60 rounded-2xl overflow-hidden bg-muted">
             <Image src={b.image} alt={b.title || 'Promo'} fill className="object-cover" />
-            <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
+            <div className="absolute inset-0 bg-black/35 flex items-center justify-center">
               <div className="text-center text-white px-4">
-                {b.title && <h3 className="text-xl md:text-2xl font-bold">{b.title}</h3>}
+                {b.title && <h3 className="font-heading text-xl md:text-2xl font-semibold">{b.title}</h3>}
                 {b.subtitle && <p className="mt-1 text-sm md:text-base opacity-95">{b.subtitle}</p>}
                 {b.buttonText && (
-                  <Button className="mt-3 rounded-xl" variant="secondary" size="sm">
+                  <Button className="mt-4 rounded-lg" variant="secondary" size="sm">
                     {b.buttonText}
                   </Button>
                 )}
@@ -144,58 +146,40 @@ export default async function HomePage() {
 
       <PromoBanner banners={banners} />
 
-      <section className="py-10 md:py-14 bg-background">
+      <section className="py-12 md:py-16 bg-background">
         <div className="container mx-auto px-4 text-center">
-          <h2 className="text-xl md:text-2xl font-bold mb-8">Why Choose AVANYAA</h2>
-          <div className="grid md:grid-cols-3 gap-8 md:gap-10">
-            <div className="space-y-3 p-4 rounded-2xl bg-primary/10">
-              <div className="w-14 h-14 mx-auto bg-brand-light rounded-2xl flex items-center justify-center">
-                <span className="text-2xl">✨</span>
+          <h2 className="font-heading text-2xl md:text-3xl font-semibold mb-10 tracking-tight">Why Choose AVANYAA</h2>
+          <div className="grid md:grid-cols-3 gap-8 md:gap-10 max-w-4xl mx-auto">
+            <div className="space-y-4 p-6 rounded-xl border border-border bg-card shadow">
+              <div className="w-14 h-14 mx-auto rounded-xl bg-muted flex items-center justify-center">
+                <span className="text-2xl" aria-hidden>✨</span>
               </div>
               <h3 className="font-semibold">Premium Quality</h3>
               <p className="text-sm text-muted-foreground">
                 Carefully curated collection of high-quality fabrics and designs
               </p>
             </div>
-            <div className="space-y-3 p-4 rounded-2xl bg-primary/10">
-              <div className="w-14 h-14 mx-auto bg-brand-light rounded-2xl flex items-center justify-center">
-                <span className="text-2xl">🚚</span>
+            <div className="space-y-4 p-6 rounded-xl border border-border bg-card shadow">
+              <div className="w-14 h-14 mx-auto rounded-xl bg-muted flex items-center justify-center">
+                <span className="text-2xl" aria-hidden>🚚</span>
               </div>
               <h3 className="font-semibold">Fast Delivery</h3>
               <p className="text-sm text-muted-foreground">
                 Quick and reliable shipping to your doorstep
               </p>
             </div>
-            <div className="space-y-3 p-4 rounded-2xl bg-primary/10">
-              <div className="w-14 h-14 mx-auto bg-brand-light rounded-2xl flex items-center justify-center">
-                <span className="text-2xl">💳</span>
+            <div className="space-y-4 p-6 rounded-xl border border-border bg-card shadow">
+              <div className="w-14 h-14 mx-auto rounded-xl bg-muted flex items-center justify-center">
+                <span className="text-2xl" aria-hidden>💳</span>
               </div>
               <h3 className="font-semibold">Cash on Delivery</h3>
               <p className="text-sm text-muted-foreground">
-                Pay when you receive your order - safe and convenient
+                Pay when you receive your order — safe and convenient
               </p>
             </div>
           </div>
         </div>
       </section>
-
-      <footer className="border-t border-border py-8 md:py-10 bg-muted/40">
-        <div className="container mx-auto px-4">
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
-            <div className="text-center md:text-left">
-              <Link href="/" className="inline-block">
-                <Image src="/logo.png" alt="Avanyaa" width={80} height={32} className="h-8 w-auto object-contain" />
-              </Link>
-              <p className="mt-2 text-sm text-muted-foreground">&copy; {new Date().getFullYear()} Avanyaa. All rights reserved.</p>
-            </div>
-            <nav className="flex flex-wrap justify-center md:justify-end gap-6 text-sm" aria-label="Footer">
-              <Link href="/" className="text-muted-foreground hover:text-primary transition-colors">Home</Link>
-              <Link href="/products" className="text-muted-foreground hover:text-primary transition-colors">Shop</Link>
-              <Link href="/products?bigSize=true" className="text-muted-foreground hover:text-primary transition-colors">Big Size</Link>
-            </nav>
-          </div>
-        </div>
-      </footer>
     </div>
   );
 }
