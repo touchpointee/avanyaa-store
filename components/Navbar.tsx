@@ -11,11 +11,15 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import NavLinks from '@/components/NavLinks';
 
 export default function Navbar() {
   const { data: session } = useSession();
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState('');
+  const [mounted, setMounted] = useState(false);
+  const [location, setLocation] = useState<string>('');
+  const [locationError, setLocationError] = useState(false);
   const [categories, setCategories] = useState<{ _id: string; name: string; slug: string }[]>([]);
 
   const totalItems = useCartStore((state) => state.getTotalItems());
@@ -58,10 +62,18 @@ export default function Navbar() {
             />
           </Link>
 
-          <span className="hidden lg:inline-flex items-center gap-1.5 text-sm text-muted-foreground shrink-0">
-            <MapPin className="h-4 w-4" aria-hidden />
-            India
-          </span>
+          {mounted && (
+            <span
+              className="hidden lg:inline-flex items-center gap-1.5 text-sm text-muted-foreground shrink-0 max-w-[140px] truncate"
+              title={locationError ? 'Location access denied' : location}
+            >
+              <MapPin
+                className={`h-4 w-4 shrink-0 ${!location ? 'animate-pulse' : ''}`}
+                aria-hidden
+              />
+              <span className="truncate">{location || 'Locating\u2026'}</span>
+            </span>
+          )}
 
           <form onSubmit={handleSearch} className="hidden md:block flex-1 min-w-0 max-w-md mx-4 lg:mx-6">
             <div className="relative w-full">
@@ -140,39 +152,18 @@ export default function Navbar() {
       <nav className="border-t border-border bg-card w-full min-w-0" aria-label="Main">
         <div className="w-full min-w-0 overflow-x-auto scrollbar-hide">
           <div className="flex items-center gap-0 min-w-max md:min-w-0 pl-4 pr-4 md:pl-0 md:pr-0 md:container md:mx-auto md:flex md:justify-center md:gap-1">
-            <Link
-              href="/products?sort=newest"
-              className="shrink-0 px-4 py-3 min-h-[44px] md:py-2.5 flex items-center text-sm font-medium text-muted-foreground hover:text-foreground transition-colors whitespace-nowrap touch-manipulation"
-            >
-              New Arrivals
-            </Link>
-            <Link
-              href="/products"
-              className="shrink-0 px-4 py-3 min-h-[44px] md:py-2.5 flex items-center text-sm font-medium text-muted-foreground hover:text-foreground transition-colors whitespace-nowrap touch-manipulation"
-            >
-              Dresses
-            </Link>
-            <Link
-              href="/products?bigSize=true"
-              className="shrink-0 px-4 py-3 min-h-[44px] md:py-2.5 flex items-center text-sm font-medium text-muted-foreground hover:text-foreground transition-colors whitespace-nowrap touch-manipulation"
-            >
-              Big Size
-            </Link>
-            {categories.slice(0, 5).map((cat) => (
-              <Link
-                key={cat._id}
-                href={`/products?categoryId=${cat._id}`}
-                className="shrink-0 px-4 py-3 min-h-[44px] md:py-2.5 flex items-center text-sm font-medium text-muted-foreground hover:text-foreground transition-colors whitespace-nowrap touch-manipulation"
-              >
-                {cat.name}
-              </Link>
-            ))}
-            <Link
-              href="/products?featured=true"
-              className="shrink-0 px-4 py-3 min-h-[44px] md:py-2.5 flex items-center text-sm font-medium text-primary hover:underline whitespace-nowrap touch-manipulation"
-            >
-              Sale
-            </Link>
+            <NavLinks
+              items={[
+                { label: 'New Arrivals', href: '/products?sort=newest' },
+                { label: 'Dresses', href: '/products' },
+                { label: 'Big Size', href: '/products?bigSize=true' },
+                ...categories.slice(0, 5).map((cat) => ({
+                  label: cat.name,
+                  href: `/products?categoryId=${cat._id}`,
+                })),
+                { label: 'Sale', href: '/products?featured=true' },
+              ]}
+            />
           </div>
         </div>
       </nav>

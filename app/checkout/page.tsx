@@ -132,11 +132,68 @@ export default function CheckoutPage() {
   }, [session, router]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
+    const { name, value } = e.target;
+    setFormData({ ...formData, [name]: value });
+
+    // Reset pincode status when user edits the zip field
+    if (name === 'zipCode') {
+      setPincodeStatus('idle');
+      setPincodeError('');
+    }
+
+    // If city or state is manually changed after a valid pin, invalidate pin
+    if ((name === 'city' || name === 'state') && pincodeStatus === 'valid') {
+      setFormData((prev) => ({ ...prev, [name]: value, zipCode: '' }));
+      setPincodeStatus('idle');
+      setPincodeError('');
+    }
   };
+
+  // Validate pincode via India Post API whenever 6 digits are entered
+  useEffect(() => {
+    const pin = formData.zipCode.trim();
+    if (!/^\d{6}$/.test(pin)) {
+      if (pin.length === 6) {
+        setPincodeStatus('invalid');
+        setPincodeError('Enter a valid 6-digit Indian pincode');
+      } else {
+        setPincodeStatus('idle');
+        setPincodeError('');
+      }
+      return;
+    }
+
+    setPincodeStatus('loading');
+    setPincodeError('');
+
+    const controller = new AbortController();
+    fetch(`https://api.postalpincode.in/pincode/${pin}`, { signal: controller.signal })
+      .then((r) => r.json())
+      .then((data) => {
+        const record = data?.[0];
+        if (record?.Status === 'Success' && record.PostOffice?.length > 0) {
+          const po = record.PostOffice[0];
+          setFormData((prev) => ({
+            ...prev,
+            city: po.District || po.Name || prev.city,
+            state: po.State || prev.state,
+          }));
+          setPincodeStatus('valid');
+          setPincodeError('');
+        } else {
+          setPincodeStatus('invalid');
+          setPincodeError('Pincode not found. Please check and try again.');
+        }
+      })
+      .catch((err) => {
+        if (err.name !== 'AbortError') {
+          setPincodeStatus('invalid');
+          setPincodeError('Could not verify pincode. Please try again.');
+        }
+      });
+
+    return () => controller.abort();
+  }, [formData.zipCode]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
