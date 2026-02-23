@@ -12,15 +12,17 @@ import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { formatPrice } from '@/lib/utils';
 import { useToast } from '@/components/ui/use-toast';
-import { Loader2 } from 'lucide-react';
+import { Loader2, CheckCircle2, XCircle } from 'lucide-react';
 
 export default function CheckoutPage() {
   const router = useRouter();
   const { data: session } = useSession();
   const { items, getTotalPrice, clearCart } = useCartStore();
   const { toast } = useToast();
-  
+
   const [loading, setLoading] = useState(false);
+  const [pincodeStatus, setPincodeStatus] = useState<'idle' | 'loading' | 'valid' | 'invalid'>('idle');
+  const [pincodeError, setPincodeError] = useState('');
   const [formData, setFormData] = useState({
     fullName: '',
     email: '',
@@ -46,17 +48,85 @@ export default function CheckoutPage() {
   }, [session, router]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
+    const { name, value } = e.target;
+    setFormData({ ...formData, [name]: value });
+
+    // Reset pincode status when user edits the zip field
+    if (name === 'zipCode') {
+      setPincodeStatus('idle');
+      setPincodeError('');
+    }
+
+    // If city or state is manually changed after a valid pin, invalidate pin
+    if ((name === 'city' || name === 'state') && pincodeStatus === 'valid') {
+      setFormData((prev) => ({ ...prev, [name]: value, zipCode: '' }));
+      setPincodeStatus('idle');
+      setPincodeError('');
+    }
   };
+
+  // Validate pincode via India Post API whenever 6 digits are entered
+  useEffect(() => {
+    const pin = formData.zipCode.trim();
+    if (!/^\d{6}$/.test(pin)) {
+      if (pin.length === 6) {
+        setPincodeStatus('invalid');
+        setPincodeError('Enter a valid 6-digit Indian pincode');
+      } else {
+        setPincodeStatus('idle');
+        setPincodeError('');
+      }
+      return;
+    }
+
+    setPincodeStatus('loading');
+    setPincodeError('');
+
+    const controller = new AbortController();
+    fetch(`https://api.postalpincode.in/pincode/${pin}`, { signal: controller.signal })
+      .then((r) => r.json())
+      .then((data) => {
+        const record = data?.[0];
+        if (record?.Status === 'Success' && record.PostOffice?.length > 0) {
+          const po = record.PostOffice[0];
+          setFormData((prev) => ({
+            ...prev,
+            city: po.District || po.Name || prev.city,
+            state: po.State || prev.state,
+          }));
+          setPincodeStatus('valid');
+          setPincodeError('');
+        } else {
+          setPincodeStatus('invalid');
+          setPincodeError('Pincode not found. Please check and try again.');
+        }
+      })
+      .catch((err) => {
+        if (err.name !== 'AbortError') {
+          setPincodeStatus('invalid');
+          setPincodeError('Could not verify pincode. Please try again.');
+        }
+      });
+
+    return () => controller.abort();
+  }, [formData.zipCode]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
-    // Validate form
+    // Validate pincode
+    if (pincodeStatus !== 'valid') {
+      toast({
+        title: 'Invalid pincode',
+        description: pincodeError || 'Please enter a valid 6-digit Indian pincode',
+        variant: 'destructive',
+      });
+      setLoading(false);
+      return;
+    }
+
+    // Validate required fields
     const requiredFields = ['fullName', 'email', 'phone', 'street', 'city', 'state', 'zipCode'];
     for (const field of requiredFields) {
       if (!formData[field as keyof typeof formData]) {
@@ -228,15 +298,41 @@ export default function CheckoutPage() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="zipCode">ZIP Code *</Label>
-                  <Input
-                    id="zipCode"
-                    name="zipCode"
-                    value={formData.zipCode}
-                    onChange={handleInputChange}
-                    required
-                    className="rounded-lg border-border"
-                  />
+                  <Label htmlFor="zipCode">PIN Code *</Label>
+                  <div className="relative">
+                    <Input
+                      id="zipCode"
+                      name="zipCode"
+                      value={formData.zipCode}
+                      onChange={handleInputChange}
+                      required
+                      maxLength={6}
+                      placeholder="e.g. 678001"
+                      className={`rounded-lg border-border pr-9 ${pincodeStatus === 'valid'
+                        ? 'border-green-500 focus-visible:ring-green-400'
+                        : pincodeStatus === 'invalid'
+                          ? 'border-red-500 focus-visible:ring-red-400'
+                          : ''
+                        }`}
+                    />
+                    <span className="absolute inset-y-0 right-3 flex items-center">
+                      {pincodeStatus === 'loading' && (
+                        <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                      )}
+                      {pincodeStatus === 'valid' && (
+                        <CheckCircle2 className="h-4 w-4 text-green-500" />
+                      )}
+                      {pincodeStatus === 'invalid' && (
+                        <XCircle className="h-4 w-4 text-red-500" />
+                      )}
+                    </span>
+                  </div>
+                  {pincodeStatus === 'invalid' && (
+                    <p className="text-xs text-red-500">{pincodeError}</p>
+                  )}
+                  {pincodeStatus === 'valid' && (
+                    <p className="text-xs text-green-600">✓ Valid pincode — city &amp; state auto-filled</p>
+                  )}
                 </div>
               </div>
             </CardContent>
