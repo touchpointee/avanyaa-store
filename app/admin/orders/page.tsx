@@ -69,16 +69,14 @@ export default function AdminOrdersPage() {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'placed':
-        return 'bg-blue-500';
-      case 'shipped':
-        return 'bg-yellow-500';
-      case 'delivered':
-        return 'bg-green-500';
-      case 'cancelled':
-        return 'bg-red-500';
-      default:
-        return 'bg-gray-500';
+      case 'placed': return 'bg-blue-500';
+      case 'packed': return 'bg-purple-500';
+      case 'shipped': return 'bg-yellow-500';
+      case 'out_for_delivery': return 'bg-orange-500';
+      case 'delivered': return 'bg-green-500';
+      case 'cancelled': return 'bg-red-500';
+      case 'returned': return 'bg-gray-500';
+      default: return 'bg-gray-400';
     }
   };
 
@@ -131,9 +129,12 @@ export default function AdminOrdersPage() {
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="placed">Placed</SelectItem>
+                        <SelectItem value="packed">Packed</SelectItem>
                         <SelectItem value="shipped">Shipped</SelectItem>
+                        <SelectItem value="out_for_delivery">Out for Delivery</SelectItem>
                         <SelectItem value="delivered">Delivered</SelectItem>
                         <SelectItem value="cancelled">Cancelled</SelectItem>
+                        <SelectItem value="returned">Returned</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>

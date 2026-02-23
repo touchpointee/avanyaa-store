@@ -12,7 +12,7 @@ const items = [
   { href: '/products', icon: LayoutGrid, label: 'Categories' },
   { href: '/wishlist', icon: Heart, label: 'Wishlist' },
   { href: '/cart', icon: ShoppingCart, label: 'Cart' },
-  { href: '/orders', icon: User, label: 'Profile' },
+  { href: '/profile', icon: User, label: 'Profile' },
 ];
 
 export default function BottomNav() {

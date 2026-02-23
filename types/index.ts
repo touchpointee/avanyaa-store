@@ -28,6 +28,8 @@ export interface ProductWithId extends Omit<IProduct, '_id'> {
 export interface OrderWithId extends Omit<IOrder, '_id' | 'userId'> {
   _id: string;
   userId?: string;
+  status: 'placed' | 'packed' | 'shipped' | 'out_for_delivery' | 'delivered' | 'cancelled' | 'returned';
+  updatedAt: string;
 }
 
 export interface DashboardStats {

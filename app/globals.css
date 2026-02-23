@@ -43,13 +43,24 @@
   * {
     @apply border-border;
   }
+
   body {
     @apply bg-background text-foreground antialiased;
     overflow-x: hidden;
   }
+
   html {
     scroll-behavior: smooth;
     overflow-x: hidden;
+  }
+}
+
+@layer utilities {
+
+  /* Force all buttons to 10px border-radius — wins over any rounded-* className prop */
+  button,
+  [role="button"] {
+    border-radius: 10px !important;
   }
 }
 
@@ -58,16 +69,22 @@
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
+
 .scrollbar-hide::-webkit-scrollbar {
   display: none;
 }
 
 /* Touch-friendly tap targets on mobile */
 @media (max-width: 768px) {
-  button:not(.size-icon), a[href], [role="button"] {
+
+  button:not(.size-icon),
+  a[href],
+  [role="button"] {
     min-height: 44px;
   }
-  button.size-icon, .size-icon {
+
+  button.size-icon,
+  .size-icon {
     min-width: 44px;
     min-height: 44px;
   }

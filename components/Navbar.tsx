@@ -26,7 +26,7 @@ export default function Navbar() {
     fetch('/api/categories')
       .then((r) => r.json())
       .then((data) => setCategories(Array.isArray(data) ? data : []))
-      .catch(() => {});
+      .catch(() => { });
   }, []);
 
   const handleSearch = (e: React.FormEvent) => {
@@ -100,7 +100,7 @@ export default function Navbar() {
             {isCustomerSession(session) ? (
               <>
                 <Button variant="ghost" size="icon" className="rounded-lg" asChild>
-                  <Link href="/orders">
+                  <Link href="/profile">
                     <User className="h-5 w-5" />
                   </Link>
                 </Button>

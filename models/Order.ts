@@ -25,8 +25,9 @@ export interface IOrder extends Document {
   items: IOrderItem[];
   totalAmount: number;
   address: IAddress;
-  status: 'placed' | 'shipped' | 'delivered' | 'cancelled';
+  status: 'placed' | 'packed' | 'shipped' | 'out_for_delivery' | 'delivered' | 'cancelled' | 'returned';
   paymentMethod: 'cod';
+  cancellationReason?: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -106,7 +107,7 @@ const OrderSchema = new Schema<IOrder>(
       type: [OrderItemSchema],
       required: true,
       validate: {
-        validator: function(v: IOrderItem[]) {
+        validator: function (v: IOrderItem[]) {
           return v.length > 0;
         },
         message: 'Order must have at least one item',
@@ -123,7 +124,7 @@ const OrderSchema = new Schema<IOrder>(
     },
     status: {
       type: String,
-      enum: ['placed', 'shipped', 'delivered', 'cancelled'],
+      enum: ['placed', 'packed', 'shipped', 'out_for_delivery', 'delivered', 'cancelled', 'returned'],
       default: 'placed',
     },
     paymentMethod: {
