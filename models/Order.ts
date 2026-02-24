@@ -138,9 +138,8 @@ const OrderSchema = new Schema<IOrder>(
   }
 );
 
-// Indexes for analytics and queries
+// Indexes for analytics and queries (orderId already indexed via unique: true)
 OrderSchema.index({ userId: 1 });
-OrderSchema.index({ orderId: 1 });
 OrderSchema.index({ status: 1 });
 OrderSchema.index({ createdAt: -1 });
 
