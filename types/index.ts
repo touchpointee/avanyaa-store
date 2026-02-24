@@ -25,10 +25,11 @@ export interface ProductWithId extends Omit<IProduct, '_id'> {
   _id: string;
 }
 
-export interface OrderWithId extends Omit<IOrder, '_id' | 'userId'> {
+export interface OrderWithId extends Omit<IOrder, '_id' | 'userId' | 'status' | 'createdAt' | 'updatedAt'> {
   _id: string;
   userId?: string;
   status: 'placed' | 'packed' | 'shipped' | 'out_for_delivery' | 'delivered' | 'cancelled' | 'returned';
+  createdAt: string;
   updatedAt: string;
 }
 

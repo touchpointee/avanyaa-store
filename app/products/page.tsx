@@ -1,7 +1,7 @@
 'use client';
 
 import { Suspense, useEffect, useState } from 'react';
-import { useSearchParams, useRouter } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import ProductCard from '@/components/ProductCard';
 import FilterSidebar, { FilterState, type CategoryOption } from '@/components/FilterSidebar';
 import Pagination from '@/components/Pagination';
@@ -19,64 +19,53 @@ import {
   BottomSheetContent,
   BottomSheetTrigger,
 } from '@/components/ui/bottom-sheet';
-import { SlidersHorizontal, X } from 'lucide-react';
+import { SlidersHorizontal, X, ArrowUpDown } from 'lucide-react';
+
+const PRICE_MAX = 10000;
+
+const DEFAULT_FILTERS: FilterState = {
+  category: [],
+  minPrice: 0,
+  maxPrice: PRICE_MAX,
+  sizes: [],
+  colors: [],
+  minDiscount: 0,
+};
+
+const SORT_OPTIONS = [
+  { value: 'newest', label: 'Recommended' },
+  { value: 'price-asc', label: 'Price: Low to High' },
+  { value: 'price-desc', label: 'Price: High to Low' },
+  { value: 'name', label: 'Name: A to Z' },
+];
 
 function ProductsContent() {
   const searchParams = useSearchParams();
-  const router = useRouter();
-  
+
   const [products, setProducts] = useState<ProductWithId[]>([]);
   const [loading, setLoading] = useState(true);
-  const [pagination, setPagination] = useState({
-    page: 1,
-    limit: 12,
-    total: 0,
-    totalPages: 0,
-  });
-  
-  const [filters, setFilters] = useState<FilterState>({
-    category: [],
-    minPrice: 0,
-    maxPrice: 10000,
-    sizes: [],
-    colors: [],
-  });
-  
+  const [pagination, setPagination] = useState({ page: 1, limit: 12, total: 0, totalPages: 0 });
+  const [filters, setFilters] = useState<FilterState>(DEFAULT_FILTERS);
   const [sort, setSort] = useState('newest');
-  const [filterDialogOpen, setFilterDialogOpen] = useState(false);
+  const [mobileSheetOpen, setMobileSheetOpen] = useState(false);
+  const [mobileSortOpen, setMobileSortOpen] = useState(false);
   const [categories, setCategories] = useState<CategoryOption[]>([]);
 
   useEffect(() => {
     fetch('/api/categories')
       .then((r) => r.json())
-      .then((data) => setCategories(Array.isArray(data) ? data : []))
-      .catch(() => {});
+      .then((d) => setCategories(Array.isArray(d) ? d : []))
+      .catch(() => { });
   }, []);
 
-  const activeFilterCount =
-    filters.category.length + filters.sizes.length + filters.colors.length;
   const categoryLabels: Record<string, string> = Object.fromEntries(
     categories.map((c) => [c._id, c.name])
   );
 
-  const removeCategory = (id: string) => {
-    handleFilterChange({
-      ...filters,
-      category: filters.category.filter((c) => c !== id),
-    });
-  };
-  const removeSize = (size: string) => {
-    handleFilterChange({
-      ...filters,
-      sizes: filters.sizes.filter((s) => s !== size),
-    });
-  };
-  const removeColor = (color: string) => {
-    handleFilterChange({
-      ...filters,
-      colors: filters.colors.filter((c) => c !== color),
-    });
-  };
+  const activeFilterCount =
+    filters.category.length + filters.sizes.length + filters.colors.length +
+    (filters.minPrice > 0 || filters.maxPrice < PRICE_MAX ? 1 : 0) +
+    (filters.minDiscount > 0 ? 1 : 0);
 
   useEffect(() => {
     fetchProducts();
@@ -84,45 +73,34 @@ function ProductsContent() {
 
   const fetchProducts = async () => {
     setLoading(true);
-    
     const params = new URLSearchParams();
     params.set('page', pagination.page.toString());
     params.set('limit', pagination.limit.toString());
     params.set('sort', sort);
 
-    // Add search from URL
     const search = searchParams.get('search');
     if (search) params.set('search', search);
 
-    // Add category from URL or filters (category IDs from API)
     const urlCategoryId = searchParams.get('categoryId');
     const urlCategory = searchParams.get('category');
-    if (urlCategoryId) {
-      params.set('categoryId', urlCategoryId);
-    } else if (urlCategory) {
-      params.set('category', urlCategory);
-    } else if (filters.category.length > 0) {
-      params.set('categoryId', filters.category[0]);
-    }
+    if (urlCategoryId) params.set('categoryId', urlCategoryId);
+    else if (urlCategory) params.set('category', urlCategory);
+    else if (filters.category.length > 0) params.set('categoryId', filters.category[0]);
 
-    // Add featured from URL
     const featured = searchParams.get('featured');
     if (featured) params.set('featured', featured);
 
-    // Big Size: products with XL, XXL, etc.
     const bigSize = searchParams.get('bigSize');
     if (bigSize === 'true') params.set('bigSize', 'true');
 
-    // Add filters
     if (filters.minPrice > 0) params.set('minPrice', filters.minPrice.toString());
-    if (filters.maxPrice < 10000) params.set('maxPrice', filters.maxPrice.toString());
+    if (filters.maxPrice < PRICE_MAX) params.set('maxPrice', filters.maxPrice.toString());
     if (filters.sizes.length > 0) params.set('size', filters.sizes[0]);
     if (filters.colors.length > 0) params.set('color', filters.colors[0]);
 
     try {
       const response = await fetch(`/api/products?${params.toString()}`);
       const data: PaginatedResponse<ProductWithId> = await response.json();
-      
       setProducts(data.data);
       setPagination(data.pagination);
     } catch (error) {
@@ -134,134 +112,125 @@ function ProductsContent() {
 
   const handleFilterChange = (newFilters: FilterState) => {
     setFilters(newFilters);
-    setPagination({ ...pagination, page: 1 });
+    setPagination((p) => ({ ...p, page: 1 }));
   };
 
-  const handlePageChange = (page: number) => {
-    setPagination({ ...pagination, page });
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
-
-  const handleSortChange = (value: string) => {
-    setSort(value);
-    setPagination({ ...pagination, page: 1 });
-  };
+  const removeChip = (patch: Partial<FilterState>) =>
+    handleFilterChange({ ...filters, ...patch });
 
   const isBigSize = searchParams.get('bigSize') === 'true';
+  const sortLabel = SORT_OPTIONS.find((o) => o.value === sort)?.label ?? 'Recommended';
 
   return (
-    <div className="container mx-auto px-4 py-6 md:py-8">
+    <div className="container mx-auto px-4 py-6 md:py-8 pb-28 md:pb-8">
       <h1 className="font-heading text-2xl md:text-3xl font-semibold mb-6 tracking-tight">
         {isBigSize ? 'Big Size' : 'Shop Dresses'}
       </h1>
       {isBigSize && (
-        <p className="text-muted-foreground mb-4 -mt-2">
-          Dresses available in XL, XXL and beyond
-        </p>
+        <p className="text-muted-foreground mb-4 -mt-2">Dresses available in XL, XXL and beyond</p>
       )}
 
-      <div className="flex flex-col gap-6">
-        <div className="w-full min-w-0">
-          <div className="flex flex-wrap items-center justify-between gap-4 mb-4">
+      <div className="flex gap-6 items-start">
+
+        {/* ════════════════════════════════════════
+            DESKTOP sidebar — no scroll, shows all
+        ════════════════════════════════════════ */}
+        <aside className="hidden md:block w-56 xl:w-64 shrink-0">
+          <div className="rounded-xl border border-border bg-card shadow p-4">
+            <FilterSidebar
+              categories={categories}
+              initialFilters={filters}
+              onFilterChange={handleFilterChange}
+            />
+          </div>
+        </aside>
+
+        {/* ════════════════
+            Main content
+        ════════════════ */}
+        <div className="flex-1 min-w-0">
+
+          {/* ── Desktop top bar: count + Sort ── */}
+          <div className="hidden md:flex items-center justify-between mb-4">
             <p className="text-sm text-muted-foreground font-medium">
-              {loading ? 'Loading...' : `${pagination.total} products`}
+              {loading ? 'Loading…' : `${pagination.total} products`}
             </p>
-            <div className="flex items-center gap-2">
-              <BottomSheet open={filterDialogOpen} onOpenChange={setFilterDialogOpen}>
-                <BottomSheetTrigger asChild>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="rounded-lg h-10 gap-2"
-                  >
-                    <SlidersHorizontal className="h-4 w-4" />
-                    Filters
-                    {activeFilterCount > 0 && (
-                      <span className="rounded-full bg-primary text-primary-foreground min-w-[18px] h-[18px] flex items-center justify-center text-xs font-medium px-1">
-                        {activeFilterCount}
-                      </span>
-                    )}
-                  </Button>
-                </BottomSheetTrigger>
-                <BottomSheetContent>
-                  {filterDialogOpen && (
-                    <FilterSidebar
-                      categories={categories}
-                      initialFilters={filters}
-                      inDrawer
-                      onFilterChange={(newFilters) => {
-                        handleFilterChange(newFilters);
-                        setFilterDialogOpen(false);
-                      }}
-                    />
-                  )}
-                </BottomSheetContent>
-              </BottomSheet>
-              <Select value={sort} onValueChange={handleSortChange}>
-                <SelectTrigger className="w-full sm:w-[180px] rounded-lg h-10 border-border">
-                  <SelectValue placeholder="Sort by" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="newest">Newest</SelectItem>
-                  <SelectItem value="price-asc">Price: Low to High</SelectItem>
-                  <SelectItem value="price-desc">Price: High to Low</SelectItem>
-                  <SelectItem value="name">Name: A to Z</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+            <Select value={sort} onValueChange={(v) => { setSort(v); setPagination((p) => ({ ...p, page: 1 })); }}>
+              <SelectTrigger className="w-[200px] h-10 border-border">
+                <SelectValue placeholder="Sort by" />
+              </SelectTrigger>
+              <SelectContent>
+                {SORT_OPTIONS.map((o) => (
+                  <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
+          {/* ── Active filter chips (both screens) ── */}
           {activeFilterCount > 0 && (
             <div className="flex flex-wrap items-center gap-2 mb-4">
-              <span className="text-xs text-muted-foreground mr-1 font-medium">Active:</span>
               {filters.category.map((id) => (
-                <button
-                  key={id}
-                  onClick={() => removeCategory(id)}
-                  className="inline-flex items-center gap-1 rounded-lg bg-muted px-3 py-1.5 text-xs font-medium text-foreground border border-border hover:bg-muted/80"
-                >
+                <button key={id}
+                  onClick={() => removeChip({ category: filters.category.filter((c) => c !== id) })}
+                  className="inline-flex items-center gap-1.5 rounded-[10px] bg-primary/10 border border-primary/20 px-3 py-1 text-xs font-medium text-primary hover:bg-primary/20 transition-colors">
                   {categoryLabels[id] ?? id} <X className="h-3 w-3" />
                 </button>
               ))}
+              {(filters.minPrice > 0 || filters.maxPrice < PRICE_MAX) && (
+                <button onClick={() => removeChip({ minPrice: 0, maxPrice: PRICE_MAX })}
+                  className="inline-flex items-center gap-1.5 rounded-[10px] bg-primary/10 border border-primary/20 px-3 py-1 text-xs font-medium text-primary hover:bg-primary/20 transition-colors">
+                  ₹{filters.minPrice.toLocaleString('en-IN')} – ₹{filters.maxPrice.toLocaleString('en-IN')}
+                  <X className="h-3 w-3" />
+                </button>
+              )}
               {filters.sizes.map((size) => (
-                <button
-                  key={size}
-                  onClick={() => removeSize(size)}
-                  className="inline-flex items-center gap-1 rounded-lg bg-muted px-3 py-1.5 text-xs font-medium text-foreground border border-border hover:bg-muted/80"
-                >
-                  Size {size} <X className="h-3 w-3" />
+                <button key={size}
+                  onClick={() => removeChip({ sizes: filters.sizes.filter((s) => s !== size) })}
+                  className="inline-flex items-center gap-1.5 rounded-[10px] bg-primary/10 border border-primary/20 px-3 py-1 text-xs font-medium text-primary hover:bg-primary/20 transition-colors">
+                  Size: {size} <X className="h-3 w-3" />
                 </button>
               ))}
               {filters.colors.map((color) => (
-                <button
-                  key={color}
-                  onClick={() => removeColor(color)}
-                  className="inline-flex items-center gap-1 rounded-lg bg-muted px-3 py-1.5 text-xs font-medium text-foreground border border-border hover:bg-muted/80"
-                >
+                <button key={color}
+                  onClick={() => removeChip({ colors: filters.colors.filter((c) => c !== color) })}
+                  className="inline-flex items-center gap-1.5 rounded-[10px] bg-primary/10 border border-primary/20 px-3 py-1 text-xs font-medium text-primary hover:bg-primary/20 transition-colors">
                   {color} <X className="h-3 w-3" />
                 </button>
               ))}
+              {filters.minDiscount > 0 && (
+                <button onClick={() => removeChip({ minDiscount: 0 })}
+                  className="inline-flex items-center gap-1.5 rounded-[10px] bg-primary/10 border border-primary/20 px-3 py-1 text-xs font-medium text-primary hover:bg-primary/20 transition-colors">
+                  {filters.minDiscount}%+ off <X className="h-3 w-3" />
+                </button>
+              )}
+              <button onClick={() => handleFilterChange(DEFAULT_FILTERS)}
+                className="inline-flex items-center gap-1.5 rounded-[10px] border border-border px-3 py-1 text-xs font-medium text-muted-foreground hover:text-destructive hover:border-destructive/40 transition-colors">
+                Clear All <X className="h-3 w-3" />
+              </button>
             </div>
           )}
 
+          {/* Loading skeleton */}
           {loading && (
-            <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
-              {[...Array(8)].map((_, i) => (
+            <div className="grid grid-cols-2 xl:grid-cols-3 gap-4 md:gap-5">
+              {[...Array(6)].map((_, i) => (
                 <div key={i} className="rounded-xl overflow-hidden border border-border bg-card shadow">
                   <div className="aspect-[4/5] bg-muted animate-pulse" />
-                  <div className="p-3 md:p-4 space-y-2">
+                  <div className="p-3 space-y-2">
                     <div className="h-3 w-3/4 rounded bg-muted animate-pulse" />
                     <div className="h-3 w-1/2 rounded bg-muted animate-pulse" />
-                    <div className="h-10 rounded-lg bg-muted animate-pulse" />
+                    <div className="h-9 rounded-lg bg-muted animate-pulse" />
                   </div>
                 </div>
               ))}
             </div>
           )}
 
+          {/* Products grid */}
           {!loading && products.length > 0 && (
             <>
-              <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
+              <div className="grid grid-cols-2 xl:grid-cols-3 gap-4 md:gap-5">
                 {products.map((product) => (
                   <ProductCard key={product._id} product={product} />
                 ))}
@@ -270,21 +239,102 @@ function ProductsContent() {
                 <Pagination
                   currentPage={pagination.page}
                   totalPages={pagination.totalPages}
-                  onPageChange={handlePageChange}
+                  onPageChange={(page) => {
+                    setPagination((p) => ({ ...p, page }));
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                  }}
                 />
               )}
             </>
           )}
 
+          {/* Empty */}
           {!loading && products.length === 0 && (
-            <div className="text-center py-16 rounded-xl border border-border bg-card shadow">
+            <div className="text-center py-20 rounded-xl border border-border bg-card shadow">
               <p className="text-muted-foreground mb-4 font-medium">No products found</p>
-              <Button className="rounded-lg" onClick={() => window.location.reload()}>
-                Clear Filters
-              </Button>
+              <Button onClick={() => handleFilterChange(DEFAULT_FILTERS)}>Clear Filters</Button>
             </div>
           )}
         </div>
+      </div>
+
+      {/* ════════════════════════════════════════
+          MOBILE — sticky "Filter & Sort" bar
+      ════════════════════════════════════════ */}
+      <div className="md:hidden fixed bottom-16 left-0 right-0 z-40 flex border-t border-border bg-background shadow-lg">
+        {/* Filter */}
+        <BottomSheet open={mobileSheetOpen} onOpenChange={setMobileSheetOpen}>
+          <BottomSheetTrigger asChild>
+            <button
+              type="button"
+              className="flex flex-1 items-center justify-center gap-2 py-3.5 text-sm font-semibold text-foreground border-r border-border hover:bg-muted/50 transition-colors"
+            >
+              <SlidersHorizontal className="h-4 w-4" />
+              Filter
+              {activeFilterCount > 0 && (
+                <span className="rounded-full bg-primary text-primary-foreground min-w-[18px] h-[18px] flex items-center justify-center text-xs font-bold px-1">
+                  {activeFilterCount}
+                </span>
+              )}
+            </button>
+          </BottomSheetTrigger>
+          <BottomSheetContent>
+            {mobileSheetOpen && (
+              <FilterSidebar
+                categories={categories}
+                initialFilters={filters}
+                inDrawer
+                onFilterChange={(f) => {
+                  handleFilterChange(f);
+                  setMobileSheetOpen(false);
+                }}
+              />
+            )}
+          </BottomSheetContent>
+        </BottomSheet>
+
+        {/* Sort */}
+        <BottomSheet open={mobileSortOpen} onOpenChange={setMobileSortOpen}>
+          <BottomSheetTrigger asChild>
+            <button
+              type="button"
+              className="flex flex-1 items-center justify-center gap-2 py-3.5 text-sm font-semibold text-foreground hover:bg-muted/50 transition-colors"
+            >
+              <ArrowUpDown className="h-4 w-4" />
+              Sort
+              {sort !== 'newest' && (
+                <span className="rounded-full bg-primary/15 text-primary min-w-[6px] h-[6px] inline-block" />
+              )}
+            </button>
+          </BottomSheetTrigger>
+          <BottomSheetContent>
+            <div className="py-2">
+              <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground px-1 mb-3">Sort By</p>
+              {SORT_OPTIONS.map((opt) => (
+                <button
+                  key={opt.value}
+                  type="button"
+                  onClick={() => {
+                    setSort(opt.value);
+                    setPagination((p) => ({ ...p, page: 1 }));
+                    setMobileSortOpen(false);
+                  }}
+                  className={`flex w-full items-center justify-between px-2 py-3.5 text-sm rounded-lg transition-colors ${sort === opt.value
+                      ? 'text-primary font-semibold bg-primary/8'
+                      : 'text-foreground hover:bg-muted/60'
+                    }`}
+                >
+                  {opt.label}
+                  {sort === opt.value && (
+                    <svg className="h-4 w-4 text-primary" fill="none" viewBox="0 0 16 16">
+                      <path d="M3 8l3.5 3.5 6.5-7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  )}
+                </button>
+              ))}
+            </div>
+          </BottomSheetContent>
+        </BottomSheet>
       </div>
     </div>
   );
@@ -292,7 +342,17 @@ function ProductsContent() {
 
 export default function ProductsPage() {
   return (
-    <Suspense fallback={<div className="container mx-auto px-4 py-6"><div className="h-8 w-24 rounded bg-muted animate-pulse" /></div>}>
+    <Suspense fallback={
+      <div className="container mx-auto px-4 py-6">
+        <div className="h-8 w-32 rounded bg-muted animate-pulse mb-6" />
+        <div className="flex gap-6">
+          <div className="hidden md:block w-56 xl:w-64 shrink-0 rounded-xl border border-border bg-card animate-pulse" style={{ height: 600 }} />
+          <div className="flex-1 grid grid-cols-2 xl:grid-cols-3 gap-4">
+            {[...Array(6)].map((_, i) => <div key={i} className="aspect-[4/5] rounded-xl bg-muted animate-pulse" />)}
+          </div>
+        </div>
+      </div>
+    }>
       <ProductsContent />
     </Suspense>
   );

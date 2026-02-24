@@ -27,9 +27,12 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className={`${cormorant.variable} ${inter.variable}`}>
-      <body className="font-sans min-h-screen flex flex-col overflow-x-hidden">
+      <body className="font-sans min-h-screen flex flex-col">
         <AuthProvider>
-          <LayoutShell>{children}</LayoutShell>
+          {/* overflow-x-hidden must NOT be on body/html — it breaks position:sticky */}
+          <div className="flex flex-col min-h-screen overflow-x-hidden">
+            <LayoutShell>{children}</LayoutShell>
+          </div>
           <Toaster />
         </AuthProvider>
       </body>

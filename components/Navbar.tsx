@@ -3,20 +3,17 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { useSession, signOut } from 'next-auth/react';
-import { ShoppingCart, Heart, Search, User, LogOut, MapPin } from 'lucide-react';
+import { ShoppingCart, Heart, User, LogOut, MapPin } from 'lucide-react';
 import { isCustomerSession } from '@/lib/customerSession';
 import { useCartStore } from '@/store/cartStore';
 import { useWishlistStore } from '@/store/wishlistStore';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
 import NavLinks from '@/components/NavLinks';
+import SearchBox from '@/components/SearchBox';
 
 export default function Navbar() {
   const { data: session } = useSession();
-  const router = useRouter();
-  const [searchQuery, setSearchQuery] = useState('');
   const [mounted, setMounted] = useState(false);
   const [location, setLocation] = useState<string>('');
   const [locationError, setLocationError] = useState(false);
@@ -33,16 +30,10 @@ export default function Navbar() {
       .catch(() => { });
   }, []);
 
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (searchQuery.trim()) {
-      router.push(`/products?search=${encodeURIComponent(searchQuery.trim())}`);
-      setSearchQuery('');
-    }
-  };
+
 
   return (
-    <header className="sticky top-0 z-40 w-full min-w-0 overflow-x-hidden bg-card border-b border-border shadow-sm">
+    <header className="fixed top-0 z-40 w-full min-w-0 overflow-x-hidden bg-card border-b border-border shadow-sm">
       <a
         href="#main-content"
         className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2 focus:bg-primary focus:text-primary-foreground focus:rounded-lg focus:outline-none"
@@ -75,18 +66,9 @@ export default function Navbar() {
             </span>
           )}
 
-          <form onSubmit={handleSearch} className="hidden md:block flex-1 min-w-0 max-w-md mx-4 lg:mx-6">
-            <div className="relative w-full">
-              <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                type="search"
-                placeholder="Search dresses..."
-                className="pl-11 h-10 rounded-lg border-border bg-muted/40 focus:bg-background focus:ring-2 focus:ring-primary/20 w-full min-w-0"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-            </div>
-          </form>
+          <SearchBox
+            className="hidden md:block flex-1 min-w-0 max-w-md mx-4 lg:mx-6"
+          />
 
           <div className="flex items-center gap-0.5 shrink-0">
             <Button variant="ghost" size="icon" className="rounded-lg" asChild>
@@ -136,18 +118,9 @@ export default function Navbar() {
         </div>
       </div>
 
-      <form onSubmit={handleSearch} className="md:hidden border-t border-border px-4 py-3">
-        <div className="relative w-full">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            type="search"
-            placeholder="Search dresses..."
-            className="pl-10 h-10 rounded-lg border-border bg-muted/40 w-full min-w-0"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-        </div>
-      </form>
+      <div className="md:hidden border-t border-border px-4 py-3">
+        <SearchBox isMobile />
+      </div>
 
       <nav className="border-t border-border bg-card w-full min-w-0" aria-label="Main">
         <div className="w-full min-w-0 overflow-x-auto scrollbar-hide">
