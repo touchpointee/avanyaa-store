@@ -26,7 +26,7 @@ export default function HeroCarousel({ banners }: HeroCarouselProps) {
 
   if (heroBanners.length === 0) {
     return (
-      <section className="relative min-h-[320px] md:min-h-[420px] bg-muted rounded-b-2xl md:rounded-b-3xl overflow-hidden">
+      <section className="relative min-h-[320px] md:min-h-[420px] bg-muted overflow-hidden">
         <div className="container mx-auto px-4 h-full min-h-[320px] md:min-h-[420px] flex items-center">
           <div className="max-w-2xl space-y-5">
             <h1 className="font-heading text-4xl md:text-5xl font-semibold leading-tight text-foreground tracking-tight">
@@ -48,7 +48,7 @@ export default function HeroCarousel({ banners }: HeroCarouselProps) {
   const goNext = () => setIndex((i) => (i + 1) % heroBanners.length);
 
   return (
-    <section className="relative overflow-hidden rounded-b-2xl md:rounded-b-3xl bg-muted/30">
+    <section className="relative overflow-hidden bg-muted/30">
       {/* Fixed 3:1 aspect on all screen sizes so full hero banner is always visible */}
       <div className="relative w-full aspect-[3/1]">
         {heroBanners.map((banner, i) => (
@@ -122,9 +122,8 @@ export default function HeroCarousel({ banners }: HeroCarouselProps) {
               type="button"
               aria-label={`Slide ${i + 1}`}
               onClick={() => setIndex(i)}
-              className={`h-1 rounded-full transition-all duration-300 ${
-                i === index ? 'w-5 bg-white' : 'w-1 bg-white/50 hover:bg-white/70'
-              }`}
+              className={`h-1 rounded-full transition-all duration-300 ${i === index ? 'w-5 bg-white' : 'w-1 bg-white/50 hover:bg-white/70'
+                }`}
             />
           ))}
         </div>

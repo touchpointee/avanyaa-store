@@ -45,7 +45,13 @@ function ProductsContent() {
   const [products, setProducts] = useState<ProductWithId[]>([]);
   const [loading, setLoading] = useState(true);
   const [pagination, setPagination] = useState({ page: 1, limit: 12, total: 0, totalPages: 0 });
-  const [filters, setFilters] = useState<FilterState>(DEFAULT_FILTERS);
+  const [filters, setFilters] = useState<FilterState>(() => {
+    const defaultCat = searchParams.get('categoryId');
+    return {
+      ...DEFAULT_FILTERS,
+      category: defaultCat ? [defaultCat] : []
+    };
+  });
   const [sort, setSort] = useState('newest');
   const [mobileSheetOpen, setMobileSheetOpen] = useState(false);
   const [mobileSortOpen, setMobileSortOpen] = useState(false);
@@ -56,6 +62,7 @@ function ProductsContent() {
       .then((r) => r.json())
       .then((d) => setCategories(Array.isArray(d) ? d : []))
       .catch(() => { });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const categoryLabels: Record<string, string> = Object.fromEntries(
@@ -81,11 +88,13 @@ function ProductsContent() {
     const search = searchParams.get('search');
     if (search) params.set('search', search);
 
-    const urlCategoryId = searchParams.get('categoryId');
-    const urlCategory = searchParams.get('category');
-    if (urlCategoryId) params.set('categoryId', urlCategoryId);
-    else if (urlCategory) params.set('category', urlCategory);
-    else if (filters.category.length > 0) params.set('categoryId', filters.category[0]);
+    // Use selected filters.category as the definitive source for category filtering
+    if (filters.category.length > 0) {
+      params.set('categoryId', filters.category.join(','));
+    } else {
+      const urlCategory = searchParams.get('category');
+      if (urlCategory) params.set('category', urlCategory);
+    }
 
     const featured = searchParams.get('featured');
     if (featured) params.set('featured', featured);
@@ -95,8 +104,9 @@ function ProductsContent() {
 
     if (filters.minPrice > 0) params.set('minPrice', filters.minPrice.toString());
     if (filters.maxPrice < PRICE_MAX) params.set('maxPrice', filters.maxPrice.toString());
-    if (filters.sizes.length > 0) params.set('size', filters.sizes[0]);
-    if (filters.colors.length > 0) params.set('color', filters.colors[0]);
+    if (filters.sizes.length > 0) params.set('size', filters.sizes.join(','));
+    if (filters.colors.length > 0) params.set('color', filters.colors.join(','));
+    if (filters.minDiscount > 0) params.set('minDiscount', filters.minDiscount.toString());
 
     try {
       const response = await fetch(`/api/products?${params.toString()}`);
@@ -213,10 +223,10 @@ function ProductsContent() {
 
           {/* Loading skeleton */}
           {loading && (
-            <div className="grid grid-cols-2 xl:grid-cols-3 gap-4 md:gap-5">
-              {[...Array(6)].map((_, i) => (
-                <div key={i} className="rounded-xl overflow-hidden border border-border bg-card shadow">
-                  <div className="aspect-[4/5] bg-muted animate-pulse" />
+            <div className="grid grid-cols-2 lg:grid-cols-12 gap-4 md:gap-5">
+              {[...Array(7)].map((_, i) => (
+                <div key={i} className={`rounded-xl overflow-hidden border border-border bg-card shadow col-span-1 ${i < 3 ? 'lg:col-span-4' : 'lg:col-span-3'}`}>
+                  <div className="aspect-square bg-muted animate-pulse" />
                   <div className="p-3 space-y-2">
                     <div className="h-3 w-3/4 rounded bg-muted animate-pulse" />
                     <div className="h-3 w-1/2 rounded bg-muted animate-pulse" />
@@ -230,9 +240,11 @@ function ProductsContent() {
           {/* Products grid */}
           {!loading && products.length > 0 && (
             <>
-              <div className="grid grid-cols-2 xl:grid-cols-3 gap-4 md:gap-5">
-                {products.map((product) => (
-                  <ProductCard key={product._id} product={product} />
+              <div className="grid grid-cols-2 lg:grid-cols-12 gap-4 md:gap-5">
+                {products.map((product, i) => (
+                  <div key={product._id} className={`col-span-1 ${i < 3 ? 'lg:col-span-4' : 'lg:col-span-3'}`}>
+                    <ProductCard product={product} />
+                  </div>
                 ))}
               </div>
               {pagination.totalPages > 1 && (
@@ -320,8 +332,8 @@ function ProductsContent() {
                     setMobileSortOpen(false);
                   }}
                   className={`flex w-full items-center justify-between px-2 py-3.5 text-sm rounded-lg transition-colors ${sort === opt.value
-                      ? 'text-primary font-semibold bg-primary/8'
-                      : 'text-foreground hover:bg-muted/60'
+                    ? 'text-primary font-semibold bg-primary/8'
+                    : 'text-foreground hover:bg-muted/60'
                     }`}
                 >
                   {opt.label}
@@ -347,8 +359,8 @@ export default function ProductsPage() {
         <div className="h-8 w-32 rounded bg-muted animate-pulse mb-6" />
         <div className="flex gap-6">
           <div className="hidden md:block w-56 xl:w-64 shrink-0 rounded-xl border border-border bg-card animate-pulse" style={{ height: 600 }} />
-          <div className="flex-1 grid grid-cols-2 xl:grid-cols-3 gap-4">
-            {[...Array(6)].map((_, i) => <div key={i} className="aspect-[4/5] rounded-xl bg-muted animate-pulse" />)}
+          <div className="flex-1 grid grid-cols-2 lg:grid-cols-12 gap-4 xl:gap-5">
+            {[...Array(7)].map((_, i) => <div key={i} className={`aspect-square rounded-xl bg-muted animate-pulse col-span-1 ${i < 3 ? 'lg:col-span-4' : 'lg:col-span-3'}`} />)}
           </div>
         </div>
       </div>

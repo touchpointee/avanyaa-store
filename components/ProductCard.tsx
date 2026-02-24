@@ -101,8 +101,8 @@ export default function ProductCard({ product }: ProductCardProps) {
   return (
     <Link href={`/products/${product.slug}`} className="group block h-full">
       <div className="h-full flex flex-col overflow-hidden rounded-xl border border-border bg-card shadow transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5">
-        {/* Image - fixed aspect 4/5, secondary on hover if available */}
-        <div className="relative aspect-[4/5] w-full shrink-0 overflow-hidden bg-muted/50">
+        {/* Image - fixed aspect square, secondary on hover if available */}
+        <div className="relative aspect-square w-full shrink-0 overflow-hidden bg-muted/50">
           <Image
             src={product.images[0]}
             alt={product.name}
@@ -127,13 +127,18 @@ export default function ProductCard({ product }: ProductCardProps) {
             className="absolute top-2 right-2 z-10 rounded-lg bg-card/95 p-2 shadow border border-border transition-transform hover:scale-105 active:scale-95"
           >
             <Heart
-              className={`h-4 w-4 ${
-                isInWishlist ? 'fill-rose-500 text-rose-500' : 'text-muted-foreground'
-              }`}
+              className={`h-4 w-4 ${isInWishlist ? 'fill-rose-500 text-rose-500' : 'text-muted-foreground'
+                }`}
             />
           </button>
           {discountPercent > 0 && (
-            <span className="absolute top-2 left-2 rounded-md bg-primary text-primary-foreground px-2 py-0.5 text-xs font-semibold shadow">
+            <span
+              className="absolute top-3 left-0 text-white text-xs font-bold px-3 pr-4 py-1 shadow-md leading-tight"
+              style={{
+                background: 'linear-gradient(135deg, hsl(212 51% 28%) 0%, hsl(212 51% 18%) 100%)',
+                clipPath: 'polygon(0 0, calc(100% - 8px) 0, 100% 50%, calc(100% - 8px) 100%, 0 100%)',
+              }}
+            >
               -{discountPercent}%
             </span>
           )}

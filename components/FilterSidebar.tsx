@@ -163,6 +163,11 @@ export default function FilterSidebar({ onFilterChange, inDrawer, initialFilters
   const categories = categoriesProp ?? categoriesFetched;
   const [filters, setFilters] = useState<FilterState>(initialFilters ?? DEFAULT_FILTERS);
 
+  // Sync with prop changes (like when the page component updates the URL parameter initially)
+  useEffect(() => {
+    if (initialFilters) setFilters(initialFilters);
+  }, [initialFilters]);
+
   /* Sync to parent immediately (desktop) or via Apply button (drawer) */
   const apply = useCallback((f: FilterState) => {
     if (!inDrawer) onFilterChange(f);

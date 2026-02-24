@@ -5,7 +5,7 @@ import { useRouter, usePathname } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { LayoutDashboard, Package, ShoppingBag, Loader2, Image, Layout, FolderOpen, Ruler } from 'lucide-react';
+import { LayoutDashboard, Package, ShoppingBag, Loader2, Image, Layout, FolderOpen, Ruler, MessageSquare } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const SESSION_LOADING_TIMEOUT_MS = 2000;
@@ -20,6 +20,7 @@ export default function AdminLayout({
   const pathname = usePathname();
   const isSignInPage = pathname === '/admin/signin';
   const [loadingTimedOut, setLoadingTimedOut] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
@@ -37,6 +38,17 @@ export default function AdminLayout({
       router.push('/');
     }
   }, [status, session, router, isSignInPage, loadingTimedOut]);
+
+  // Fetch unread message count for sidebar badge
+  useEffect(() => {
+    if (status !== 'authenticated' || (session?.user as any)?.role !== 'admin') return;
+    fetch('/api/admin/messages')
+      .then((r) => r.ok ? r.json() : [])
+      .then((msgs: { status: string }[]) =>
+        setUnreadCount(msgs.filter((m) => m.status === 'new').length)
+      )
+      .catch(() => { });
+  }, [status, session]);
 
   // If session stays "loading" too long (e.g. API/auth issue), show sign-in instead of infinite spinner
   useEffect(() => {
@@ -164,6 +176,23 @@ export default function AdminLayout({
               <Link href="/admin/orders">
                 <ShoppingBag className="mr-2 h-4 w-4" />
                 Orders
+              </Link>
+            </Button>
+            <Button
+              variant="ghost"
+              className={cn('w-full justify-start', pathname?.startsWith('/admin/messages') && 'bg-primary/10 text-primary')}
+              asChild
+            >
+              <Link href="/admin/messages" className="flex items-center justify-between">
+                <span className="flex items-center">
+                  <MessageSquare className="mr-2 h-4 w-4" />
+                  Messages
+                </span>
+                {unreadCount > 0 && (
+                  <span className="ml-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-blue-500 px-1.5 text-[10px] font-bold text-white">
+                    {unreadCount}
+                  </span>
+                )}
               </Link>
             </Button>
           </nav>

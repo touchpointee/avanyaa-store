@@ -12,7 +12,7 @@ export async function GET(req: NextRequest) {
     await connectDB();
 
     const { searchParams } = new URL(req.url);
-    
+
     // Pagination
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '12');
@@ -25,10 +25,11 @@ export async function GET(req: NextRequest) {
     const maxPrice = searchParams.get('maxPrice');
     const size = searchParams.get('size');
     const color = searchParams.get('color');
+    const minDiscount = searchParams.get('minDiscount');
     const search = searchParams.get('search');
     const featured = searchParams.get('featured');
     const bigSize = searchParams.get('bigSize');
-    
+
     // Sort
     const sort = searchParams.get('sort') || 'newest';
 
@@ -36,9 +37,13 @@ export async function GET(req: NextRequest) {
     const query: any = {};
 
     if (categoryId) {
-      query.categoryId = categoryId;
+      const ids = categoryId.split(',');
+      if (ids.length === 1) query.categoryId = categoryId;
+      else query.categoryId = { $in: ids };
     } else if (category) {
-      query.category = category;
+      const cats = category.split(',');
+      if (cats.length === 1) query.category = category;
+      else query.category = { $in: cats };
     }
 
     if (minPrice || maxPrice) {
@@ -48,11 +53,35 @@ export async function GET(req: NextRequest) {
     }
 
     if (size) {
-      query.sizes = size;
+      const sizes = size.split(',');
+      if (sizes.length === 1) query.sizes = size;
+      else query.sizes = { $in: sizes };
     }
 
     if (color) {
-      query.colors = color;
+      const colors = color.split(',');
+      if (colors.length === 1) query.colors = color;
+      else query.colors = { $in: colors };
+    }
+
+    if (minDiscount) {
+      const discountVal = parseFloat(minDiscount);
+      query.$expr = {
+        $gte: [
+          {
+            $multiply: [
+              {
+                $divide: [
+                  { $subtract: [{ $ifNull: ["$compareAtPrice", "$price"] }, "$price"] },
+                  { $ifNull: ["$compareAtPrice", 1] }
+                ]
+              },
+              100
+            ]
+          },
+          discountVal
+        ]
+      };
     }
 
     if (featured === 'true') {
@@ -76,7 +105,7 @@ export async function GET(req: NextRequest) {
 
     // Sort options
     let sortOption: any = { createdAt: -1 }; // default: newest
-    
+
     if (sort === 'price-asc') {
       sortOption = { price: 1 };
     } else if (sort === 'price-desc') {
@@ -117,7 +146,7 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
-    
+
     if (!session || (session.user as any).role !== 'admin') {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }

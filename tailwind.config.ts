@@ -7,7 +7,7 @@ const config = {
     './components/**/*.{ts,tsx}',
     './app/**/*.{ts,tsx}',
     './src/**/*.{ts,tsx}',
-	],
+  ],
   prefix: "",
   theme: {
     container: {
@@ -19,8 +19,8 @@ const config = {
     },
     extend: {
       fontFamily: {
-        sans: ["var(--font-sans)", "system-ui", "sans-serif"],
-        heading: ["var(--font-heading)", "var(--font-sans)", "serif"],
+        sans: ["var(--font-poppins)", "system-ui", "sans-serif"],
+        heading: ["var(--font-poppins)", "system-ui", "sans-serif"],
       },
       boxShadow: {
         soft: "0 2px 15px -3px rgb(0 0 0 / 0.07), 0 4px 6px -4px rgb(0 0 0 / 0.05)",

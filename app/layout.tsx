@@ -1,18 +1,15 @@
 import type { Metadata } from 'next';
-import { Cormorant_Garamond, Inter } from 'next/font/google';
+import { Poppins } from 'next/font/google';
 import './globals.css';
 import { Toaster } from '@/components/ui/toaster';
 import { AuthProvider } from '@/components/AuthProvider';
 import LayoutShell from '@/components/LayoutShell';
 
-const cormorant = Cormorant_Garamond({
+const poppins = Poppins({
   subsets: ['latin'],
-  weight: ['400', '500', '600', '700'],
-  variable: '--font-heading',
-});
-const inter = Inter({
-  subsets: ['latin'],
-  variable: '--font-sans',
+  weight: ['300', '400', '500', '600', '700'],
+  variable: '--font-poppins',
+  display: 'swap',
 });
 
 export const metadata: Metadata = {
@@ -26,7 +23,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={`${cormorant.variable} ${inter.variable}`}>
+    <html lang="en" className={poppins.variable}>
       <body className="font-sans min-h-screen flex flex-col">
         <AuthProvider>
           {/* overflow-x-hidden must NOT be on body/html — it breaks position:sticky */}

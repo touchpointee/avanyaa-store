@@ -23,32 +23,34 @@ export default function AnnouncementBar() {
           setBanner(list[0]);
         }
       })
-      .catch(() => {});
+      .catch(() => { });
   }, []);
 
   if (!banner) return null;
 
   const text = [banner.title, banner.subtitle].filter(Boolean).join(' — ');
-  const wrapperClass = 'w-full min-w-0 overflow-hidden bg-primary text-primary-foreground py-2.5 px-4 text-center text-sm font-medium';
-  const content = (
-    <span className="block max-w-full break-words px-1">
-      {text}
-      {banner.link && (banner.buttonText || 'Shop Now') && (
-        <>
-          {' '}
-          <Link href={banner.link} className="underline font-semibold hover:opacity-90">
-            {banner.buttonText || 'Shop Now'}
-          </Link>
-        </>
-      )}
-    </span>
+  // Duplicate for seamless loop
+  const repeated = Array.from({ length: 6 }, () => text);
+
+  return (
+    <div className="w-full overflow-hidden bg-primary text-primary-foreground py-2 select-none">
+      <div className="flex whitespace-nowrap animate-marquee">
+        {repeated.map((msg, i) => (
+          <span key={i} className="inline-flex items-center text-sm font-medium px-8 gap-3">
+            {msg}
+            {banner.link && (
+              <Link
+                href={banner.link}
+                className="underline underline-offset-2 font-semibold hover:opacity-80 shrink-0"
+                onClick={(e) => e.stopPropagation()}
+              >
+                {banner.buttonText || 'Shop Now'}
+              </Link>
+            )}
+            <span className="opacity-30 mx-1">•</span>
+          </span>
+        ))}
+      </div>
+    </div>
   );
-  if (banner.link && !banner.buttonText && text) {
-    return (
-      <Link href={banner.link} className={wrapperClass}>
-        {content}
-      </Link>
-    );
-  }
-  return <div className={wrapperClass}>{content}</div>;
 }
