@@ -9,7 +9,6 @@ import { useCartStore } from '@/store/cartStore';
 import { useWishlistStore } from '@/store/wishlistStore';
 import { Button } from '@/components/ui/button';
 import { useState, useEffect } from 'react';
-import NavLinks from '@/components/NavLinks';
 import SearchBox from '@/components/SearchBox';
 
 export default function Navbar() {
@@ -17,18 +16,10 @@ export default function Navbar() {
   const [mounted, setMounted] = useState(false);
   const [location, setLocation] = useState<string>('');
   const [locationError, setLocationError] = useState(false);
-  const [categories, setCategories] = useState<{ _id: string; name: string; slug: string }[]>([]);
 
   const totalItems = useCartStore((state) => state.getTotalItems());
   const wishlistItems = useWishlistStore((state) => state.items);
   const isAdmin = (session?.user as { role?: string })?.role === 'admin';
-
-  useEffect(() => {
-    fetch('/api/categories')
-      .then((r) => r.json())
-      .then((data) => setCategories(Array.isArray(data) ? data : []))
-      .catch(() => { });
-  }, []);
 
   useEffect(() => {
     setMounted(true);
@@ -146,24 +137,6 @@ export default function Navbar() {
         <SearchBox isMobile />
       </div>
 
-      <nav className="border-t border-border bg-card w-full min-w-0" aria-label="Main">
-        <div className="w-full min-w-0 overflow-x-auto scrollbar-hide">
-          <div className="flex items-center gap-0 min-w-max md:min-w-0 pl-4 pr-4 md:pl-0 md:pr-0 md:container md:mx-auto md:flex md:justify-center md:gap-1">
-            <NavLinks
-              items={[
-                { label: 'New Arrivals', href: '/products?sort=newest' },
-                { label: 'Dresses', href: '/products' },
-                { label: 'Big Size', href: '/products?bigSize=true' },
-                ...categories.slice(0, 5).map((cat) => ({
-                  label: cat.name,
-                  href: `/products?categoryId=${cat._id}`,
-                })),
-                { label: 'Sale', href: '/products?featured=true' },
-              ]}
-            />
-          </div>
-        </div>
-      </nav>
-    </header >
+    </header>
   );
 }
