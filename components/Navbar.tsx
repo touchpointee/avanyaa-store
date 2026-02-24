@@ -30,7 +30,31 @@ export default function Navbar() {
       .catch(() => { });
   }, []);
 
-
+  useEffect(() => {
+    setMounted(true);
+    if ('geolocation' in navigator) {
+      navigator.geolocation.getCurrentPosition(
+        async (position) => {
+          try {
+            const res = await fetch(
+              `https://nominatim.openstreetmap.org/reverse?lat=${position.coords.latitude}&lon=${position.coords.longitude}&format=json`
+            );
+            const data = await res.json();
+            const city = data.address.city || data.address.town || data.address.village || 'India';
+            setLocation(city);
+          } catch {
+            setLocation('India');
+          }
+        },
+        () => {
+          setLocationError(true);
+          setLocation('India');
+        }
+      );
+    } else {
+      setLocation('India');
+    }
+  }, []);
 
   return (
     <header className="fixed top-0 z-40 w-full min-w-0 overflow-x-hidden bg-card border-b border-border shadow-sm">
@@ -140,6 +164,6 @@ export default function Navbar() {
           </div>
         </div>
       </nav>
-    </header>
+    </header >
   );
 }

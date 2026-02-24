@@ -24,7 +24,8 @@ export default function EditProductPage() {
     description: '',
     price: '',
     compareAtPrice: '',
-    category: 'casual',
+    category: '',
+    categoryId: '',
     sizes: [] as string[],
     colors: [] as string[],
     images: [] as string[],
@@ -33,6 +34,7 @@ export default function EditProductPage() {
   });
 
   const [sizes, setSizes] = useState<string[]>([]);
+  const [categories, setCategories] = useState<{ _id: string; name: string; slug: string }[]>([]);
   const [homepageSections, setHomepageSections] = useState<{ _id: string; title: string; type: string; linkedProductIds: { _id: string }[] }[]>([]);
   const [showInSectionIds, setShowInSectionIds] = useState<string[]>([]);
   const COLORS = ['Black', 'White', 'Red', 'Blue', 'Green', 'Pink', 'Yellow', 'Purple'];
@@ -42,6 +44,24 @@ export default function EditProductPage() {
   useEffect(() => {
     fetchProduct();
   }, []);
+
+  useEffect(() => {
+    fetch('/api/categories')
+      .then((res) => res.ok ? res.json() : [])
+      .then((data) => setCategories(Array.isArray(data) ? data : []))
+      .catch(() => setCategories([]));
+  }, []);
+
+  // Sync categoryId from category name when editing old products that only have category string
+  useEffect(() => {
+    if (categories.length === 0 || !formData.category || formData.categoryId) return;
+    const match = categories.find(
+      (c) => c.name === formData.category || c.slug === formData.category
+    );
+    if (match) {
+      setFormData((prev) => ({ ...prev, categoryId: match._id }));
+    }
+  }, [categories, formData.category, formData.categoryId]);
 
   useEffect(() => {
     fetch('/api/sizes')
@@ -75,12 +95,15 @@ export default function EditProductPage() {
       const response = await fetch(`/api/products/${params.id}`);
       if (response.ok) {
         const data = await response.json();
+        const catId = data.categoryId?.toString?.() || data.categoryId || '';
+        const catName = data.category || '';
         setFormData({
           name: data.name,
           description: data.description,
           price: data.price.toString(),
           compareAtPrice: data.compareAtPrice?.toString() || '',
-          category: data.category,
+          category: catName,
+          categoryId: catId,
           sizes: data.sizes,
           colors: data.colors,
           images: data.images,
@@ -305,21 +328,26 @@ export default function EditProductPage() {
             <div className="space-y-2">
               <Label htmlFor="category">Category *</Label>
               <Select
-                value={formData.category}
-                onValueChange={(value) => setFormData({ ...formData, category: value })}
+                value={formData.categoryId}
+                onValueChange={(value) => {
+                  const cat = categories.find((c) => c._id === value);
+                  setFormData({ ...formData, categoryId: value, category: cat?.name ?? '' });
+                }}
               >
                 <SelectTrigger>
-                  <SelectValue />
+                  <SelectValue placeholder="Select category" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="casual">Casual</SelectItem>
-                  <SelectItem value="formal">Formal</SelectItem>
-                  <SelectItem value="party">Party</SelectItem>
-                  <SelectItem value="ethnic">Ethnic</SelectItem>
-                  <SelectItem value="summer">Summer</SelectItem>
-                  <SelectItem value="winter">Winter</SelectItem>
+                  {categories.map((c) => (
+                    <SelectItem key={c._id} value={c._id}>
+                      {c.name}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
+              {categories.length === 0 && (
+                <p className="text-xs text-muted-foreground">No categories yet. Add them in Admin → Categories.</p>
+              )}
             </div>
 
             <div className="space-y-2">

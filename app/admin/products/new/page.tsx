@@ -22,7 +22,8 @@ export default function NewProductPage() {
     description: '',
     price: '',
     compareAtPrice: '',
-    category: 'casual',
+    category: '',
+    categoryId: '',
     sizes: [] as string[],
     colors: [] as string[],
     images: [] as string[],
@@ -31,6 +32,7 @@ export default function NewProductPage() {
   });
 
   const [sizes, setSizes] = useState<string[]>([]);
+  const [categories, setCategories] = useState<{ _id: string; name: string; slug: string }[]>([]);
   const [homepageSections, setHomepageSections] = useState<{ _id: string; title: string; type: string; linkedProductIds: { _id: string }[] }[]>([]);
   const [showInSectionIds, setShowInSectionIds] = useState<string[]>([]);
   const COLORS = ['Black', 'White', 'Red', 'Blue', 'Green', 'Pink', 'Yellow', 'Purple'];
@@ -42,6 +44,21 @@ export default function NewProductPage() {
       .then((res) => res.ok ? res.json() : [])
       .then((data) => setSizes(data.map((s: { name: string }) => s.name)))
       .catch(() => setSizes([]));
+  }, []);
+
+  useEffect(() => {
+    fetch('/api/categories')
+      .then((res) => res.ok ? res.json() : [])
+      .then((data) => {
+        const list = Array.isArray(data) ? data : [];
+        setCategories(list);
+        if (list.length > 0) {
+          setFormData((prev) =>
+            prev.categoryId ? prev : { ...prev, category: list[0].name, categoryId: list[0]._id }
+          );
+        }
+      })
+      .catch(() => setCategories([]));
   }, []);
 
   useEffect(() => {
@@ -137,6 +154,8 @@ export default function NewProductPage() {
         },
         body: JSON.stringify({
           ...formData,
+          category: formData.category,
+          categoryId: formData.categoryId || undefined,
           price: parseFloat(formData.price),
           compareAtPrice: formData.compareAtPrice ? parseFloat(formData.compareAtPrice) : undefined,
           stock: parseInt(formData.stock),
@@ -248,21 +267,26 @@ export default function NewProductPage() {
             <div className="space-y-2">
               <Label htmlFor="category">Category *</Label>
               <Select
-                value={formData.category}
-                onValueChange={(value) => setFormData({ ...formData, category: value })}
+                value={formData.categoryId}
+                onValueChange={(value) => {
+                  const cat = categories.find((c) => c._id === value);
+                  setFormData({ ...formData, categoryId: value, category: cat?.name ?? '' });
+                }}
               >
                 <SelectTrigger>
-                  <SelectValue />
+                  <SelectValue placeholder="Select category" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="casual">Casual</SelectItem>
-                  <SelectItem value="formal">Formal</SelectItem>
-                  <SelectItem value="party">Party</SelectItem>
-                  <SelectItem value="ethnic">Ethnic</SelectItem>
-                  <SelectItem value="summer">Summer</SelectItem>
-                  <SelectItem value="winter">Winter</SelectItem>
+                  {categories.map((c) => (
+                    <SelectItem key={c._id} value={c._id}>
+                      {c.name}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
+              {categories.length === 0 && (
+                <p className="text-xs text-muted-foreground">No categories yet. Add them in Admin → Categories.</p>
+              )}
             </div>
 
             <div className="space-y-2">
