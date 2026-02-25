@@ -75,7 +75,7 @@ export default function CategoryCarousel({ categories }: { categories: HomepageC
 
     return (
         <div
-            className="relative group -mx-4 md:mx-0"
+            className="relative group -mx-4 md:mx-0 mt-10"
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}
             onTouchStart={() => setIsHovered(true)}

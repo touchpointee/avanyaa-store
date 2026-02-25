@@ -9,6 +9,7 @@ import { getHomepageData } from '@/lib/homepage';
 import type { HomepageBanner, HomepageCategory, HomepageSectionData } from '@/lib/homepage';
 import { ProductWithId } from '@/types';
 import { Sparkles, Truck, RotateCcw, ShieldCheck, Star, ArrowRight } from 'lucide-react';
+import AnimatedStat from '@/components/AnimatedStat';
 
 /* ───── Trust strip ───── */
 const TRUST = [
@@ -21,10 +22,10 @@ const TRUST = [
 function TrustStrip() {
   return (
     <section
-      className="relative py-6"
+      className="relative pt-1 pb-1  md:pt-3 md:pb-3"
       style={{ background: 'linear-gradient(135deg, hsl(212 51% 20%) 0%, hsl(212 51% 28%) 100%)' }}
     >
-      <div className="container mx-auto px-4">
+      <div className="container mx-auto px-4 py-4">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
           {TRUST.map(({ icon: Icon, label, sub, iconBg, iconColor }) => (
             <div
@@ -64,19 +65,14 @@ function CategoryShowcase({ categories }: { categories: HomepageCategory[] }) {
   const small = categories.slice(2);
 
   return (
-    <section className="py-16 md:py-20 bg-background">
+    <section className="pt-6 md:pt-10 bg-background">
       <div className="container mx-auto px-4">
         {/* Section header */}
-        <div className="flex items-end justify-between mb-10">
-          <div>
-            <p className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground mb-2">Collections</p>
-            <h2 className="font-heading text-3xl md:text-4xl font-semibold tracking-tight">
-              Shop by Category
-            </h2>
-          </div>
-          <Button variant="ghost" size="sm" className="gap-1.5 text-primary hidden sm:flex" asChild>
-            <Link href="/products">View all <ArrowRight className="h-3.5 w-3.5" /></Link>
-          </Button>
+        <div className="mb-8 md:mb-10">
+          <p className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground mb-1.5">Collections</p>
+          <h2 className="font-heading text-2xl md:text-4xl font-semibold tracking-tight">
+            Shop by Category
+          </h2>
         </div>
 
         {/* Large cards row */}
@@ -155,7 +151,7 @@ function ProductShowcase({
 }) {
   if (products.length === 0) return null;
   return (
-    <section className={`py-14 md:py-18 ${bg}`}>
+    <section className={`pt-6 md:pt-10 ${bg}`}>
       <div className="container mx-auto px-4">
         <div className="flex items-end justify-between mb-8">
           <div>
@@ -169,15 +165,8 @@ function ProductShowcase({
           )}
         </div>
 
-        <ProductCarousel products={products} />
-
-        {viewAllHref && (
-          <div className="mt-8 text-center sm:hidden">
-            <Button variant="outline" asChild className="rounded-full px-8">
-              <Link href={viewAllHref}>View All</Link>
-            </Button>
-          </div>
-        )}
+        {/* viewAllHref passed so the end-card appears inside the carousel on mobile */}
+        <ProductCarousel products={products} viewAllHref={viewAllHref} />
       </div>
     </section>
   );
@@ -224,19 +213,22 @@ function EditorialBanner({ banners }: { banners: HomepageBanner[] }) {
 /* ─── Stats band ─── */
 function StatsBand() {
   return (
-    <section className="bg-primary text-primary-foreground py-12">
-      <div className="container mx-auto px-4">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
+    <section className="bg-primary text-primary-foreground pt-10 mt-10 pb-5 md:pt-10 md:pb-10">
+      <div className="container mx-auto px-4 pb-4 md:pb-0">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
           {[
             { value: '5,000+', label: 'Happy Customers' },
             { value: '200+', label: 'Styles Available' },
             { value: '4.8★', label: 'Average Rating' },
             { value: '7-Day', label: 'Easy Returns' },
           ].map(({ value, label }) => (
-            <div key={label}>
-              <p className="font-heading text-3xl md:text-4xl font-bold mb-1">{value}</p>
-              <p className="text-sm opacity-70 uppercase tracking-widest">{label}</p>
-            </div>
+            <AnimatedStat
+              key={label}
+              value={value}
+              label={label}
+              className="text-3xl md:text-4xl"
+              labelClassName="text-sm opacity-70 uppercase tracking-widest"
+            />
           ))}
         </div>
       </div>
@@ -247,7 +239,7 @@ function StatsBand() {
 /* ─── Reviews ─── */
 function ReviewsStrip() {
   return (
-    <section className="py-14 md:py-18 bg-accent/20 border-y border-border">
+    <section className="pt-6 md:pt-10 bg-accent/20 border-y border-border">
       <div className="container mx-auto px-4">
         <div className="text-center mb-10">
           <p className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground mb-2">Testimonials</p>
@@ -274,13 +266,13 @@ function ReviewsStrip() {
 /* ─── Why AVANYAA ─── */
 function WhyUs() {
   return (
-    <section className="py-16 md:py-20 bg-background">
+    <section className="pt-6 md:pt-10 bg-background">
       <div className="container mx-auto px-4">
         <div className="text-center mb-12">
           <p className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground mb-2">Our Promise</p>
           <h2 className="font-heading text-2xl md:text-3xl font-semibold tracking-tight">Why Choose AVANYAA</h2>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 max-w-5xl mx-auto">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 max-w-5xl mx-auto">
           {[
             { icon: Sparkles, color: 'text-violet-500 bg-violet-50', title: 'Premium Quality', desc: 'Curated fabrics and finishes made to last, not just a season.' },
             { icon: Truck, color: 'text-blue-500 bg-blue-50', title: 'Fast Delivery', desc: 'Reliable pan-India shipping with real-time tracking.' },
@@ -306,7 +298,7 @@ function WhyUs() {
 /* ─── Newsletter CTA ─── */
 function NewsletterCTA() {
   return (
-    <section className="py-16 border-t border-border">
+    <section className="pt-6 md:pt-10 border-t border-border">
       <div className="container mx-auto px-4 text-center max-w-xl">
         <p className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground mb-3">Stay Updated</p>
         <h2 className="font-heading text-2xl md:text-3xl font-semibold tracking-tight mb-3">
@@ -315,13 +307,13 @@ function NewsletterCTA() {
         <p className="text-sm text-muted-foreground mb-7">
           Be the first to know about new collections, exclusive offers, and style inspiration.
         </p>
-        <div className="flex flex-col sm:flex-row gap-3 max-w-sm mx-auto">
+        <div className="flex flex-col gap-3 max-w-sm mx-auto">
           <input
             type="email"
             placeholder="Your email address"
-            className="flex-1 h-11 rounded-full border border-border bg-card px-5 text-sm outline-none focus:ring-2 focus:ring-primary/30"
+            className="w-full h-11 rounded-full border border-border bg-card px-5 text-sm outline-none focus:ring-2 focus:ring-primary/30"
           />
-          <button className="h-11 rounded-full bg-primary text-primary-foreground px-7 text-sm font-semibold hover:bg-primary/90 transition-colors shrink-0">
+          <button className="w-full h-11 rounded-full bg-primary text-primary-foreground px-7 text-sm font-semibold hover:bg-primary/90 transition-colors">
             Subscribe
           </button>
         </div>
@@ -350,7 +342,7 @@ function DynamicSections({ sections }: { sections: HomepageSectionData[] }) {
         </div>
       );
       renderBlocks.push(
-        <section key={section._id} className="w-full">
+        <section key={section._id} className="w-full mt-5 mb-5">
           {section.link ? (
             <Link href={section.link} className="block w-full h-full group hover:opacity-95 transition-opacity">
               {ImgContent}
@@ -372,7 +364,7 @@ function DynamicSections({ sections }: { sections: HomepageSectionData[] }) {
       ];
 
       renderBlocks.push(
-        <section key={section._id} className="py-8 md:py-12">
+        <section key={section._id} className="pt-6 md:pt-10">
           <div className="container mx-auto px-4">
             <div className={`grid grid-cols-1 ${images.length > 1 ? 'sm:grid-cols-2 md:grid-cols-2' : ''} gap-4`}>
               {images.map((img) => {

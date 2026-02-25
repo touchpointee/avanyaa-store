@@ -42,7 +42,7 @@ function FooterCol({ title, children }: { title: string; children: React.ReactNo
 export default function Footer() {
   return (
     <footer
-      className="border-t border-border mt-auto w-full"
+      className="border-t border-border mt-10 w-full"
       style={{ background: 'radial-gradient(ellipse at 50% 0%, hsl(212 45% 92%) 0%, hsl(212 25% 96%) 45%, hsl(40 20% 99%) 100%)' }}
       role="contentinfo"
     >

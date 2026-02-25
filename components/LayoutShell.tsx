@@ -26,7 +26,7 @@ export default function LayoutShell({
     <>
       <AnnouncementBar />
       <Navbar />
-      <main id="main-content" className="flex-1 pb-24 md:pb-0 pt-[6.5rem] md:pt-16" tabIndex={-1}>{children}</main>
+      <main id="main-content" className="flex-1 pb-24 md:pb-0 pt-10 md:pt-16" tabIndex={-1}>{children}</main>
       <Footer />
       <BottomNav />
     </>

@@ -17,7 +17,7 @@ const MESSAGES = [
 
 export default function MarqueeBanner() {
     return (
-        <div className="w-full overflow-hidden bg-primary text-primary-foreground py-2.5 select-none">
+        <div className="w-full overflow-hidden bg-primary text-primary-foreground py-2.5 select-none pb-4 md:pb-2.5 mt-4 md:mt-0">
             <div className="flex whitespace-nowrap animate-marquee">
                 {MESSAGES.map((msg, i) => (
                     <span key={i} className="inline-flex items-center gap-2 text-sm font-medium px-8">

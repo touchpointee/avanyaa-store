@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import AnimatedStat from '@/components/AnimatedStat';
 import { Heart, Sparkles, Shield, Leaf } from 'lucide-react';
 
 const VALUES = [
@@ -59,12 +60,16 @@ export default function AboutPage() {
 
             {/* ── Stats bar ──────────────────────────────────── */}
             <section className="border-b border-border bg-card">
-                <div className="container mx-auto px-4">
+                <div className="container mx-auto px-4 py-4">
                     <div className="grid grid-cols-2 md:grid-cols-4 divide-x divide-y md:divide-y-0 divide-border">
                         {STATS.map(({ value, label }) => (
-                            <div key={label} className="flex flex-col items-center py-8 px-4 text-center">
-                                <span className="font-heading text-3xl font-bold text-primary">{value}</span>
-                                <span className="text-sm text-muted-foreground mt-1">{label}</span>
+                            <div key={label} className="py-8 px-4">
+                                <AnimatedStat
+                                    value={value}
+                                    label={label}
+                                    className="text-3xl font-bold text-primary"
+                                    labelClassName="text-sm text-muted-foreground"
+                                />
                             </div>
                         ))}
                     </div>

@@ -1,24 +1,37 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { Home, LayoutGrid, Heart, ShoppingCart, User } from 'lucide-react';
 import { useCartStore } from '@/store/cartStore';
 import { useWishlistStore } from '@/store/wishlistStore';
+import { useSession } from 'next-auth/react';
 import { cn } from '@/lib/utils';
 
 const items = [
-  { href: '/', icon: Home, label: 'Home' },
-  { href: '/products', icon: LayoutGrid, label: 'Categories' },
-  { href: '/wishlist', icon: Heart, label: 'Wishlist' },
-  { href: '/cart', icon: ShoppingCart, label: 'Cart' },
-  { href: '/profile', icon: User, label: 'Profile' },
+  { href: '/', icon: Home, label: 'Home', protected: false },
+  { href: '/products', icon: LayoutGrid, label: 'Categories', protected: false },
+  { href: '/wishlist', icon: Heart, label: 'Wishlist', protected: true },
+  { href: '/cart', icon: ShoppingCart, label: 'Cart', protected: true },
+  { href: '/profile', icon: User, label: 'Profile', protected: true },
 ];
 
 export default function BottomNav() {
   const pathname = usePathname();
+  const router = useRouter();
+  const { data: session } = useSession();
+
   const totalItems = useCartStore((state) => state.getTotalItems());
   const wishlistCount = useWishlistStore((state) => state.items.length);
+
+  const isLoggedIn = !!session?.user;
+
+  const handleNav = (e: React.MouseEvent<HTMLAnchorElement>, item: typeof items[number]) => {
+    if (item.protected && !isLoggedIn) {
+      e.preventDefault();
+      router.push('/auth/signin');
+    }
+  };
 
   return (
     <nav
@@ -27,15 +40,23 @@ export default function BottomNav() {
       aria-label="Mobile navigation"
     >
       <div className="flex items-center justify-around h-16">
-        {items.map(({ href, icon: Icon, label }) => {
+        {items.map((item) => {
+          const { href, icon: Icon, label } = item;
           const isCart = href === '/cart';
           const isWishlist = href === '/wishlist';
-          const count = isCart ? totalItems : isWishlist ? wishlistCount : 0;
+
+          // Only show counts when the user is logged in
+          const count = isLoggedIn
+            ? isCart ? totalItems : isWishlist ? wishlistCount : 0
+            : 0;
+
           const active = pathname === href || (href !== '/' && pathname.startsWith(href));
+
           return (
             <Link
               key={href}
               href={href}
+              onClick={(e) => handleNav(e, item)}
               className={cn(
                 'flex flex-col items-center justify-center gap-0.5 flex-1 min-w-0 py-2 transition-colors',
                 active ? 'text-primary' : 'text-muted-foreground'

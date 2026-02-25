@@ -49,8 +49,8 @@ export default function HeroCarousel({ banners }: HeroCarouselProps) {
 
   return (
     <section className="relative overflow-hidden bg-muted/30">
-      {/* Fixed 3:1 aspect on all screen sizes so full hero banner is always visible */}
-      <div className="relative w-full aspect-[3/1]">
+      {/* Taller on mobile so content + dots don't collide */}
+      <div className="relative w-full aspect-[2/1] sm:aspect-[2.5/1] md:aspect-[3/1]">
         {heroBanners.map((banner, i) => (
           <div
             key={banner._id}
@@ -71,7 +71,7 @@ export default function HeroCarousel({ banners }: HeroCarouselProps) {
                 <div className="container mx-auto px-4">
                   <div className="max-w-2xl space-y-4">
                     {banner.title && (
-                      <h1 className="font-heading text-3xl sm:text-4xl md:text-5xl font-semibold text-white drop-shadow-md tracking-tight">
+                      <h1 className="font-heading text-xl sm:text-3xl md:text-5xl font-semibold text-white drop-shadow-md tracking-tight leading-tight">
                         {banner.title}
                       </h1>
                     )}
@@ -98,31 +98,33 @@ export default function HeroCarousel({ banners }: HeroCarouselProps) {
             type="button"
             aria-label="Previous slide"
             onClick={goPrev}
-            className="absolute left-0 top-0 bottom-0 z-10 w-12 md:w-14 flex items-center justify-center bg-black/10 hover:bg-black/20 transition-colors"
+            className="absolute left-0 top-0 bottom-0 z-10 w-8 md:w-14 flex items-center justify-center bg-black/10 hover:bg-black/20 transition-colors"
           >
-            <ChevronLeft className="h-7 w-7 text-white drop-shadow" />
+            <ChevronLeft className="h-5 w-5 md:h-7 md:w-7 text-white drop-shadow" />
           </button>
           <button
             type="button"
             aria-label="Next slide"
             onClick={goNext}
-            className="absolute right-0 top-0 bottom-0 z-10 w-12 md:w-14 flex items-center justify-center bg-black/10 hover:bg-black/20 transition-colors"
+            className="absolute right-0 top-0 bottom-0 z-10 w-8 md:w-14 flex items-center justify-center bg-black/10 hover:bg-black/20 transition-colors"
           >
-            <ChevronRight className="h-7 w-7 text-white drop-shadow" />
+            <ChevronRight className="h-5 w-5 md:h-7 md:w-7 text-white drop-shadow" />
           </button>
         </>
       )}
 
-      {/* Dots */}
+      {/* Slide indicator — uniform circles, never look like "10" */}
       {heroBanners.length > 1 && (
-        <div className="absolute bottom-5 left-0 right-0 z-10 flex justify-center gap-2">
+        <div className="hidden md:flex absolute bottom-4 left-0 right-0 z-10 justify-center items-center gap-2">
           {heroBanners.map((_, i) => (
             <button
               key={i}
               type="button"
               aria-label={`Slide ${i + 1}`}
               onClick={() => setIndex(i)}
-              className={`h-1 rounded-full transition-all duration-300 ${i === index ? 'w-5 bg-white' : 'w-1 bg-white/50 hover:bg-white/70'
+              className={`rounded-full transition-all duration-300 ${i === index
+                ? 'w-2.5 h-2.5 bg-white shadow-md'
+                : 'w-2 h-2 bg-white/45 hover:bg-white/70'
                 }`}
             />
           ))}
