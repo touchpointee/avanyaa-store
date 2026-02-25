@@ -47,10 +47,10 @@ export default function Footer() {
       role="contentinfo"
     >
       <div className="container mx-auto px-4 py-7 md:py-9">
-        <div className="grid grid-cols-2 gap-6 md:grid-cols-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 md:gap-6">
 
           {/* ── Col 1 : Brand ─────────────────────────────── */}
-          <div className="col-span-2 md:col-span-1 flex flex-col gap-4 pl-4 md:pl-6">
+          <div className="sm:col-span-2 lg:col-span-1 flex flex-col gap-4">
             <Link href="/" className="inline-block">
               <Image
                 src="/logo.png"
@@ -81,7 +81,7 @@ export default function Footer() {
           </div>
 
           {/* ── Col 2 : Quick Links ───────────────────────── */}
-          <div className="pl-6 md:pl-10">
+          <div className="lg:pl-10">
             <FooterCol title="Quick Links">
               {QUICK_LINKS.map((l) => (
                 <FooterLink key={l.label} href={l.href}>{l.label}</FooterLink>
@@ -97,7 +97,7 @@ export default function Footer() {
           </FooterCol>
 
           {/* ── Col 4 : Get in Touch ──────────────────────── */}
-          <div>
+          <div className="sm:col-span-2 lg:col-span-1">
             <h3 className="text-sm font-semibold text-primary mb-2.5">Get in Touch</h3>
             <ul className="space-y-3 text-sm text-muted-foreground">
               <li>
