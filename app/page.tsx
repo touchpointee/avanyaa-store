@@ -345,7 +345,7 @@ function DynamicSections({ sections }: { sections: HomepageSectionData[] }) {
     // Handle full banner
     if (section.type === 'banner' && section.image) {
       const ImgContent = (
-        <div className="relative w-full aspect-[4/1] md:aspect-[5/1] xl:aspect-[6/1]">
+        <div className="relative w-full aspect-video md:aspect-[5/1] xl:aspect-[6/1]">
           <Image src={section.image} alt={section.title || 'Banner'} fill className="object-cover" />
         </div>
       );
@@ -374,10 +374,10 @@ function DynamicSections({ sections }: { sections: HomepageSectionData[] }) {
       renderBlocks.push(
         <section key={section._id} className="py-8 md:py-12">
           <div className="container mx-auto px-4">
-            <div className={`grid grid-cols-1 ${images.length > 1 ? 'md:grid-cols-2' : ''} gap-4`}>
+            <div className={`grid grid-cols-1 ${images.length > 1 ? 'sm:grid-cols-2 md:grid-cols-2' : ''} gap-4`}>
               {images.map((img) => {
                 const ImgContent = (
-                  <div className={`relative w-full rounded-2xl overflow-hidden shadow-sm aspect-[16/9] ${images.length > 1 ? 'md:aspect-[21/9]' : 'md:aspect-[4/1]'}`}>
+                  <div className={`relative w-full rounded-2xl overflow-hidden shadow-sm aspect-video ${images.length > 1 ? 'sm:aspect-[4/3] md:aspect-[21/9]' : 'md:aspect-[4/1]'}`}>
                     <Image src={img.url} alt={section.title || 'Semi Banner'} fill className="object-cover hover:scale-105 transition-transform duration-500" />
                   </div>
                 );
