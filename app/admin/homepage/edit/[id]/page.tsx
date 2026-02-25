@@ -18,15 +18,22 @@ export default function EditHomepageSectionPage() {
   const { toast } = useToast();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [categories, setCategories] = useState<{ _id: string; name: string }[]>([]);
   const [products, setProducts] = useState<{ _id: string; name: string }[]>([]);
   const [form, setForm] = useState({
     type: 'trending',
+    image: '',
     title: '',
-    linkedProductIds: [] as string[],
-    categoryId: '',
-    order: 0,
+    subtitle: '',
+    buttonText: '',
+    link: '',
+    image2: '',
+    link2: '',
     active: true,
+    order: 0,
+    categoryId: '',
+    linkedProductIds: [] as string[],
   });
 
   useEffect(() => {
@@ -49,10 +56,16 @@ export default function EditHomepageSectionPage() {
           setForm({
             type: s.type,
             title: s.title || '',
+            image: s.image || '',
+            link: s.link || '',
+            image2: s.image2 || '',
+            link2: s.link2 || '',
             linkedProductIds: (s.linkedProductIds || []).map((p: any) => (typeof p === 'object' ? p._id : p)),
             categoryId: s.categoryId?._id || s.categoryId || '',
             order: s.order ?? 0,
             active: s.active ?? true,
+            subtitle: '',
+            buttonText: '',
           });
         }
       })
@@ -95,6 +108,30 @@ export default function EditHomepageSectionPage() {
     }));
   };
 
+  const [uploading1, setUploading1] = useState(false);
+  const [uploading2, setUploading2] = useState(false);
+
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>, fieldName: 'image' | 'image2', setUploadingLocal: (v: boolean) => void) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      setUploadingLocal(true);
+      const fd = new FormData();
+      fd.append('file', file);
+      const res = await fetch('/api/upload', { method: 'POST', body: fd });
+      const data = await res.json();
+      if (data.url) {
+        setForm((f) => ({ ...f, [fieldName]: data.url }));
+      } else {
+        toast({ title: 'Upload failed', variant: 'destructive' });
+      }
+    } catch (err) {
+      toast({ title: 'Upload error', variant: 'destructive' });
+    } finally {
+      setUploadingLocal(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
@@ -125,6 +162,8 @@ export default function EditHomepageSectionPage() {
                   <SelectItem value="promo">Promo</SelectItem>
                   <SelectItem value="category">Category Section</SelectItem>
                   <SelectItem value="big_size">Big Size (XL/XXL etc.)</SelectItem>
+                  <SelectItem value="banner">Full Banner</SelectItem>
+                  <SelectItem value="semi_banner">Semi Banner</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -177,6 +216,74 @@ export default function EditHomepageSectionPage() {
                 </Select>
               </div>
             )}
+            {(form.type === 'banner' || form.type === 'semi_banner') && (
+              <>
+                <div>
+                  <Label>{form.type === 'semi_banner' ? 'Left Image *' : 'Image *'}</Label>
+                  <div className="mt-2 border-2 border-dashed rounded-lg p-6 text-center">
+                    <label className="cursor-pointer">
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={(e) => handleFileSelect(e, 'image', setUploading1)}
+                        disabled={uploading1}
+                      />
+                      {uploading1 ? (
+                        <Loader2 className="h-8 w-8 animate-spin mx-auto" />
+                      ) : form.image ? (
+                        <img src={form.image} alt="Banner" className="max-h-40 mx-auto rounded" />
+                      ) : (
+                        <span className="text-sm text-muted-foreground">Click to upload image</span>
+                      )}
+                    </label>
+                  </div>
+                </div>
+                <div>
+                  <Label>Link (Optional URL)</Label>
+                  <Input
+                    value={form.link}
+                    onChange={(e) => setForm((f) => ({ ...f, link: e.target.value }))}
+                    placeholder="/products?category=..."
+                  />
+                </div>
+              </>
+            )}
+
+            {form.type === 'semi_banner' && (
+              <>
+                <div className="pt-4 border-t">
+                  <Label>Right Image *</Label>
+                  <div className="mt-2 border-2 border-dashed rounded-lg p-6 text-center">
+                    <label className="cursor-pointer">
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={(e) => handleFileSelect(e, 'image2', setUploading2)}
+                        disabled={uploading2}
+                      />
+                      {uploading2 ? (
+                        <Loader2 className="h-8 w-8 animate-spin mx-auto" />
+                      ) : form.image2 ? (
+                        <img src={form.image2} alt="Semi Banner Right" className="max-h-40 mx-auto rounded" />
+                      ) : (
+                        <span className="text-sm text-muted-foreground">Click to upload 2nd image</span>
+                      )}
+                    </label>
+                  </div>
+                </div>
+                <div>
+                  <Label>Right Link (Optional URL)</Label>
+                  <Input
+                    value={form.link2}
+                    onChange={(e) => setForm((f) => ({ ...f, link2: e.target.value }))}
+                    placeholder="/products?category=..."
+                  />
+                </div>
+              </>
+            )}
+
             <div className="flex items-center gap-4">
               <div className="flex items-center space-x-2">
                 <Checkbox

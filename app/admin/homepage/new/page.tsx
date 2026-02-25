@@ -23,6 +23,10 @@ export default function NewHomepageSectionPage() {
     title: '',
     linkedProductIds: [] as string[],
     categoryId: '',
+    image: '',
+    link: '',
+    image2: '',
+    link2: '',
     order: 0,
     active: true,
   });
@@ -71,6 +75,30 @@ export default function NewHomepageSectionPage() {
     }));
   };
 
+  const [uploading1, setUploading1] = useState(false);
+  const [uploading2, setUploading2] = useState(false);
+
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>, fieldName: 'image' | 'image2', setUploading: (v: boolean) => void) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      setUploading(true);
+      const fd = new FormData();
+      fd.append('file', file);
+      const res = await fetch('/api/upload', { method: 'POST', body: fd });
+      const data = await res.json();
+      if (data.url) {
+        setForm((f) => ({ ...f, [fieldName]: data.url }));
+      } else {
+        toast({ title: 'Upload failed', variant: 'destructive' });
+      }
+    } catch (err) {
+      toast({ title: 'Upload error', variant: 'destructive' });
+    } finally {
+      setUploading(false);
+    }
+  };
+
   return (
     <div className="max-w-2xl space-y-6">
       <h2 className="text-3xl font-bold">Add Homepage Section</h2>
@@ -93,6 +121,8 @@ export default function NewHomepageSectionPage() {
                   <SelectItem value="promo">Promo</SelectItem>
                   <SelectItem value="category">Category Section</SelectItem>
                   <SelectItem value="big_size">Big Size (XL/XXL etc.)</SelectItem>
+                  <SelectItem value="banner">Full Banner</SelectItem>
+                  <SelectItem value="semi_banner">Semi Banner</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -146,6 +176,74 @@ export default function NewHomepageSectionPage() {
                 </Select>
               </div>
             )}
+            {(form.type === 'banner' || form.type === 'semi_banner') && (
+              <>
+                <div>
+                  <Label>{form.type === 'semi_banner' ? 'Left Image *' : 'Image *'}</Label>
+                  <div className="mt-2 border-2 border-dashed rounded-lg p-6 text-center">
+                    <label className="cursor-pointer">
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={(e) => handleFileSelect(e, 'image', setUploading1)}
+                        disabled={uploading1}
+                      />
+                      {uploading1 ? (
+                        <Loader2 className="h-8 w-8 animate-spin mx-auto" />
+                      ) : form.image ? (
+                        <img src={form.image} alt="Banner" className="max-h-40 mx-auto rounded" />
+                      ) : (
+                        <span className="text-sm text-muted-foreground">Click to upload image</span>
+                      )}
+                    </label>
+                  </div>
+                </div>
+                <div>
+                  <Label>Link (Optional URL)</Label>
+                  <Input
+                    value={form.link}
+                    onChange={(e) => setForm((f) => ({ ...f, link: e.target.value }))}
+                    placeholder="/products?category=..."
+                  />
+                </div>
+              </>
+            )}
+
+            {form.type === 'semi_banner' && (
+              <>
+                <div className="pt-4 border-t">
+                  <Label>Right Image *</Label>
+                  <div className="mt-2 border-2 border-dashed rounded-lg p-6 text-center">
+                    <label className="cursor-pointer">
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={(e) => handleFileSelect(e, 'image2', setUploading2)}
+                        disabled={uploading2}
+                      />
+                      {uploading2 ? (
+                        <Loader2 className="h-8 w-8 animate-spin mx-auto" />
+                      ) : form.image2 ? (
+                        <img src={form.image2} alt="Semi Banner Right" className="max-h-40 mx-auto rounded" />
+                      ) : (
+                        <span className="text-sm text-muted-foreground">Click to upload 2nd image</span>
+                      )}
+                    </label>
+                  </div>
+                </div>
+                <div>
+                  <Label>Right Link (Optional URL)</Label>
+                  <Input
+                    value={form.link2}
+                    onChange={(e) => setForm((f) => ({ ...f, link2: e.target.value }))}
+                    placeholder="/products?category=..."
+                  />
+                </div>
+              </>
+            )}
+
             <div className="flex items-center gap-4">
               <div className="flex items-center space-x-2">
                 <Checkbox

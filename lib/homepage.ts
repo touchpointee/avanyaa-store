@@ -31,6 +31,10 @@ export interface HomepageSectionData {
   title: string;
   order: number;
   categoryId: string | null;
+  image?: string;
+  link?: string;
+  image2?: string;
+  link2?: string;
   products: Array<{
     _id: string;
     name: string;
@@ -97,6 +101,10 @@ export async function getHomepageData(): Promise<{
       title: s.title || '',
       order: s.order,
       categoryId: s.categoryId ? s.categoryId.toString() : null,
+      image: s.image,
+      link: s.link,
+      image2: s.image2,
+      link2: s.link2,
       products: (s.linkedProductIds || [])
         .map((id: any) => productsMap[id.toString()])
         .filter(Boolean),

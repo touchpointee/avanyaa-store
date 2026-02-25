@@ -1,12 +1,16 @@
 import mongoose, { Schema, Document, Model } from 'mongoose';
 
-export type HomepageSectionType = 'hero' | 'featured_categories' | 'trending' | 'new_arrivals' | 'promo' | 'category' | 'big_size';
+export type HomepageSectionType = 'hero' | 'featured_categories' | 'trending' | 'new_arrivals' | 'promo' | 'category' | 'big_size' | 'banner' | 'semi_banner';
 
 export interface IHomepageSection extends Document {
   type: HomepageSectionType;
   title: string;
   linkedProductIds: mongoose.Types.ObjectId[];
   categoryId?: mongoose.Types.ObjectId;
+  image?: string;
+  link?: string;
+  image2?: string;
+  link2?: string;
   order: number;
   active: boolean;
   createdAt: Date;
@@ -18,7 +22,7 @@ const HomepageSectionSchema = new Schema<IHomepageSection>(
     type: {
       type: String,
       required: true,
-      enum: ['hero', 'featured_categories', 'trending', 'new_arrivals', 'promo', 'category', 'big_size'],
+      enum: ['hero', 'featured_categories', 'trending', 'new_arrivals', 'promo', 'category', 'big_size', 'banner', 'semi_banner'],
     },
     title: {
       type: String,
@@ -33,6 +37,18 @@ const HomepageSectionSchema = new Schema<IHomepageSection>(
     categoryId: {
       type: Schema.Types.ObjectId,
       ref: 'Category',
+    },
+    image: {
+      type: String,
+    },
+    link: {
+      type: String,
+    },
+    image2: {
+      type: String,
+    },
+    link2: {
+      type: String,
     },
     order: {
       type: Number,

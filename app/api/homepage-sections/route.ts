@@ -53,13 +53,17 @@ export async function POST(req: NextRequest) {
     await connectDB();
 
     const body = await req.json();
-    const { type, title, linkedProductIds, categoryId, order, active } = body;
+    const { type, title, linkedProductIds, categoryId, order, active, image, link, image2, link2 } = body;
 
     const section = await HomepageSection.create({
       type: type || 'trending',
       title: title || '',
       linkedProductIds: linkedProductIds || [],
       categoryId: categoryId || undefined,
+      image: image || undefined,
+      link: link || undefined,
+      image2: image2 || undefined,
+      link2: link2 || undefined,
       order: order ?? 0,
       active: active ?? true,
     });

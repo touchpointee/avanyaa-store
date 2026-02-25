@@ -331,33 +331,100 @@ function NewsletterCTA() {
 }
 
 /* ─── Dynamic section router ─── */
-function DynamicSection({ section, index }: { section: HomepageSectionData; index: number }) {
-  if (section.type === 'featured_categories' || section.type === 'promo') return null;
-  const viewAllHref =
-    section.type === 'big_size'
-      ? '/products?bigSize=true'
-      : section.categoryId
-        ? `/products?categoryId=${section.categoryId}`
-        : '/products';
-  const subtitle = index % 2 === 0 ? 'Collection' : 'Featured Picks';
-  const bg = index % 2 === 1 ? 'bg-accent/20' : 'bg-muted/30';
-  return (
-    <ProductShowcase
-      title={section.title || 'Shop'}
-      subtitle={subtitle}
-      products={section.products as ProductWithId[]}
-      viewAllHref={viewAllHref}
-      bg={bg}
-    />
+function DynamicSections({ sections }: { sections: HomepageSectionData[] }) {
+  const dynamicSections = sections.filter(
+    (s) => s.type !== 'featured_categories' && s.type !== 'promo'
   );
+
+  const renderBlocks: React.ReactNode[] = [];
+  let i = 0;
+
+  while (i < dynamicSections.length) {
+    const section = dynamicSections[i];
+
+    // Handle full banner
+    if (section.type === 'banner' && section.image) {
+      const ImgContent = (
+        <div className="relative w-full aspect-[4/1] md:aspect-[5/1] xl:aspect-[6/1]">
+          <Image src={section.image} alt={section.title || 'Banner'} fill className="object-cover" />
+        </div>
+      );
+      renderBlocks.push(
+        <section key={section._id} className="w-full">
+          {section.link ? (
+            <Link href={section.link} className="block w-full h-full group hover:opacity-95 transition-opacity">
+              {ImgContent}
+            </Link>
+          ) : (
+            ImgContent
+          )}
+        </section>
+      );
+      i++;
+      continue;
+    }
+
+    // Single semi_banner pair side-by-side
+    if (section.type === 'semi_banner' && section.image) {
+      const images = [
+        { id: `semi-1-${section._id}`, url: section.image, link: section.link },
+        ...(section.image2 ? [{ id: `semi-2-${section._id}`, url: section.image2, link: section.link2 }] : [])
+      ];
+
+      renderBlocks.push(
+        <section key={section._id} className="py-8 md:py-12">
+          <div className="container mx-auto px-4">
+            <div className={`grid grid-cols-1 ${images.length > 1 ? 'md:grid-cols-2' : ''} gap-4`}>
+              {images.map((img) => {
+                const ImgContent = (
+                  <div className={`relative w-full rounded-2xl overflow-hidden shadow-sm aspect-[16/9] ${images.length > 1 ? 'md:aspect-[21/9]' : 'md:aspect-[4/1]'}`}>
+                    <Image src={img.url} alt={section.title || 'Semi Banner'} fill className="object-cover hover:scale-105 transition-transform duration-500" />
+                  </div>
+                );
+                return img.link ? (
+                  <Link key={img.id} href={img.link} className="block w-full h-full group hover:scale-[1.02] transition-transform duration-300">
+                    {ImgContent}
+                  </Link>
+                ) : (
+                  <div key={img.id}>{ImgContent}</div>
+                );
+              })}
+            </div>
+          </div>
+        </section>
+      );
+      i++;
+      continue;
+    }
+
+    // Other section types (product carousels)
+    const viewAllHref =
+      section.type === 'big_size'
+        ? '/products?bigSize=true'
+        : section.categoryId
+          ? `/products?categoryId=${section.categoryId}`
+          : '/products';
+    const subtitle = i % 2 === 0 ? 'Collection' : 'Featured Picks';
+    const bg = i % 2 === 1 ? 'bg-accent/20' : 'bg-muted/30';
+    renderBlocks.push(
+      <ProductShowcase
+        key={section._id}
+        title={section.title || 'Shop'}
+        subtitle={subtitle}
+        products={section.products as ProductWithId[]}
+        viewAllHref={viewAllHref}
+        bg={bg}
+      />
+    );
+    i++;
+  }
+
+  return <>{renderBlocks}</>;
 }
 
 /* ═══════════════════ PAGE ═══════════════════ */
 export default async function HomePage() {
   const { banners, categories, sections } = await getHomepageData();
-  const dynamicSections = sections.filter(
-    (s) => s.type !== 'featured_categories' && s.type !== 'promo'
-  );
 
   return (
     <div>
@@ -374,9 +441,7 @@ export default async function HomePage() {
       <CategoryShowcase categories={categories} />
 
       {/* 5 — Dynamic product sections (horizontal scroll on mobile) */}
-      {dynamicSections.map((section, i) => (
-        <DynamicSection key={section._id} section={section} index={i} />
-      ))}
+      <DynamicSections sections={sections} />
 
       {/* 6 — Full-bleed editorial promo banner */}
       <EditorialBanner banners={banners} />
