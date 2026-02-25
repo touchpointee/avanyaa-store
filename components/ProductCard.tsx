@@ -9,7 +9,7 @@ import { useCartStore } from '@/store/cartStore';
 import { useWishlistStore } from '@/store/wishlistStore';
 import { formatPrice } from '@/lib/utils';
 import { useToast } from '@/components/ui/use-toast';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { isCustomerSession } from '@/lib/customerSession';
 
@@ -24,6 +24,9 @@ export default function ProductCard({ product }: ProductCardProps) {
   const toggleWishlist = useWishlistStore((state) => state.toggleItem);
   const isInWishlist = useWishlistStore((state) => state.isInWishlist(product._id));
   const [isWishlistLoading, setIsWishlistLoading] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => { setMounted(true); }, []);
 
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -123,12 +126,11 @@ export default function ProductCard({ product }: ProductCardProps) {
           {/* Wishlist - top right */}
           <button
             onClick={handleToggleWishlist}
-            disabled={isWishlistLoading}
+            disabled={!mounted || isWishlistLoading}
             className="absolute top-2 right-2 z-10 rounded-lg bg-card/95 p-2 shadow border border-border transition-transform hover:scale-105 active:scale-95"
           >
             <Heart
-              className={`h-4 w-4 ${isInWishlist ? 'fill-rose-500 text-rose-500' : 'text-muted-foreground'
-                }`}
+              className={`h-4 w-4 ${mounted && isInWishlist ? 'fill-rose-500 text-rose-500' : 'text-muted-foreground'}`}
             />
           </button>
           {discountPercent > 0 && (

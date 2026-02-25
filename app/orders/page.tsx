@@ -8,13 +8,14 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { formatPrice } from '@/lib/utils';
-import { Loader2, Package, X, AlertTriangle } from 'lucide-react';
+import { Loader2, Package, X, AlertTriangle, Star, CheckCircle2 } from 'lucide-react';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { useToast } from '@/components/ui/use-toast';
 import OrderStatusPopup from '@/components/OrderStatusPopup';
 import OrderTracker from '@/components/OrderTracker';
+import ReviewModal from '@/components/ReviewModal';
 
 /* ─── Cancellation reasons ────────────────────────────────────── */
 const CANCEL_REASONS = [
@@ -180,6 +181,14 @@ export default function OrdersPage() {
   const [cancelTarget, setCancelTarget] = useState<{ id: string; ref: string } | null>(null);
   const [showCancelPopup, setShowCancelPopup] = useState(false);
 
+  /* Review modal state */
+  const [reviewTarget, setReviewTarget] = useState<{
+    productId: string;
+    productName: string;
+    productImage: string;
+  } | null>(null);
+  const [reviewed, setReviewed] = useState<Set<string>>(new Set());
+
   useEffect(() => {
     if (status === 'unauthenticated') {
       router.push('/auth/signin');
@@ -265,6 +274,20 @@ export default function OrdersPage() {
         />
       )}
 
+      {/* Review modal */}
+      {reviewTarget && (
+        <ReviewModal
+          productId={reviewTarget.productId}
+          productName={reviewTarget.productName}
+          productImage={reviewTarget.productImage}
+          onClose={() => setReviewTarget(null)}
+          onSubmitted={() => {
+            setReviewed((prev) => new Set(Array.from(prev).concat(reviewTarget.productId)));
+            setReviewTarget(null);
+          }}
+        />
+      )}
+
       {/* Cancel reason modal */}
       {cancelTarget && (
         <CancelModal
@@ -332,6 +355,31 @@ export default function OrdersPage() {
                         <p className="text-sm text-muted-foreground">
                           Qty: {item.quantity} × {formatPrice(item.price)}
                         </p>
+
+                        {/* ── Rate & Review — only on delivered orders ── */}
+                        {order.status === 'delivered' && (
+                          reviewed.has(item.productId.toString()) ? (
+                            <span className="inline-flex items-center gap-1 mt-2 text-xs font-medium text-emerald-600">
+                              <CheckCircle2 className="h-3.5 w-3.5" />
+                              Review submitted
+                            </span>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={() =>
+                                setReviewTarget({
+                                  productId: item.productId.toString(),
+                                  productName: item.productName,
+                                  productImage: item.productImage,
+                                })
+                              }
+                              className="inline-flex items-center gap-1.5 mt-2 text-xs font-semibold text-primary border border-primary/30 rounded-lg px-3 py-1 hover:bg-primary/8 transition-colors"
+                            >
+                              <Star className="h-3.5 w-3.5" />
+                              Rate &amp; Review
+                            </button>
+                          )
+                        )}
                       </div>
                       <div className="text-right shrink-0">
                         <p className="font-bold text-sm sm:text-base">

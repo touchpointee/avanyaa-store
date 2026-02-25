@@ -6,6 +6,27 @@ import Product from '@/models/Product';
 import { getBigSizeNames } from '@/lib/sizes';
 import mongoose from 'mongoose';
 
+/* Serialize a raw Mongoose .lean() product into a plain object safe for Client Components */
+function serializeProduct(p: any) {
+  return {
+    _id: p._id?.toString() ?? '',
+    name: p.name ?? '',
+    slug: p.slug ?? '',
+    price: p.price ?? 0,
+    compareAtPrice: p.compareAtPrice ?? undefined,
+    images: p.images ?? [],
+    category: p.category ?? '',
+    categoryId: p.categoryId ? p.categoryId.toString() : undefined,
+    sizes: p.sizes ?? [],
+    colors: p.colors ?? [],
+    stock: p.stock ?? 0,
+    featured: p.featured ?? false,
+    description: p.description ?? '',
+    createdAt: p.createdAt ? new Date(p.createdAt).toISOString() : '',
+    updatedAt: p.updatedAt ? new Date(p.updatedAt).toISOString() : '',
+  };
+}
+
 export interface HomepageBanner {
   _id: string;
   type: string;
@@ -68,7 +89,7 @@ export async function getHomepageData(): Promise<{
   if (productIdList.length > 0) {
     const products = await Product.find({ _id: { $in: productIdList } }).lean();
     products.forEach((p) => {
-      productsMap[p._id.toString()] = { ...p, _id: p._id.toString() };
+      productsMap[p._id.toString()] = serializeProduct(p);
     });
   }
 
@@ -81,7 +102,7 @@ export async function getHomepageData(): Promise<{
       .limit(12)
       .sort({ createdAt: -1 })
       .lean();
-    bigSizeProducts = bigSizeProducts.map((p) => ({ ...p, _id: p._id.toString() }));
+    bigSizeProducts = bigSizeProducts.map((p) => serializeProduct(p));
   }
 
   const sectionsWithProducts: HomepageSectionData[] = sections.map((s) => {

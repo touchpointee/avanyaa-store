@@ -5,11 +5,32 @@ import connectDB from '@/lib/db';
 import Wishlist from '@/models/Wishlist';
 import Product from '@/models/Product';
 
+/* Strip Mongoose-specific fields so only plain JSON reaches the client */
+function serializeProduct(p: any) {
+  return {
+    _id: p._id?.toString() ?? '',
+    name: p.name ?? '',
+    slug: p.slug ?? '',
+    price: p.price ?? 0,
+    compareAtPrice: p.compareAtPrice ?? undefined,
+    images: p.images ?? [],
+    category: p.category ?? '',
+    categoryId: p.categoryId ? p.categoryId.toString() : undefined,
+    sizes: p.sizes ?? [],
+    colors: p.colors ?? [],
+    stock: p.stock ?? 0,
+    featured: p.featured ?? false,
+    description: p.description ?? '',
+    createdAt: p.createdAt ? new Date(p.createdAt).toISOString() : '',
+    updatedAt: p.updatedAt ? new Date(p.updatedAt).toISOString() : '',
+  };
+}
+
 // GET /api/wishlist - Get user's wishlist (customer only)
 export async function GET(req: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
-    
+
     if (!session) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -20,7 +41,7 @@ export async function GET(req: NextRequest) {
     await connectDB();
 
     const userId = (session.user as any).id;
-    
+
     let wishlist = await Wishlist.findOne({ userId }).populate('productIds').lean();
 
     if (!wishlist) {
@@ -28,7 +49,15 @@ export async function GET(req: NextRequest) {
       wishlist = await Wishlist.findOne({ userId }).populate('productIds').lean();
     }
 
-    return NextResponse.json(wishlist ?? { userId, productIds: [] });
+    if (!wishlist) {
+      return NextResponse.json({ userId, productIds: [] });
+    }
+    return NextResponse.json({
+      ...wishlist,
+      _id: wishlist._id?.toString(),
+      userId: wishlist.userId?.toString(),
+      productIds: (wishlist.productIds as any[]).map(serializeProduct),
+    });
   } catch (error) {
     console.error('Wishlist fetch error:', error);
     return NextResponse.json(
@@ -42,7 +71,7 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
-    
+
     if (!session) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -77,7 +106,12 @@ export async function POST(req: NextRequest) {
 
     const populatedWishlist = await Wishlist.findById(wishlist._id).populate('productIds').lean();
 
-    return NextResponse.json(populatedWishlist);
+    return NextResponse.json({
+      ...populatedWishlist,
+      _id: populatedWishlist?._id?.toString(),
+      userId: populatedWishlist?.userId?.toString(),
+      productIds: ((populatedWishlist?.productIds ?? []) as any[]).map(serializeProduct),
+    });
   } catch (error) {
     console.error('Wishlist add error:', error);
     return NextResponse.json(
@@ -91,7 +125,7 @@ export async function POST(req: NextRequest) {
 export async function DELETE(req: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
-    
+
     if (!session) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -121,7 +155,16 @@ export async function DELETE(req: NextRequest) {
 
     const populatedWishlist = await Wishlist.findOne({ userId }).populate('productIds').lean();
 
-    return NextResponse.json(populatedWishlist || { userId, productIds: [] });
+    return NextResponse.json(
+      populatedWishlist
+        ? {
+          ...populatedWishlist,
+          _id: populatedWishlist._id?.toString(),
+          userId: populatedWishlist.userId?.toString(),
+          productIds: ((populatedWishlist.productIds ?? []) as any[]).map(serializeProduct),
+        }
+        : { userId, productIds: [] }
+    );
   } catch (error) {
     console.error('Wishlist remove error:', error);
     return NextResponse.json(

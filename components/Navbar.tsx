@@ -117,7 +117,7 @@ export default function Navbar() {
               <Button variant="ghost" size="icon" className="rounded-lg hidden md:inline-flex" asChild>
                 <Link href="/wishlist" className="relative">
                   <Heart className="h-5 w-5" />
-                  {wishlistItems.length > 0 && (
+                  {mounted && wishlistItems.length > 0 && (
                     <span className="absolute -top-0.5 -right-0.5 h-4 w-4 rounded-full bg-primary text-[10px] font-semibold text-primary-foreground flex items-center justify-center">
                       {wishlistItems.length}
                     </span>
@@ -127,15 +127,20 @@ export default function Navbar() {
               <Button variant="ghost" size="icon" className="rounded-lg hidden md:inline-flex" asChild>
                 <Link href="/cart" className="relative">
                   <ShoppingCart className="h-5 w-5" />
-                  {totalItems > 0 && (
+                  {mounted && totalItems > 0 && (
                     <span className="absolute -top-0.5 -right-0.5 h-4 w-4 rounded-full bg-primary text-[10px] font-semibold text-primary-foreground flex items-center justify-center">
                       {totalItems}
                     </span>
                   )}
                 </Link>
               </Button>
-              {/* User & LogOut: desktop only — on mobile they live in the sidebar */}
-              {isCustomerSession(session) ? (
+              {/* Auth buttons — rendered only after mount to avoid SSR/CSR mismatch */}
+              {!mounted ? (
+                /* Static placeholder matching the unauthenticated server render */
+                <Button size="sm" className="rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 hidden md:inline-flex" asChild>
+                  <Link href="/auth/signin">Sign In</Link>
+                </Button>
+              ) : isCustomerSession(session) ? (
                 <>
                   <Button variant="ghost" size="icon" className="rounded-lg hidden md:inline-flex" asChild>
                     <Link href="/profile">

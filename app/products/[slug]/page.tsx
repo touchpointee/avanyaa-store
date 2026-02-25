@@ -20,7 +20,7 @@ export default function ProductDetailPage() {
   const router = useRouter();
   const { data: session } = useSession();
   const { toast } = useToast();
-  
+
   const [product, setProduct] = useState<ProductWithId | null>(null);
   const [loading, setLoading] = useState(true);
   const [selectedSize, setSelectedSize] = useState('');
@@ -171,9 +171,8 @@ export default function ProductDetailPage() {
                   key={index}
                   type="button"
                   onClick={() => setSelectedImage(index)}
-                  className={`relative aspect-square w-16 shrink-0 rounded-lg overflow-hidden border-2 transition-all ${
-                    selectedImage === index ? 'border-primary ring-2 ring-primary/20' : 'border-border'
-                  }`}
+                  className={`relative aspect-square w-16 shrink-0 rounded-lg overflow-hidden border-2 transition-all ${selectedImage === index ? 'border-primary ring-2 ring-primary/20' : 'border-border'
+                    }`}
                 >
                   <Image src={image} alt="" fill className="object-cover object-top" sizes="64px" />
                 </button>
