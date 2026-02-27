@@ -4,6 +4,7 @@ import './globals.css';
 import { Toaster } from '@/components/ui/toaster';
 import { AuthProvider } from '@/components/AuthProvider';
 import LayoutShell from '@/components/LayoutShell';
+import SplashScreen from '@/components/SplashScreen';
 
 const poppins = Poppins({
   subsets: ['latin'],
@@ -26,6 +27,7 @@ export default function RootLayout({
     <html lang="en" className={poppins.variable}>
       <body className="font-sans min-h-screen flex flex-col">
         <AuthProvider>
+          <SplashScreen />
           {/* overflow-x-hidden must NOT be on body/html — it breaks position:sticky */}
           <div className="flex flex-col min-h-screen overflow-x-hidden">
             <LayoutShell>{children}</LayoutShell>

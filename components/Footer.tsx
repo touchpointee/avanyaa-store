@@ -106,19 +106,19 @@ export default function Footer() {
                 </a>
               </li>
               <li>
-                <a href="tel:+919999999999" className="hover:text-foreground transition-colors">
-                  +91-99999-99999
+                <a href="tel:+918075023434" className="hover:text-foreground transition-colors">
+                  +91-80750-23434
                 </a>
               </li>
-              <li className="leading-relaxed">
-                Palakkad, Kerala — 678 001
+              <li className="leading-relaxed whitespace-pre-line">
+                Murukkumpuzha{'\n'}Thiruvananthapuram
               </li>
             </ul>
 
             {/* Social icons */}
             <div className="flex items-center gap-3 mt-5">
               {/* Instagram */}
-              <a href="https://instagram.com/avanyaa" target="_blank" rel="noopener noreferrer"
+              <a href="https://www.instagram.com/avanyaa_by_anu?igsh=ZXRvdmV2cGUzbHJ0" target="_blank" rel="noopener noreferrer"
                 className="w-8 h-8 rounded-full border border-border flex items-center justify-center hover:bg-muted transition-colors">
                 <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none">
                   <defs>
@@ -135,7 +135,7 @@ export default function Footer() {
                 </svg>
               </a>
               {/* Facebook */}
-              <a href="https://facebook.com/avanyaa" target="_blank" rel="noopener noreferrer"
+              <a href="https://www.facebook.com/share/1AmGQVfHwE/" target="_blank" rel="noopener noreferrer"
                 className="w-8 h-8 rounded-full border border-border flex items-center justify-center hover:bg-muted transition-colors">
                 <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none">
                   <rect width="24" height="24" rx="6" fill="#1877F2" />
@@ -143,7 +143,7 @@ export default function Footer() {
                 </svg>
               </a>
               {/* WhatsApp */}
-              <a href="https://wa.me/919999999999" target="_blank" rel="noopener noreferrer"
+              <a href="https://wa.me/918075023434" target="_blank" rel="noopener noreferrer"
                 className="w-8 h-8 rounded-full border border-border flex items-center justify-center hover:bg-muted transition-colors">
                 <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none">
                   <rect width="24" height="24" rx="6" fill="#25D366" />

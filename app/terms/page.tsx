@@ -63,7 +63,7 @@ export default function TermsPage() {
                     </PolicySection>
 
                     <PolicySection title="12. Governing Law">
-                        <p>These Terms are governed by the laws of India. Any disputes arising shall be subject to the exclusive jurisdiction of the courts in Palakkad, Kerala.</p>
+                        <p>These Terms are governed by the laws of India. Any disputes arising shall be subject to the exclusive jurisdiction of the courts in Thiruvananthapuram, Kerala.</p>
                     </PolicySection>
 
                     <PolicySection title="13. Contact Us">

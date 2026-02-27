@@ -72,7 +72,7 @@ export default function Navbar() {
 
   return (
     <>
-      <header className="fixed top-0 z-40 w-full min-w-0 overflow-x-hidden bg-card border-b border-border shadow-sm">
+      <header className="fixed top-0 z-40 w-full min-w-0 overflow-x-hidden bg-[#F9F9F7] border-b border-border shadow-sm">
         <a
           href="#main-content"
           className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2 focus:bg-primary focus:text-primary-foreground focus:rounded-lg focus:outline-none"
@@ -183,7 +183,7 @@ export default function Navbar() {
 
       {/* Drawer panel */}
       <aside
-        className={`fixed top-0 left-0 z-50 h-full w-72 bg-card shadow-2xl flex flex-col transition-transform duration-300 ease-in-out md:hidden ${menuOpen ? 'translate-x-0' : '-translate-x-full'
+        className={`fixed top-0 left-0 z-50 h-full w-72 bg-[#F9F9F7] shadow-2xl flex flex-col transition-transform duration-300 ease-in-out md:hidden ${menuOpen ? 'translate-x-0' : '-translate-x-full'
           }`}
         aria-label="Navigation menu"
       >

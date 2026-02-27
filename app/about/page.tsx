@@ -85,7 +85,7 @@ export default function AboutPage() {
                         </h2>
                         <div className="space-y-4 text-muted-foreground text-sm leading-relaxed">
                             <p>
-                                AVANYAA started as a small boutique in Palakkad, Kerala — a dream nurtured by a passion
+                                AVANYAA started as a small boutique in Murukkumpuzha, Thiruvananthapuram — a dream nurtured by a passion
                                 for fashion that feels personal. We noticed a gap: beautiful, well-crafted ethnic and
                                 contemporary dresses that were actually affordable and accessible across India.
                             </p>
@@ -105,7 +105,7 @@ export default function AboutPage() {
                     <div className="rounded-2xl overflow-hidden bg-gradient-to-br from-primary/20 via-primary/10 to-transparent border border-primary/15 flex items-center justify-center aspect-[4/3]">
                         <div className="text-center p-8">
                             <p className="font-heading text-5xl font-bold text-primary/30">AVANYAA</p>
-                            <p className="text-xs text-muted-foreground mt-2 uppercase tracking-widest">Est. Palakkad, Kerala</p>
+                            <p className="text-xs text-muted-foreground mt-2 uppercase tracking-widest">Est. Murukkumpuzha, Thiruvananthapuram</p>
                         </div>
                     </div>
                 </div>

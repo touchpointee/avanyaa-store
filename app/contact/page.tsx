@@ -66,14 +66,14 @@ export default function ContactPage() {
                         {
                             icon: <Phone className="h-5 w-5" />,
                             title: 'Phone',
-                            lines: ['+91 98765 43210'],
-                            href: 'tel:+919876543210',
+                            lines: ['+91 80750 23434'],
+                            href: 'tel:+918075023434',
                         },
                         {
                             icon: <MessageCircle className="h-5 w-5" />,
                             title: 'WhatsApp',
                             lines: ['Chat with us'],
-                            href: 'https://wa.me/919876543210?text=Hi%20Avanyaa!%20I%20need%20help.',
+                            href: 'https://wa.me/918075023434?text=Hi%20Avanyaa!%20I%20need%20help.',
                         },
                         {
                             icon: <Mail className="h-5 w-5" />,
@@ -161,7 +161,7 @@ export default function ContactPage() {
                                     Send Message
                                 </Button>
                                 <a
-                                    href="https://wa.me/919876543210?text=Hi%20Avanyaa!%20I%20need%20help."
+                                    href="https://wa.me/918075023434?text=Hi%20Avanyaa!%20I%20need%20help."
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     className="flex-1 flex items-center justify-center gap-2 h-11 rounded-[10px] border-2 border-[#25D366] text-[#25D366] font-semibold text-sm hover:bg-[#25D366]/10 transition-colors"
@@ -186,20 +186,20 @@ export default function ContactPage() {
                                 <div>
                                     <p className="font-semibold text-sm">AVANYAA Fashion</p>
                                     <p className="text-sm text-muted-foreground leading-relaxed mt-1">
-                                        123 Fashion Street, Rose Garden,<br />
-                                        Palakkad, Kerala – 678001<br />
+                                        Murukkumpuzha,<br />
+                                        Thiruvananthapuram<br />
                                         India
                                     </p>
                                 </div>
                                 <a
-                                    href="https://maps.google.com/?q=Palakkad,Kerala,India"
+                                    href="https://maps.google.com/?q=Murukkumpuzha,Thiruvananthapuram,India"
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     className="block w-full rounded-lg overflow-hidden border border-border hover:opacity-90 transition-opacity"
                                 >
                                     <img
-                                        src="https://maps.googleapis.com/maps/api/staticmap?center=Palakkad,Kerala,India&zoom=13&size=400x180&markers=color:0x2d5f8a%7CPalakkad,Kerala,India&style=feature:all|element:labels.text.fill|color:0x555555&key="
-                                        alt="Map showing store location in Palakkad"
+                                        src="https://maps.googleapis.com/maps/api/staticmap?center=Murukkumpuzha,Thiruvananthapuram,India&zoom=13&size=400x180&markers=color:0x2d5f8a%7CMurukkumpuzha,Thiruvananthapuram,India&style=feature:all|element:labels.text.fill|color:0x555555&key="
+                                        alt="Map showing store location in Thiruvananthapuram"
                                         className="w-full h-36 object-cover bg-muted"
                                         onError={(e) => {
                                             (e.target as HTMLImageElement).style.display = 'none';
@@ -219,7 +219,7 @@ export default function ContactPage() {
                                 <p className="font-semibold text-sm mb-3">Follow Us</p>
                                 <div className="flex gap-3">
                                     {/* Instagram */}
-                                    <a href="https://instagram.com/avanyaa" target="_blank" rel="noopener noreferrer"
+                                    <a href="https://www.instagram.com/avanyaa_by_anu?igsh=ZXRvdmV2cGUzbHJ0" target="_blank" rel="noopener noreferrer"
                                         className="flex-1 flex flex-col items-center gap-1.5 p-3 rounded-xl border border-border hover:border-pink-300 hover:bg-pink-50/50 dark:hover:bg-pink-950/20 transition-all text-center group">
                                         <svg className="w-7 h-7" viewBox="0 0 24 24" fill="none">
                                             <defs>
@@ -238,7 +238,7 @@ export default function ContactPage() {
                                         <span className="text-[11px] text-muted-foreground font-medium">Instagram</span>
                                     </a>
                                     {/* Facebook */}
-                                    <a href="https://facebook.com/avanyaa" target="_blank" rel="noopener noreferrer"
+                                    <a href="https://www.facebook.com/share/1AmGQVfHwE/" target="_blank" rel="noopener noreferrer"
                                         className="flex-1 flex flex-col items-center gap-1.5 p-3 rounded-xl border border-border hover:border-blue-300 hover:bg-blue-50/50 dark:hover:bg-blue-950/20 transition-all text-center group">
                                         <svg className="w-7 h-7" viewBox="0 0 24 24" fill="none">
                                             <rect width="24" height="24" rx="5.5" fill="#1877F2" />
