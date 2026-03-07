@@ -2,7 +2,7 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
-import { Heart, ShoppingCart } from 'lucide-react';
+import { Heart, ShoppingCart, Star } from 'lucide-react';
 import { ProductWithId } from '@/types';
 import { Button } from '@/components/ui/button';
 import { useCartStore } from '@/store/cartStore';
@@ -25,8 +25,31 @@ export default function ProductCard({ product }: ProductCardProps) {
   const isInWishlist = useWishlistStore((state) => state.isInWishlist(product._id));
   const [isWishlistLoading, setIsWishlistLoading] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [reviewStats, setReviewStats] = useState<{ total: number; avg: number } | null>(null);
 
-  useEffect(() => { setMounted(true); }, []);
+  useEffect(() => {
+    setMounted(true);
+
+    const fetchReviews = async () => {
+      try {
+        const res = await fetch(`/api/reviews?productId=${product._id}`);
+        if (res.ok) {
+          const data = await res.json();
+          if (data.stats) {
+            setReviewStats(data.stats);
+          } else {
+            setReviewStats({ total: 0, avg: 0 });
+          }
+        } else {
+          setReviewStats({ total: 0, avg: 0 });
+        }
+      } catch (err) {
+        setReviewStats({ total: 0, avg: 0 });
+      }
+    };
+
+    fetchReviews();
+  }, [product._id]);
 
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -170,6 +193,24 @@ export default function ProductCard({ product }: ProductCardProps) {
           <h3 className="font-heading font-semibold text-sm md:text-base line-clamp-2 group-hover:text-primary transition-colors tracking-tight">
             {product.name}
           </h3>
+
+          {mounted && reviewStats && (
+            <div className="mt-1 flex items-center gap-1">
+              {reviewStats.total > 0 ? (
+                <>
+                  <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
+                  <span className="text-xs font-semibold">{reviewStats.avg}</span>
+                  <span className="text-xs text-muted-foreground">({reviewStats.total})</span>
+                </>
+              ) : (
+                <>
+                  <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
+                  <span className="text-xs text-muted-foreground">No reviews</span>
+                </>
+              )}
+            </div>
+          )}
+
           {product.category && (
             <p className="mt-1 text-xs text-muted-foreground capitalize">{product.category}</p>
           )}

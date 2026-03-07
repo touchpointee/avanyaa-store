@@ -7,6 +7,7 @@ export interface IReview extends Document {
     rating: number;       // 1–5
     title: string;
     body: string;
+    isHidden: boolean;
     createdAt: Date;
     updatedAt: Date;
 }
@@ -19,6 +20,7 @@ const ReviewSchema = new Schema<IReview>(
         rating: { type: Number, required: true, min: 1, max: 5 },
         title: { type: String, required: true, trim: true, maxlength: 120 },
         body: { type: String, required: true, trim: true, maxlength: 1000 },
+        isHidden: { type: Boolean, default: false },
     },
     { timestamps: true }
 );

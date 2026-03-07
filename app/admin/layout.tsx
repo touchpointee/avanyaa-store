@@ -5,7 +5,8 @@ import { useRouter, usePathname } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { LayoutDashboard, Package, ShoppingBag, Loader2, Image, Layout, FolderOpen, Ruler, MessageSquare } from 'lucide-react';
+import { LayoutDashboard, Package, ShoppingBag, Loader2, Image as ImageIcon, Layout, FolderOpen, Ruler, MessageSquare, Star } from 'lucide-react';
+import Image from 'next/image';
 import { cn } from '@/lib/utils';
 
 const SESSION_LOADING_TIMEOUT_MS = 2000;
@@ -101,103 +102,127 @@ export default function AdminLayout({
   return (
     <div className="min-h-screen flex">
       {/* Fixed sidebar */}
-      <aside className="fixed left-0 top-0 z-30 h-screen w-64 shrink-0 border-r border-border bg-card shadow-sm">
+      {/* Fixed sidebar */}
+      <aside className="fixed left-0 top-0 z-30 h-screen w-64 shrink-0 border-none bg-[#265b9f] text-white shadow-xl flex flex-col">
         <div className="flex h-full flex-col">
-          <div className="border-b border-border px-4 py-4">
-            <h2 className="font-semibold text-lg">Admin Panel</h2>
-            <p className="text-xs text-muted-foreground mt-0.5">AVANYAA</p>
+          {/* Logo Header matches website logo background */}
+          <div className="flex items-center justify-center bg-[#F9F9F7] h-16 md:h-[70px] shrink-0 border-b border-border shadow-sm px-4">
+            <Link href="/admin" className="flex items-center gap-3 w-full justify-center">
+              <Image
+                src="/logo.png"
+                alt="Avanyaa"
+                width={130}
+                height={46}
+                className="h-10 w-auto object-contain"
+                priority
+              />
+              <span className="font-semibold text-[1.1rem] text-foreground mt-0.5 whitespace-nowrap">Admin Panel</span>
+            </Link>
           </div>
-          <nav className="flex-1 overflow-y-auto p-3 space-y-1">
+
+          {/* Navigation Links */}
+          <nav className="flex-1 overflow-y-auto p-4 space-y-1.5 mt-2">
             <Button
               variant="ghost"
-              className={cn('w-full justify-start', pathname === '/admin' && 'bg-primary/10 text-primary')}
+              className={cn('w-full justify-start text-blue-100 hover:text-white hover:bg-white/10 transition-colors', pathname === '/admin' && 'bg-white/20 text-white font-semibold')}
               asChild
             >
               <Link href="/admin">
-                <LayoutDashboard className="mr-2 h-4 w-4" />
+                <LayoutDashboard className="mr-3 h-4 w-4" />
                 Dashboard
               </Link>
             </Button>
             <Button
               variant="ghost"
-              className={cn('w-full justify-start', pathname?.startsWith('/admin/banners') && 'bg-primary/10 text-primary')}
+              className={cn('w-full justify-start text-blue-100 hover:text-white hover:bg-white/10 transition-colors', pathname?.startsWith('/admin/banners') && 'bg-white/20 text-white font-semibold')}
               asChild
             >
               <Link href="/admin/banners">
-                <Image className="mr-2 h-4 w-4" />
+                <ImageIcon className="mr-3 h-4 w-4" />
                 Banners
               </Link>
             </Button>
             <Button
               variant="ghost"
-              className={cn('w-full justify-start', pathname?.startsWith('/admin/homepage') && 'bg-primary/10 text-primary')}
+              className={cn('w-full justify-start text-blue-100 hover:text-white hover:bg-white/10 transition-colors', pathname?.startsWith('/admin/homepage') && 'bg-white/20 text-white font-semibold')}
               asChild
             >
               <Link href="/admin/homepage">
-                <Layout className="mr-2 h-4 w-4" />
+                <Layout className="mr-3 h-4 w-4" />
                 Homepage
               </Link>
             </Button>
             <Button
               variant="ghost"
-              className={cn('w-full justify-start', pathname?.startsWith('/admin/categories') && 'bg-primary/10 text-primary')}
+              className={cn('w-full justify-start text-blue-100 hover:text-white hover:bg-white/10 transition-colors', pathname?.startsWith('/admin/categories') && 'bg-white/20 text-white font-semibold')}
               asChild
             >
               <Link href="/admin/categories">
-                <FolderOpen className="mr-2 h-4 w-4" />
+                <FolderOpen className="mr-3 h-4 w-4" />
                 Categories
               </Link>
             </Button>
             <Button
               variant="ghost"
-              className={cn('w-full justify-start', pathname?.startsWith('/admin/sizes') && 'bg-primary/10 text-primary')}
+              className={cn('w-full justify-start text-blue-100 hover:text-white hover:bg-white/10 transition-colors', pathname?.startsWith('/admin/sizes') && 'bg-white/20 text-white font-semibold')}
               asChild
             >
               <Link href="/admin/sizes">
-                <Ruler className="mr-2 h-4 w-4" />
+                <Ruler className="mr-3 h-4 w-4" />
                 Sizes
               </Link>
             </Button>
             <Button
               variant="ghost"
-              className={cn('w-full justify-start', pathname?.startsWith('/admin/products') && 'bg-primary/10 text-primary')}
+              className={cn('w-full justify-start text-blue-100 hover:text-white hover:bg-white/10 transition-colors', pathname?.startsWith('/admin/products') && 'bg-white/20 text-white font-semibold')}
               asChild
             >
               <Link href="/admin/products">
-                <Package className="mr-2 h-4 w-4" />
+                <Package className="mr-3 h-4 w-4" />
                 Products
               </Link>
             </Button>
             <Button
               variant="ghost"
-              className={cn('w-full justify-start', pathname?.startsWith('/admin/orders') && 'bg-primary/10 text-primary')}
+              className={cn('w-full justify-start text-blue-100 hover:text-white hover:bg-white/10 transition-colors', pathname?.startsWith('/admin/orders') && 'bg-white/20 text-white font-semibold')}
               asChild
             >
               <Link href="/admin/orders">
-                <ShoppingBag className="mr-2 h-4 w-4" />
+                <ShoppingBag className="mr-3 h-4 w-4" />
                 Orders
               </Link>
             </Button>
             <Button
               variant="ghost"
-              className={cn('w-full justify-start', pathname?.startsWith('/admin/messages') && 'bg-primary/10 text-primary')}
+              className={cn('w-full justify-start text-blue-100 hover:text-white hover:bg-white/10 transition-colors', pathname?.startsWith('/admin/reviews') && 'bg-white/20 text-white font-semibold')}
               asChild
             >
-              <Link href="/admin/messages" className="flex items-center justify-between">
-                <span className="flex items-center">
-                  <MessageSquare className="mr-2 h-4 w-4" />
-                  Messages
-                </span>
+              <Link href="/admin/reviews">
+                <Star className="mr-3 h-4 w-4" />
+                Reviews
+              </Link>
+            </Button>
+            <Button
+              variant="ghost"
+              className={cn('w-full justify-start text-blue-100 hover:text-white hover:bg-white/10 transition-colors', pathname?.startsWith('/admin/messages') && 'bg-white/20 text-white font-semibold')}
+              asChild
+            >
+              <Link href="/admin/messages" className="flex items-center w-full">
+                <div className="flex items-center flex-1">
+                  <MessageSquare className="mr-3 h-4 w-4" />
+                  <span>Messages</span>
+                </div>
                 {unreadCount > 0 && (
-                  <span className="ml-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-blue-500 px-1.5 text-[10px] font-bold text-white">
+                  <span className="ml-2 flex h-5 min-w-5 items-center justify-center rounded-full bg-rose-500 px-1.5 text-[10px] font-bold text-white shadow-sm">
                     {unreadCount}
                   </span>
                 )}
               </Link>
             </Button>
           </nav>
-          <div className="border-t border-border p-3">
-            <Button variant="outline" className="w-full justify-start" size="sm" asChild>
+
+          <div className="border-t border-white/10 p-4 shrink-0">
+            <Button className="w-full justify-start bg-white/10 hover:bg-white/20 text-white border-0 transition-colors" size="sm" asChild>
               <Link href="/">Back to Store</Link>
             </Button>
           </div>

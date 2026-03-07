@@ -7,13 +7,14 @@ import { ProductWithId } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { Heart, ShoppingCart, Loader2 } from 'lucide-react';
+import { Heart, ShoppingCart, Loader2, Star } from 'lucide-react';
 import { useCartStore } from '@/store/cartStore';
 import { useWishlistStore } from '@/store/wishlistStore';
 import { formatPrice } from '@/lib/utils';
 import { useToast } from '@/components/ui/use-toast';
 import { useSession } from 'next-auth/react';
 import { isCustomerSession } from '@/lib/customerSession';
+import ProductReviews from '@/components/ProductReviews';
 
 export default function ProductDetailPage() {
   const params = useParams();
@@ -25,6 +26,7 @@ export default function ProductDetailPage() {
   const [loading, setLoading] = useState(true);
   const [selectedSize, setSelectedSize] = useState('');
   const [selectedImage, setSelectedImage] = useState(0);
+  const [reviewStats, setReviewStats] = useState({ total: 0, avg: 0 });
 
   const addToCart = useCartStore((state) => state.addItem);
   const toggleWishlist = useWishlistStore((state) => state.toggleItem);
@@ -43,6 +45,19 @@ export default function ProductDetailPage() {
         const data = await response.json();
         setProduct(data);
         setSelectedSize(data.sizes[0] || '');
+
+        // Fetch review stats
+        try {
+          const revRes = await fetch(`/api/reviews?productId=${data._id}`);
+          if (revRes.ok) {
+            const revData = await revRes.json();
+            if (revData.stats) {
+              setReviewStats(revData.stats);
+            }
+          }
+        } catch {
+          // ignore error, just don't show stats
+        }
       } else {
         toast({
           title: 'Product not found',
@@ -189,6 +204,22 @@ export default function ProductDetailPage() {
             </Badge>
           )}
           <h1 className="font-heading text-2xl md:text-3xl font-semibold tracking-tight">{product.name}</h1>
+
+          <div className="flex items-center gap-1.5 mt-1">
+            {reviewStats.total > 0 ? (
+              <>
+                <Star className="h-4 w-4 fill-amber-400 text-amber-400" />
+                <span className="text-sm font-semibold">{reviewStats.avg}</span>
+                <span className="text-sm text-muted-foreground">({reviewStats.total} review{reviewStats.total !== 1 ? 's' : ''})</span>
+              </>
+            ) : (
+              <>
+                <Star className="h-4 w-4 fill-amber-400 text-amber-400" />
+                <span className="text-sm text-muted-foreground">No reviews yet</span>
+              </>
+            )}
+          </div>
+
           <div className="flex items-center gap-3">
             <span className="text-2xl font-semibold">{formatPrice(product.price)}</span>
             {product.compareAtPrice && (
@@ -263,6 +294,9 @@ export default function ProductDetailPage() {
           </div>
         </div>
       </div>
+
+      {/* Product Reviews */}
+      <ProductReviews productId={product._id} />
 
       {/* Sticky bottom CTA - Mobile only */}
       <div className="md:hidden fixed bottom-16 left-0 right-0 z-40 p-4 bg-card border-t border-border shadow-lg safe-area-pb">

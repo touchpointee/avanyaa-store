@@ -4,6 +4,9 @@ import { authOptions } from '@/lib/auth';
 import connectDB from '@/lib/db';
 import Review from '@/models/Review';
 import Product from '@/models/Product';
+import Order from '@/models/Order';
+
+export const dynamic = 'force-dynamic';
 
 /* ── GET /api/reviews?productId=xxx ─────────────────────────── */
 export async function GET(req: NextRequest) {
@@ -15,7 +18,7 @@ export async function GET(req: NextRequest) {
 
         await connectDB();
 
-        const reviews = await Review.find({ productId })
+        const reviews = await Review.find({ productId, isHidden: { $ne: true } })
             .sort({ createdAt: -1 })
             .lean();
 
@@ -70,6 +73,17 @@ export async function POST(req: NextRequest) {
 
         const userId = (session.user as any).id;
         const userName = session.user.name || 'Customer';
+
+        // Check if user has purchased the product (not cancelled/returned)
+        const hasPurchased = await Order.exists({
+            userId,
+            status: { $nin: ['cancelled', 'returned'] },
+            'items.productId': productId,
+        });
+
+        if (!hasPurchased && (session.user as any).role !== 'admin') {
+            return NextResponse.json({ error: 'Only verified purchasers can leave a review' }, { status: 403 });
+        }
 
         // Upsert — one review per user per product
         const review = await Review.findOneAndUpdate(

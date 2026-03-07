@@ -108,6 +108,7 @@ export default function ProductReviews({ productId }: { productId: string }) {
     const [reviews, setReviews] = useState<Review[]>([]);
     const [stats, setStats] = useState<Stats>({ total: 0, avg: 0, dist: [] });
     const [loadingReviews, setLoadingReviews] = useState(true);
+    const [hasPurchased, setHasPurchased] = useState(false);
 
     /* Form state */
     const [showForm, setShowForm] = useState(false);
@@ -140,7 +141,21 @@ export default function ProductReviews({ productId }: { productId: string }) {
         }
     }, [productId]);
 
-    useEffect(() => { fetchReviews(); }, [fetchReviews]);
+    const checkPurchase = useCallback(async () => {
+        if (!isLoggedIn) return;
+        try {
+            const res = await fetch(`/api/orders/check-purchase?productId=${productId}`);
+            const data = await res.json();
+            setHasPurchased(data.hasPurchased);
+        } catch {
+            setHasPurchased(false);
+        }
+    }, [productId, isLoggedIn]);
+
+    useEffect(() => {
+        fetchReviews();
+        checkPurchase();
+    }, [fetchReviews, checkPurchase]);
 
     /* ── Pre-fill form if user already reviewed ─────────────── */
     useEffect(() => {
@@ -223,15 +238,21 @@ export default function ProductReviews({ productId }: { productId: string }) {
                 {/* Write review button */}
                 {!showForm && (
                     isLoggedIn ? (
-                        <Button
-                            size="sm"
-                            variant={myReview ? 'outline' : 'default'}
-                            className="shrink-0 rounded-lg gap-2"
-                            onClick={() => setShowForm(true)}
-                        >
-                            <Pencil className="h-3.5 w-3.5" />
-                            {myReview ? 'Edit My Review' : 'Write a Review'}
-                        </Button>
+                        hasPurchased ? (
+                            <Button
+                                size="sm"
+                                variant={myReview ? 'outline' : 'default'}
+                                className="shrink-0 rounded-lg gap-2"
+                                onClick={() => setShowForm(true)}
+                            >
+                                <Pencil className="h-3.5 w-3.5" />
+                                {myReview ? 'Edit My Review' : 'Write a Review'}
+                            </Button>
+                        ) : (
+                            <p className="text-sm text-muted-foreground italic border border-border bg-muted/30 px-3 py-1.5 rounded-lg shrink-0">
+                                Only customers who purchased this can review.
+                            </p>
+                        )
                     ) : (
                         <Button
                             size="sm"
