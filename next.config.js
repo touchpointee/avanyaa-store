@@ -18,12 +18,13 @@ const nextConfig = {
       // MinIO: allow your MINIO_ENDPOINT host (required for next/image to load MinIO images)
       ...(minioHost
         ? [
-            { protocol: 'https', hostname: minioHost, pathname: '/**' },
-            { protocol: 'http', hostname: minioHost, pathname: '/**' },
-          ]
+          { protocol: 'https', hostname: minioHost, pathname: '/**' },
+          { protocol: 'http', hostname: minioHost, pathname: '/**' },
+        ]
         : []),
     ],
   },
+  output: 'standalone',
 }
 
 module.exports = nextConfig
