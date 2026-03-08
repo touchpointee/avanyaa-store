@@ -51,10 +51,10 @@ export default function ContactPage() {
                 <div className="container mx-auto px-4 text-center">
                     <p className="text-sm uppercase tracking-widest opacity-70 mb-3">Get in touch</p>
                     <h1 className="font-heading text-4xl md:text-5xl font-semibold tracking-tight mb-4">
-                        We'd Love to Hear From You
+                        We&apos;d Love to Hear From You
                     </h1>
                     <p className="text-base opacity-80 max-w-xl mx-auto">
-                        Have a question about an order, sizing, or our collection? Reach out and we'll respond promptly.
+                        Have a question about an order, sizing, or our collection? Reach out and we&apos;ll respond promptly.
                     </p>
                 </div>
             </section>

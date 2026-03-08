@@ -142,7 +142,7 @@ export default function AboutPage() {
                     Ready to Explore?
                 </h2>
                 <p className="text-sm text-muted-foreground mb-7">
-                    Browse our latest collection or reach out — we'd love to help you find your perfect look.
+                    Browse our latest collection or reach out — we&apos;d love to help you find your perfect look.
                 </p>
                 <div className="flex flex-col sm:flex-row gap-3 justify-center">
                     <Link

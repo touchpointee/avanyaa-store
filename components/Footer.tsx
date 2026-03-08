@@ -61,7 +61,7 @@ export default function Footer() {
               />
             </Link>
             <p className="text-sm text-muted-foreground leading-relaxed max-w-[220px]">
-              Premium women's dresses crafted for elegance, comfort, and confidence.
+              Premium women&apos;s dresses crafted for elegance, comfort, and confidence.
             </p>
             {/* Social proof */}
             <div className="flex items-center gap-2 mt-1">

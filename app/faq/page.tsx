@@ -127,7 +127,7 @@ export default function FAQPage() {
                         Frequently Asked Questions
                     </h1>
                     <p className="text-base opacity-80 max-w-xl mx-auto">
-                        Everything you need to know about shopping with AVANYAA. Can't find your answer?{' '}
+                        Everything you need to know about shopping with AVANYAA. Can&apos;t find your answer?{' '}
                         <Link href="/contact" className="underline underline-offset-2 font-medium">
                             Contact us
                         </Link>
