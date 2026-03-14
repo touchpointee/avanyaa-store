@@ -20,6 +20,7 @@ export default function SignUpPage() {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
+    mobile: '',
     password: '',
     confirmPassword: '',
   });
@@ -56,6 +57,7 @@ export default function SignUpPage() {
         body: JSON.stringify({
           name: formData.name,
           email: formData.email,
+          mobile: formData.mobile,
           password: formData.password,
         }),
       });
@@ -119,6 +121,21 @@ export default function SignUpPage() {
                 value={formData.email}
                 onChange={(e) =>
                   setFormData({ ...formData, email: e.target.value })
+                }
+                required
+                className="rounded-lg border-border"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="mobile">Mobile Number *</Label>
+              <Input
+                id="mobile"
+                type="tel"
+                placeholder="+91 98765 43210"
+                value={formData.mobile}
+                onChange={(e) =>
+                  setFormData({ ...formData, mobile: e.target.value })
                 }
                 required
                 className="rounded-lg border-border"

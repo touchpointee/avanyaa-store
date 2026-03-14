@@ -196,3 +196,101 @@ body[data-scroll-locked] {
   overflow: visible !important;
   overflow-y: scroll !important;
 }
+
+/* ─────────────────────────────────────────────
+   Page transition — every Next.js page fades in
+   ───────────────────────────────────────────── */
+@keyframes page-enter {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Apply to the main wrapper inside layouts */
+.page-transition {
+  animation: page-enter 0.28s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* Admin main content area */
+main > div,
+.admin-content {
+  animation: page-enter 0.25s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* ─────────────────────────────────────────────
+   Button press feedback — feels tactile
+   ───────────────────────────────────────────── */
+button:not([disabled]),
+[role="button"]:not([disabled]) {
+  transition:
+    background-color 120ms ease,
+    color 120ms ease,
+    border-color 120ms ease,
+    box-shadow 120ms ease,
+    transform 80ms ease,
+    opacity 120ms ease;
+}
+
+button:not([disabled]):active,
+[role="button"]:not([disabled]):active {
+  transform: scale(0.97);
+  opacity: 0.9;
+}
+
+/* ─────────────────────────────────────────────
+   Link transitions
+   ───────────────────────────────────────────── */
+a {
+  transition: color 150ms ease, opacity 150ms ease;
+}
+
+/* ─────────────────────────────────────────────
+   Input / textarea focus transitions
+   ───────────────────────────────────────────── */
+input, textarea, select {
+  transition: border-color 150ms ease, box-shadow 150ms ease;
+}
+
+/* ─────────────────────────────────────────────
+   Card hover lift (for clickable cards)
+   ───────────────────────────────────────────── */
+.card-hover {
+  transition: box-shadow 200ms ease, transform 200ms ease;
+}
+.card-hover:hover {
+  box-shadow: 0 8px 24px -6px rgb(0 0 0 / 0.12);
+  transform: translateY(-2px);
+}
+
+/* ─────────────────────────────────────────────
+   Admin sidebar link transitions
+   ───────────────────────────────────────────── */
+aside a, aside button {
+  transition:
+    background-color 150ms ease,
+    color 150ms ease,
+    transform 80ms ease !important;
+}
+
+aside a:active, aside button:active {
+  transform: scale(0.98);
+}
+
+/* ─────────────────────────────────────────────
+   Skeleton shimmer (for loading states)
+   ───────────────────────────────────────────── */
+@keyframes skeleton-pulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.5; }
+}
+
+.skeleton {
+  background: hsl(var(--muted));
+  border-radius: 6px;
+  animation: skeleton-pulse 1.5s ease-in-out infinite;
+}

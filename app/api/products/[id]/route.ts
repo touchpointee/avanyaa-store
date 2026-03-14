@@ -37,7 +37,7 @@ export async function PUT(
 ) {
   try {
     const session = await getServerSession(authOptions);
-    
+
     if (!session || (session.user as any).role !== 'admin') {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -45,43 +45,56 @@ export async function PUT(
     await connectDB();
 
     const body = await req.json();
-    const { name, description, price, compareAtPrice, category, categoryId, sizes, colors, images, stock, featured } = body;
+    const { name, description, price, compareAtPrice, category, categoryId, sizes, colors, images, variants, stock, featured, colorImages } = body;
 
-    const product = await Product.findById(params.id);
+    const existing = await Product.findById(params.id);
 
-    if (!product) {
+    if (!existing) {
       return NextResponse.json({ error: 'Product not found' }, { status: 404 });
     }
 
     // Update slug if name changed
-    if (name && name !== product.name) {
-      const slug = generateSlug(name);
-      const existingProduct = await Product.findOne({ slug, _id: { $ne: params.id } });
-      if (existingProduct) {
+    let slug = existing.slug;
+    if (name && name !== existing.name) {
+      slug = generateSlug(name);
+      const duplicate = await Product.findOne({ slug, _id: { $ne: params.id } });
+      if (duplicate) {
         return NextResponse.json(
           { error: 'Product with this name already exists' },
           { status: 400 }
         );
       }
-      product.slug = slug;
     }
 
-    // Update fields
-    if (name) product.name = name;
-    if (description) product.description = description;
-    if (price !== undefined) product.price = price;
-    if (compareAtPrice !== undefined) product.compareAtPrice = compareAtPrice;
-    if (category !== undefined) product.category = category;
-    if (categoryId !== undefined) product.categoryId = categoryId || undefined;
-    if (sizes) product.sizes = sizes;
-    if (colors) product.colors = colors;
-    if (images) product.images = images;
-    if (stock !== undefined) product.stock = stock;
-    if (featured !== undefined) product.featured = featured;
+    const resolvedVariants = variants ?? existing.variants ?? [];
+    // The Total stock is strictly the sum of all variant stocks
+    const resolvedStock = resolvedVariants.reduce((sum: number, v: any) => sum + (Number(v.stock) || 0), 0);
 
-    await product.save();
+    // Build update object with all fields explicitly
+    const updateData: any = {
+      slug,
+      name,
+      description,
+      price,
+      compareAtPrice: compareAtPrice ?? existing.compareAtPrice,
+      category: category ?? existing.category,
+      categoryId: categoryId || existing.categoryId,
+      sizes: sizes ?? existing.sizes,
+      colors: colors ?? existing.colors,
+      images: images ?? existing.images,
+      variants: resolvedVariants,
+      stock: resolvedStock,
+      featured: featured ?? existing.featured,
+      colorImages: colorImages ?? existing.colorImages ?? [],
+    };
 
-    return NextResponse.json(product);
+    const updated = await Product.findByIdAndUpdate(
+      params.id,
+      { $set: updateData },
+      { new: true }
+    );
+
+    return NextResponse.json(updated);
   } catch (error: any) {
     console.error('Product update error:', error);
     return NextResponse.json(
@@ -98,7 +111,7 @@ export async function DELETE(
 ) {
   try {
     const session = await getServerSession(authOptions);
-    
+
     if (!session || (session.user as any).role !== 'admin') {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }

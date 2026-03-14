@@ -154,7 +154,7 @@ export async function POST(req: NextRequest) {
     await connectDB();
 
     const body = await req.json();
-    const { name, description, price, compareAtPrice, category, categoryId, sizes, colors, images, stock, featured } = body;
+    const { name, description, price, compareAtPrice, category, categoryId, sizes, colors, images, variants, stock, featured, colorImages } = body;
 
     // Generate slug
     const slug = generateSlug(name);
@@ -168,6 +168,9 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    const resolvedVariants = variants || [];
+    const resolvedStock = resolvedVariants.reduce((sum: number, v: any) => sum + (Number(v.stock) || 0), 0);
+
     const product = await Product.create({
       name,
       slug,
@@ -179,8 +182,10 @@ export async function POST(req: NextRequest) {
       sizes,
       colors,
       images,
-      stock,
+      variants: resolvedVariants,
+      stock: resolvedStock,
       featured: featured || false,
+      colorImages: colorImages || [],
     });
 
     return NextResponse.json(product, { status: 201 });

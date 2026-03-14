@@ -11,6 +11,12 @@ export interface IProduct extends Document {
   sizes: string[];
   colors: string[];
   images: string[];
+  colorImages: { color: string; image: string }[];
+  variants: {
+    size: string;
+    color: string;
+    stock: number;
+  }[];
   stock: number;
   featured: boolean;
   createdAt: Date;
@@ -65,12 +71,25 @@ const ProductSchema = new Schema<IProduct>(
       type: [String],
       required: true,
       validate: {
-        validator: function(v: string[]) {
+        validator: function (v: string[]) {
           return v.length > 0;
         },
         message: 'At least one image is required',
       },
     },
+    variants: [
+      {
+        size: { type: String, required: true },
+        color: { type: String, required: true },
+        stock: { type: Number, required: true, default: 0, min: 0 }
+      }
+    ],
+    colorImages: [
+      {
+        color: { type: String, required: true },
+        image: { type: String, required: true },
+      }
+    ],
     stock: {
       type: Number,
       required: true,
@@ -94,6 +113,13 @@ ProductSchema.index({ categoryId: 1 });
 ProductSchema.index({ price: 1 });
 ProductSchema.index({ featured: 1 });
 
-const Product: Model<IProduct> = mongoose.models.Product || mongoose.model<IProduct>('Product', ProductSchema);
+// Always delete and re-register the model to avoid stale schema caching
+// (important when adding new fields like colorImages in development/production)
+if (mongoose.models.Product) {
+  delete (mongoose.models as any).Product;
+}
+
+const Product: Model<IProduct> = mongoose.model<IProduct>('Product', ProductSchema);
+
 
 export default Product;

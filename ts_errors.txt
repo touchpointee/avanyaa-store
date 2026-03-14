@@ -1,0 +1,2 @@
+﻿app/admin/inventory/history/page.tsx(14,8): error TS2307: Cannot find module '@/components/ui/table' or its corresponding type declarations.
+app/admin/inventory/page.tsx(15,8): error TS2307: Cannot find module '@/components/ui/table' or its corresponding type declarations.

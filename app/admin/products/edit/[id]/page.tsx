@@ -9,7 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/components/ui/use-toast';
-import { Loader2, Upload, X } from 'lucide-react';
+import { Loader2, Upload, X, Plus } from 'lucide-react';
 
 export default function EditProductPage() {
   const router = useRouter();
@@ -18,7 +18,7 @@ export default function EditProductPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [uploadingImages, setUploadingImages] = useState(false);
-  
+
   const [formData, setFormData] = useState({
     name: '',
     description: '',
@@ -29,15 +29,16 @@ export default function EditProductPage() {
     sizes: [] as string[],
     colors: [] as string[],
     images: [] as string[],
-    stock: '',
     featured: false,
+    variants: [] as { size: string; color: string; stock: string | number }[],
+    colorImages: [] as { color: string; image: string }[],
   });
 
   const [sizes, setSizes] = useState<string[]>([]);
+  const [colors, setColors] = useState<{ name: string; hex: string }[]>([]);
   const [categories, setCategories] = useState<{ _id: string; name: string; slug: string }[]>([]);
   const [homepageSections, setHomepageSections] = useState<{ _id: string; title: string; type: string; linkedProductIds: { _id: string }[] }[]>([]);
   const [showInSectionIds, setShowInSectionIds] = useState<string[]>([]);
-  const COLORS = ['Black', 'White', 'Red', 'Blue', 'Green', 'Pink', 'Yellow', 'Purple'];
 
   const sectionTypesWithProducts = ['trending', 'new_arrivals', 'promo', 'category'];
 
@@ -68,6 +69,13 @@ export default function EditProductPage() {
       .then((res) => res.ok ? res.json() : [])
       .then((data) => setSizes(data.map((s: { name: string }) => s.name)))
       .catch(() => setSizes([]));
+  }, []);
+
+  useEffect(() => {
+    fetch('/api/colors')
+      .then((res) => res.ok ? res.json() : [])
+      .then((data) => setColors(Array.isArray(data) ? data.map((c: { name: string; hex: string }) => ({ name: c.name, hex: c.hex })) : []))
+      .catch(() => setColors([]));
   }, []);
 
   useEffect(() => {
@@ -107,8 +115,9 @@ export default function EditProductPage() {
           sizes: data.sizes,
           colors: data.colors,
           images: data.images,
-          stock: data.stock.toString(),
           featured: data.featured,
+          variants: data.variants || [],
+          colorImages: (data.colorImages || []).map((ci: any) => ({ color: ci.color, image: ci.image })),
         });
       } else {
         toast({
@@ -169,9 +178,12 @@ export default function EditProductPage() {
   };
 
   const handleRemoveImage = (index: number) => {
+    const removedUrl = formData.images[index];
     setFormData((prev) => ({
       ...prev,
       images: prev.images.filter((_, i) => i !== index),
+      // Also clear any color mapping that used this image
+      colorImages: prev.colorImages.filter((ci) => ci.image !== removedUrl),
     }));
   };
 
@@ -209,7 +221,9 @@ export default function EditProductPage() {
           ...formData,
           price: parseFloat(formData.price),
           compareAtPrice: formData.compareAtPrice ? parseFloat(formData.compareAtPrice) : undefined,
-          stock: parseInt(formData.stock),
+          stock: formData.variants.reduce((sum, v) => sum + (parseInt(String(v.stock)) || 0), 0),
+          variants: formData.variants.map(v => ({ ...v, stock: parseInt(String(v.stock)) || 0 })),
+          colorImages: formData.colorImages,
         }),
       });
 
@@ -270,7 +284,7 @@ export default function EditProductPage() {
   }
 
   return (
-    <div className="max-w-2xl">
+    <div className="max-w-3xl pb-20">
       <h2 className="text-3xl font-bold mb-6">Edit Product</h2>
 
       <form onSubmit={handleSubmit} className="space-y-6">
@@ -350,17 +364,6 @@ export default function EditProductPage() {
               )}
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="stock">Stock *</Label>
-              <Input
-                id="stock"
-                type="number"
-                value={formData.stock}
-                onChange={(e) => setFormData({ ...formData, stock: e.target.value })}
-                required
-              />
-            </div>
-
             <div className="flex items-center space-x-2">
               <Checkbox
                 id="featured"
@@ -433,27 +436,145 @@ export default function EditProductPage() {
             <CardTitle>Colors *</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-2 gap-2">
-              {COLORS.map((color) => (
-                <div key={color} className="flex items-center space-x-2">
-                  <Checkbox
-                    id={color}
-                    checked={formData.colors.includes(color)}
-                    onCheckedChange={(checked) => {
-                      setFormData((prev) => ({
-                        ...prev,
-                        colors: checked
-                          ? [...prev.colors, color]
-                          : prev.colors.filter((c) => c !== color),
-                      }));
-                    }}
-                  />
-                  <Label htmlFor={color} className="cursor-pointer">
-                    {color}
-                  </Label>
+            {colors.length === 0 ? (
+              <p className="text-sm text-muted-foreground">Loading colours…</p>
+            ) : (
+              <div className="grid grid-cols-2 gap-2">
+                {colors.map((color) => (
+                  <div key={color.name} className="flex items-center space-x-2">
+                    <Checkbox
+                      id={`color-${color.name}`}
+                      checked={formData.colors.includes(color.name)}
+                      onCheckedChange={(checked) => {
+                        setFormData((prev) => ({
+                          ...prev,
+                          colors: checked
+                            ? [...prev.colors, color.name]
+                            : prev.colors.filter((c) => c !== color.name),
+                        }));
+                      }}
+                    />
+                    <div
+                      className="h-4 w-4 rounded-full border border-border shadow-sm shrink-0"
+                      style={{ backgroundColor: color.hex }}
+                    />
+                    <Label htmlFor={`color-${color.name}`} className="cursor-pointer">
+                      {color.name}
+                    </Label>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Variants & Stock</CardTitle>
+            <p className="text-sm text-muted-foreground">Manage stock for specific sizes and colors.</p>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {/* Total Stock — auto-calculated from variants */}
+            <div className="flex items-center gap-4 p-4 rounded-xl bg-muted/50 border border-border">
+              <div className="flex-1 space-y-1">
+                <Label className="text-sm font-semibold">Total Stock</Label>
+                <p className="text-xs text-muted-foreground">Auto-calculated from the sum of all variant stocks below.</p>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-32 h-10 rounded-md border border-border bg-background px-3 flex items-center justify-center font-bold text-lg select-none">
+                  {formData.variants.reduce((sum, v) => sum + (parseInt(String(v.stock)) || 0), 0)}
                 </div>
-              ))}
+              </div>
             </div>
+            <div className="border-b border-border" />
+            {formData.variants.length > 0 ? (
+              <div className="space-y-3">
+                <div className="grid grid-cols-4 gap-4 font-medium text-sm text-muted-foreground pb-2 border-b">
+                  <div>Size</div>
+                  <div>Color</div>
+                  <div>Stock</div>
+                  <div></div>
+                </div>
+                {formData.variants.map((v, idx) => (
+                  <div key={idx} className="grid grid-cols-4 gap-4 items-center">
+                    <Select
+                      value={v.size || undefined}
+                      onValueChange={(val) => {
+                        const newVariants = [...formData.variants];
+                        newVariants[idx].size = val;
+                        setFormData({ ...formData, variants: newVariants });
+                      }}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select size" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {formData.sizes.map((s) => (
+                          <SelectItem key={s} value={s}>{s}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <Select
+                      value={v.color || undefined}
+                      onValueChange={(val) => {
+                        const newVariants = [...formData.variants];
+                        newVariants[idx].color = val;
+                        setFormData({ ...formData, variants: newVariants });
+                      }}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select color" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {formData.colors.map((c) => (
+                          <SelectItem key={c} value={c}>{c}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <Input
+                      type="number"
+                      min="0"
+                      value={String(v.stock)}
+                      onChange={(e) => {
+                        const newVariants = [...formData.variants];
+                        newVariants[idx] = { ...newVariants[idx], stock: e.target.value };
+                        setFormData({ ...formData, variants: newVariants });
+                      }}
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="text-destructive w-fit"
+                      onClick={() => {
+                        setFormData({
+                          ...formData,
+                          variants: formData.variants.filter((_, i) => i !== idx)
+                        });
+                      }}
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm text-muted-foreground">No variants added yet.</p>
+            )}
+
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full mt-4"
+              onClick={() => {
+                setFormData({
+                  ...formData,
+                  variants: [...formData.variants, { size: formData.sizes[0] || '', color: formData.colors[0] || '', stock: '' }]
+                });
+              }}
+            >
+              <Plus className="h-4 w-4 mr-2" /> Add Variant
+            </Button>
           </CardContent>
         </Card>
 
@@ -506,6 +627,51 @@ export default function EditProductPage() {
             )}
           </CardContent>
         </Card>
+
+        {/* Color → Image Mapping */}
+        {formData.colors.length > 0 && formData.images.length > 0 && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Color → Image Mapping</CardTitle>
+              <p className="text-sm text-muted-foreground">Assign a specific image to each color. When a customer selects a color, that image will be shown automatically.</p>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {formData.colors.map((color) => {
+                const mapped = formData.colorImages.find((ci) => ci.color === color);
+                return (
+                  <div key={color} className="flex items-center gap-4">
+                    <span className="w-20 text-sm font-medium shrink-0">{color}</span>
+                    <Select
+                      value={mapped?.image || '__none__'}
+                      onValueChange={(val) => {
+                        setFormData((prev) => {
+                          const rest = prev.colorImages.filter((ci) => ci.color !== color);
+                          if (val === '__none__') return { ...prev, colorImages: rest };
+                          return { ...prev, colorImages: [...rest, { color, image: val }] };
+                        });
+                      }}
+                    >
+                      <SelectTrigger className="flex-1">
+                        <SelectValue placeholder="No image assigned" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="__none__">— No image assigned —</SelectItem>
+                        {formData.images.map((url, idx) => (
+                          <SelectItem key={url} value={url}>
+                            Image {idx + 1}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    {mapped?.image && (
+                      <img src={mapped.image} alt={color} className="w-12 h-12 rounded-lg object-cover border shrink-0" />
+                    )}
+                  </div>
+                );
+              })}
+            </CardContent>
+          </Card>
+        )}
 
         <div className="flex gap-4">
           <Button type="submit" disabled={saving} className="flex-1">

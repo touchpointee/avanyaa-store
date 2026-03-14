@@ -8,6 +8,7 @@ export interface CartItem {
   image: string;
   quantity: number;
   size?: string;
+  color?: string;
   stock: number;
 }
 
@@ -23,6 +24,7 @@ export interface CheckoutFormData {
 
 export interface ProductWithId extends Omit<IProduct, '_id'> {
   _id: string;
+  colorImages: { color: string; image: string }[];
 }
 
 export interface OrderWithId extends Omit<IOrder, '_id' | 'userId' | 'status' | 'createdAt' | 'updatedAt'> {
@@ -37,10 +39,24 @@ export interface DashboardStats {
   totalOrders: number;
   totalRevenue: number;
   totalProducts: number;
+  totalUsers: number;
+  totalMessages: number;
   recentOrders: OrderWithId[];
   ordersLast7Days: Array<{
     date: string;
     count: number;
+  }>;
+  outOfStockProducts: Array<{
+    _id: string;
+    name: string;
+    stock: number;
+    images: string[];
+  }>;
+  lowStockProducts: Array<{
+    _id: string;
+    name: string;
+    stock: number;
+    images: string[];
   }>;
 }
 

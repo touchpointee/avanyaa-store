@@ -11,8 +11,8 @@ import { cn } from '@/lib/utils';
 const items = [
   { href: '/', icon: Home, label: 'Home', protected: false },
   { href: '/products', icon: LayoutGrid, label: 'Categories', protected: false },
-  { href: '/wishlist', icon: Heart, label: 'Wishlist', protected: true },
-  { href: '/cart', icon: ShoppingCart, label: 'Cart', protected: true },
+  { href: '/wishlist', icon: Heart, label: 'Wishlist', protected: false },
+  { href: '/cart', icon: ShoppingCart, label: 'Cart', protected: false },
   { href: '/profile', icon: User, label: 'Profile', protected: true },
 ];
 
@@ -45,10 +45,8 @@ export default function BottomNav() {
           const isCart = href === '/cart';
           const isWishlist = href === '/wishlist';
 
-          // Only show counts when the user is logged in
-          const count = isLoggedIn
-            ? isCart ? totalItems : isWishlist ? wishlistCount : 0
-            : 0;
+          // Show counts for everyone (guests can use cart and wishlist)
+          const count = isCart ? totalItems : isWishlist ? wishlistCount : 0;
 
           const active = pathname === href || (href !== '/' && pathname.startsWith(href));
 

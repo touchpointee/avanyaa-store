@@ -99,7 +99,7 @@ const EMPTY_FORM: FormData = {
 export default function CheckoutPage() {
   const router = useRouter();
   const { data: session, status: sessionStatus } = useSession();
-  const { items, getTotalPrice, clearCart } = useCartStore();
+  const { items, getTotalPrice, clearCart, hasHydrated } = useCartStore();
   const { toast } = useToast();
 
   const [loading, setLoading] = useState(false);
@@ -278,7 +278,7 @@ export default function CheckoutPage() {
       const response = await fetch('/api/orders', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ items: items.map((item) => ({ productId: item.productId, quantity: item.quantity, size: item.size })), address }),
+        body: JSON.stringify({ items: items.map((item) => ({ productId: item.productId, quantity: item.quantity, size: item.size, color: item.color })), address }),
       });
       const data = await response.json();
       if (response.ok) { clearCart(); setPlacedOrderId(data.orderId); }
@@ -292,8 +292,17 @@ export default function CheckoutPage() {
   };
 
   useEffect(() => {
-    if (items.length === 0 && !loading && !placedOrderId) router.replace('/cart');
-  }, [items.length, loading, placedOrderId, router]);
+    if (hasHydrated && items.length === 0 && !loading && !placedOrderId) router.replace('/cart');
+  }, [hasHydrated, items.length, loading, placedOrderId, router]);
+
+  // Show loading spinner while cart is hydrating from localStorage
+  if (!hasHydrated) {
+    return (
+      <div className="container mx-auto px-4 py-16 flex items-center justify-center min-h-[40vh]">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   if (items.length === 0 && !placedOrderId) {
     return <div className="container mx-auto px-4 py-16 flex items-center justify-center min-h-[40vh]"><p className="text-muted-foreground">Redirecting to cart...</p></div>;
@@ -532,33 +541,19 @@ export default function CheckoutPage() {
                         )}
                       </div>
                       {/* ZIP */}
-                      <div className="space-y-2" ref={isIndia && availableZips.length > 1 ? zipRef : undefined}>
-                        <Label htmlFor={isIndia && availableZips.length > 1 ? 'zip-btn' : 'zipCode'}>ZIP Code *</Label>
-                        {isIndia && availableZips.length > 1 ? (
-                          <div className="relative">
-                            <button id="zip-btn" type="button" disabled={!formData.city} onClick={() => setZipOpen((o) => !o)}
-                              className="flex h-10 w-full items-center justify-between gap-2 rounded-lg border border-border bg-background px-3 py-2 text-sm hover:bg-muted/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
-                              <span className={formData.zipCode ? '' : 'text-muted-foreground'}>{formData.zipCode || (formData.city ? 'Select PIN' : 'Select city first')}</span>
-                              <ChevronDown className={`h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-200 ${zipOpen ? 'rotate-180' : ''}`} />
-                            </button>
-                            {zipOpen && (
-                              <div className="absolute z-50 mt-1 w-full rounded-lg border border-border bg-background shadow-lg overflow-hidden">
-                                <ul className="max-h-48 overflow-y-auto py-1" role="listbox">
-                                  {availableZips.map((z) => (
-                                    <li key={z}><button type="button" role="option" aria-selected={formData.zipCode === z}
-                                      onClick={() => { setFormData({ ...formData, zipCode: z }); setZipOpen(false); }}
-                                      className={`flex w-full items-center px-3 py-2.5 text-sm font-mono transition-colors hover:bg-muted/60 ${formData.zipCode === z ? 'bg-primary/10 font-semibold text-primary' : ''}`}>{z}</button></li>
-                                  ))}
-                                </ul>
-                              </div>
-                            )}
-                          </div>
-                        ) : (
-                          <Input id="zipCode" name="zipCode" value={formData.zipCode} onChange={handleInputChange} required readOnly={isIndia && availableZips.length === 1}
-                            placeholder={isIndia && !formData.city ? 'Select city first' : ''} className="rounded-lg border-border" />
-                        )}
+                      <div className="space-y-2">
+                        <Label htmlFor="zipCode">ZIP / Pincode *</Label>
+                        <Input
+                          id="zipCode"
+                          name="zipCode"
+                          value={formData.zipCode}
+                          onChange={handleInputChange}
+                          required
+                          placeholder={isIndia ? 'Enter 6-digit pincode' : 'Enter ZIP code'}
+                          className="rounded-lg border-border"
+                        />
                         {pincodeError && <p className="text-xs text-destructive mt-1">{pincodeError}</p>}
-                        {pincodeStatus === 'valid' && <p className="text-xs text-emerald-600 mt-1 flex items-center gap-1"><CheckCircle2 className="h-3 w-3" /> Pincode verified</p>}
+                        {pincodeStatus === 'valid' && <p className="text-xs text-emerald-600 mt-1 flex items-center gap-1"><CheckCircle2 className="h-3 w-3" /> Pincode verified — city &amp; state auto-filled</p>}
                       </div>
                     </div>
 
@@ -623,7 +618,14 @@ export default function CheckoutPage() {
                 <div className="space-y-3">
                   {items.map((item) => (
                     <div key={`${item.productId}-${item.size}`} className="flex justify-between gap-2 text-sm">
-                      <span className="text-muted-foreground min-w-0 truncate">{item.name} × {item.quantity}{item.size && ` (${item.size})`}</span>
+                      <span className="text-muted-foreground min-w-0 truncate">
+                        {item.name} × {item.quantity}
+                        {(item.size || item.color) && ` (`}
+                        {item.size && item.size}
+                        {item.size && item.color && `, `}
+                        {item.color && item.color}
+                        {(item.size || item.color) && `)`}
+                      </span>
                       <span className="shrink-0">{formatPrice(item.price * item.quantity)}</span>
                     </div>
                   ))}

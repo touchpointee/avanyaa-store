@@ -17,8 +17,10 @@ export interface IAddress {
 export interface IUser extends Document {
   name: string;
   email: string;
+  mobile: string;
   password?: string;
   role: 'user' | 'admin';
+  status: 'active' | 'blocked';
   addresses: IAddress[];
   createdAt: Date;
   updatedAt: Date;
@@ -38,6 +40,11 @@ const UserSchema = new Schema<IUser>(
       lowercase: true,
       trim: true,
     },
+    mobile: {
+      type: String,
+      trim: true,
+      sparse: true,
+    },
     password: {
       type: String,
       select: false,
@@ -46,6 +53,11 @@ const UserSchema = new Schema<IUser>(
       type: String,
       enum: ['user', 'admin'],
       default: 'user',
+    },
+    status: {
+      type: String,
+      enum: ['active', 'blocked'],
+      default: 'active',
     },
     addresses: [
       {
@@ -67,6 +79,7 @@ const UserSchema = new Schema<IUser>(
   }
 );
 
+// Always delete and re-register the model to avoid stale schema caching
 const User: Model<IUser> = mongoose.models.User || mongoose.model<IUser>('User', UserSchema);
 
 export default User;

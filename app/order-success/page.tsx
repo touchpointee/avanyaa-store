@@ -53,11 +53,17 @@ function OrderSuccessContent() {
               Track your order in{' '}
               <Link href="/orders" className="text-primary font-medium hover:underline">
                 My Orders
+              </Link>{' '}or{' '}
+              <Link href="/orders/lookup" className="text-primary font-medium hover:underline">
+                track as guest
               </Link>.
             </p>
             <div className="flex flex-col sm:flex-row gap-3 justify-center pt-4">
               <Button className="rounded-lg w-full sm:w-auto" asChild>
                 <Link href="/orders">View orders</Link>
+              </Button>
+              <Button variant="outline" className="rounded-lg w-full sm:w-auto border-border" asChild>
+                <Link href="/orders/lookup">Track as guest</Link>
               </Button>
               <Button variant="outline" className="rounded-lg w-full sm:w-auto border-border" asChild>
                 <Link href="/products">Continue shopping</Link>

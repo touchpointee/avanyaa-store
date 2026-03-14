@@ -25,6 +25,10 @@ export const authOptions: NextAuthOptions = {
           throw new Error('Invalid email or password');
         }
 
+        if (user.status === 'blocked') {
+          throw new Error('Your account has been blocked. Please contact support.');
+        }
+
         const isPasswordValid = await bcrypt.compare(credentials.password, user.password);
 
         if (!isPasswordValid) {
@@ -36,6 +40,7 @@ export const authOptions: NextAuthOptions = {
           email: user.email,
           name: user.name,
           role: user.role,
+          mobile: (user as any).mobile ?? '',
         };
       },
     }),
@@ -45,6 +50,7 @@ export const authOptions: NextAuthOptions = {
       if (user) {
         token.role = (user as any).role;
         token.id = user.id;
+        token.mobile = (user as any).mobile ?? ''; // ← store in JWT
       }
       return token;
     },
@@ -52,6 +58,7 @@ export const authOptions: NextAuthOptions = {
       if (session.user) {
         (session.user as any).role = token.role;
         (session.user as any).id = token.id;
+        (session.user as any).mobile = token.mobile ?? ''; // ← expose in session
       }
       return session;
     },
@@ -64,3 +71,4 @@ export const authOptions: NextAuthOptions = {
   },
   secret: process.env.NEXTAUTH_SECRET,
 };
+

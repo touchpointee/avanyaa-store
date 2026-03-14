@@ -1,0 +1,29 @@
+{
+  "_id": "69b1585068f498720c8a92f8",
+  "name": "Premium organza Churidhar material",
+  "slug": "premium-organza-churidhar-material",
+  "description": "Premium organza Churidhar material\nSoft organza top\nShantoon bottom\nOrganza dupatta",
+  "price": 1200,
+  "compareAtPrice": 1400,
+  "category": "Woman outfits",
+  "categoryId": "69ac18ef5872c80d4e6bf566",
+  "sizes": [
+    "L"
+  ],
+  "colors": [
+    "Purple",
+    "Green",
+    "Pink"
+  ],
+  "images": [
+    "https://minio-ak044g00w0oco4o0kk8oo8c4.72.60.219.81.sslip.io/avanyaa/1773230103708-WhatsApp-Image-2026-03-10-at-9.13.58-PM-(2).jpeg",
+    "https://minio-ak044g00w0oco4o0kk8oo8c4.72.60.219.81.sslip.io/avanyaa/1773230129494-WhatsApp-Image-2026-03-10-at-9.13.58-PM-(1).jpeg",
+    "https://minio-ak044g00w0oco4o0kk8oo8c4.72.60.219.81.sslip.io/avanyaa/1773230138661-WhatsApp-Image-2026-03-10-at-9.13.58-PM.jpeg"
+  ],
+  "stock": 11,
+  "featured": true,
+  "createdAt": "2026-03-11T11:56:00.191Z",
+  "updatedAt": "2026-03-13T11:17:56.656Z",
+  "__v": 1,
+  "variants": []
+}

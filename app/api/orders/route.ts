@@ -3,33 +3,77 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import connectDB from '@/lib/db';
 import Order from '@/models/Order';
+import User from '@/models/User';
 import Product from '@/models/Product';
+import InventoryHistory from '@/models/InventoryHistory';
 import { generateOrderId } from '@/lib/utils';
 import { sendOrderConfirmationEmail, sendAdminOrderNotification } from '@/lib/email';
+import mongoose from 'mongoose';
 
-// GET /api/orders - Get orders (user's own or all for admin)
+// GET /api/orders - Get orders (user's own, admin all, or guest lookup by email+phone)
 export async function GET(req: NextRequest) {
   try {
+    await connectDB();
+
+    const { searchParams } = new URL(req.url);
+    const guestEmail = searchParams.get('email');
+    const guestPhone = searchParams.get('phone');
+
+    // ── Guest order lookup (no session required) ──────────────────
+    if (guestEmail && guestPhone) {
+      const orders = await Order.find({
+        'address.email': guestEmail.toLowerCase().trim(),
+        'address.phone': guestPhone.trim(),
+      }).sort({ createdAt: -1 }).lean();
+      return NextResponse.json(orders);
+    }
+
+    // ── Authenticated lookup ──────────────────────────────────────
     const session = await getServerSession(authOptions);
-    
     if (!session) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    await connectDB();
-
     const userId = (session.user as any).id;
+    const userEmail = (session.user as any).email;
     const role = (session.user as any).role;
 
-    let orders;
-
     if (role === 'admin') {
-      // Admin sees all orders
-      orders = await Order.find().sort({ createdAt: -1 }).lean();
-    } else {
-      // User sees only their orders
-      orders = await Order.find({ userId }).sort({ createdAt: -1 }).lean();
+      const orders = await Order.find().sort({ createdAt: -1 }).lean();
+      return NextResponse.json(orders);
     }
+
+    // Fetch the user's saved mobile from DB so we can match guest orders too
+    const userDoc = await User.findById(userId).lean();
+    const userMobile = (userDoc as any)?.mobile?.trim() ?? '';
+
+    // Cast userId string → ObjectId so Mongoose matches correctly inside $or
+    let userObjectId: mongoose.Types.ObjectId | string = userId;
+    try { userObjectId = new mongoose.Types.ObjectId(userId); } catch { /* keep string */ }
+
+    // Base condition: orders placed while logged in
+    const orConditions: any[] = [{ userId: userObjectId }];
+
+    // Link guest orders only when BOTH email AND mobile match the order address
+    if (userEmail && userMobile) {
+      orConditions.push({
+        'address.email': userEmail.toLowerCase().trim(),
+        'address.phone': userMobile,
+      });
+    }
+
+    const rawOrders = await Order.find({ $or: orConditions })
+      .sort({ createdAt: -1 })
+      .lean();
+
+    // Deduplicate by _id (multiple conditions may match the same order)
+    const seen = new Set<string>();
+    const orders = rawOrders.filter((o: any) => {
+      const id = o._id.toString();
+      if (seen.has(id)) return false;
+      seen.add(id);
+      return true;
+    });
 
     return NextResponse.json(orders);
   } catch (error) {
@@ -41,15 +85,16 @@ export async function GET(req: NextRequest) {
   }
 }
 
-// POST /api/orders - Create order (customer only; admin must use store as customer)
+
+
+// POST /api/orders - Create order (guests and customers; admin sessions treated as guest)
 export async function POST(req: NextRequest) {
   try {
     await connectDB();
 
     const session = await getServerSession(authOptions);
-    if (session && (session.user as any).role === 'admin') {
-      return NextResponse.json({ error: 'Sign in as a customer to place orders' }, { status: 401 });
-    }
+    // If session belongs to an admin, treat this as a guest order (no userId)
+    const isAdmin = session && (session.user as any).role === 'admin';
     const body = await req.json();
     const { items, address } = body;
 
@@ -69,7 +114,7 @@ export async function POST(req: NextRequest) {
 
     for (const item of items) {
       const product = await Product.findById(item.productId);
-      
+
       if (!product) {
         return NextResponse.json(
           { error: `Product ${item.productId} not found` },
@@ -77,16 +122,22 @@ export async function POST(req: NextRequest) {
         );
       }
 
-      if (product.stock < item.quantity) {
-        return NextResponse.json(
-          { error: `Insufficient stock for ${product.name}` },
-          { status: 400 }
+      // Find the specific variant
+      let variantIndex = -1;
+      if (product.variants && product.variants.length > 0 && item.size && item.color) {
+        variantIndex = product.variants.findIndex(
+          (v: any) => v.size === item.size && v.color === item.color
         );
       }
 
-      // Reduce stock
-      product.stock -= item.quantity;
-      await product.save();
+      const availableStock = variantIndex > -1 ? product.variants[variantIndex].stock : 0;
+
+      if (availableStock < item.quantity) {
+        return NextResponse.json(
+          { error: `Insufficient stock for ${product.name} (${item.size || ''} ${item.color || ''})` },
+          { status: 400 }
+        );
+      }
 
       totalAmount += product.price * item.quantity;
 
@@ -97,20 +148,55 @@ export async function POST(req: NextRequest) {
         price: product.price,
         quantity: item.quantity,
         size: item.size,
+        color: item.color,
       });
+
+      // We will reduce stock and record history after order is fully validated
     }
 
     const orderId = generateOrderId();
+    // Admin sessions → guest order (no userId); customers → link to their account
+    const userId = (session && !isAdmin) ? (session.user as any).id : null;
 
     const order = await Order.create({
       orderId,
-      userId: session ? (session.user as any).id : null,
+      userId,
       items: orderItems,
       totalAmount,
       address,
       status: 'placed',
       paymentMethod: 'cod',
     });
+
+    // Reduce stock and create history logs
+    for (const item of orderItems) {
+      const product = await Product.findById(item.productId);
+      if (product) {
+        let variantIndex = -1;
+        if (product.variants && product.variants.length > 0 && item.size && item.color) {
+          variantIndex = product.variants.findIndex(
+            (v: any) => v.size === item.size && v.color === item.color
+          );
+        }
+
+        if (variantIndex > -1) {
+          product.variants[variantIndex].stock -= item.quantity;
+          product.stock = product.variants.reduce((total: number, v: any) => total + (Number(v.stock) || 0), 0);
+
+          await InventoryHistory.create({
+            productId: product._id,
+            productName: product.name,
+            variant: { size: item.size, color: item.color },
+            changeAmount: -item.quantity,
+            reason: 'Order Placed',
+            referenceId: orderId,
+          });
+        }
+        // No else block - we strictly use variants for stock reduction now. 
+        // Validation above ensures we only get here if variant existed.
+        await product.save();
+      }
+    }
 
     // Send emails
     try {
@@ -123,6 +209,7 @@ export async function POST(req: NextRequest) {
           quantity: item.quantity,
           price: item.price,
           size: item.size,
+          color: item.color,
         })),
         totalAmount,
         address,

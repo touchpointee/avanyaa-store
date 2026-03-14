@@ -1,0 +1,45 @@
+--- TOTAL_PRODUCTS_IN_DB: 8 ---
+1. NAME: Checked A Lind top with front plete
+   TOTAL_STOCK: 32
+   NO_VARIANTS
+-----------------------------------
+2. NAME: Pure cotton slit top
+   TOTAL_STOCK: 23
+   VARIANTS:
+     - L/Purple: 10
+     - L/Green: 5
+     - L/Red: 4
+     - L/Blue: 0
+     - XL/Purple: 1
+     - XL/Green: 1
+     - XL/Red: 2
+     - XL/Blue: 0
+-----------------------------------
+3. NAME: Chennuri silk dupatta with raw silk top ( 2 piece)
+   TOTAL_STOCK: 10
+   VARIANTS:
+     - XS/Blue: 10
+-----------------------------------
+4. NAME: Raw silk top with kalamkari dupatta and bottom 3 piece set
+   TOTAL_STOCK: 14
+   NO_VARIANTS
+-----------------------------------
+5. NAME: Premium georgette churidar material  Golden appliqué thread work  Fabric.
+   TOTAL_STOCK: 2
+   VARIANTS:
+     - XS/Black: 2
+-----------------------------------
+6. NAME: Pure cotton Churidhar material  Sequence work in neck  and yolk Beautiful and comfort dupatta  Fabric.
+   TOTAL_STOCK: 15
+   NO_VARIANTS
+-----------------------------------
+7. NAME: Churidar set  Fabric cotton
+   TOTAL_STOCK: 10
+   VARIANTS:
+     - L/Blue: 10
+-----------------------------------
+8. NAME: Premium organza Churidhar material
+   TOTAL_STOCK: 1
+   VARIANTS:
+     - L/Green: 1
+-----------------------------------

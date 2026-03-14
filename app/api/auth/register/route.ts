@@ -7,12 +7,12 @@ export async function POST(req: NextRequest) {
   try {
     await connectDB();
 
-    const { name, email, password } = await req.json();
+    const { name, email, password, mobile } = await req.json();
 
     // Validate input
-    if (!name || !email || !password) {
+    if (!name || !email || !password || !mobile) {
       return NextResponse.json(
-        { error: 'Please provide all required fields' },
+        { error: 'Please provide all required fields including mobile number' },
         { status: 400 }
       );
     }
@@ -41,6 +41,7 @@ export async function POST(req: NextRequest) {
       name,
       email,
       password: hashedPassword,
+      mobile: mobile.trim(),
       role: 'user',
     });
 

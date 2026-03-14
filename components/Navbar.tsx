@@ -10,6 +10,8 @@ import { useWishlistStore } from '@/store/wishlistStore';
 import { Button } from '@/components/ui/button';
 import { useState, useEffect } from 'react';
 import SearchBox from '@/components/SearchBox';
+import NavLinks from '@/components/NavLinks';
+import { useWishlistSync } from '@/hooks/useWishlistSync';
 
 const NAV_LINKS = [
   { label: 'Home', href: '/', icon: Home },
@@ -30,6 +32,9 @@ export default function Navbar() {
   const totalItems = useCartStore((state) => state.getTotalItems());
   const wishlistItems = useWishlistStore((state) => state.items);
   const isAdmin = (session?.user as { role?: string })?.role === 'admin';
+
+  // Sync DB wishlist → Zustand store on login/logout
+  useWishlistSync();
 
   useEffect(() => {
     setMounted(true);
@@ -82,8 +87,19 @@ export default function Navbar() {
         <div className="container mx-auto w-full min-w-0 px-4">
           <div className="flex h-14 md:h-16 items-center justify-between gap-2 md:gap-4">
 
+            {/* ── Mobile Menu Toggle ────────────────────────── */}
+            <Button
+              variant="ghost"
+              size="icon"
+              className="lg:hidden shrink-0"
+              onClick={() => setMenuOpen(true)}
+              aria-label="Open menu"
+            >
+              <Menu className="h-6 w-6" />
+            </Button>
+
             {/* ── Logo ─────────────────────────────────────── */}
-            <Link href="/" className="shrink-0 flex items-center min-w-0">
+            <Link href="/" className="shrink-0 flex items-center min-w-0 lg:-ml-2">
               <Image
                 src="/logo.png"
                 alt="Avanyaa"
@@ -93,6 +109,11 @@ export default function Navbar() {
                 priority
               />
             </Link>
+
+            {/* ── Desktop Navigation ───────────────────────── */}
+            <nav className="hidden lg:flex items-center mx-4 gap-1 flex-shrink-0" aria-label="Main Navigation">
+              <NavLinks items={NAV_LINKS} />
+            </nav>
 
             {/* ── Location (desktop only) ───────────────────── */}
             {mounted && (

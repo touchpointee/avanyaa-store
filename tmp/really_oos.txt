@@ -1,0 +1,4 @@
+Found 1 products matching Out of Stock query
+PRODUCT: Pure cotton slit top | TotalStock: 23
+  -> Variant Out of stock: L/Blue
+  -> Variant Out of stock: XL/Blue

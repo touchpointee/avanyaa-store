@@ -3,6 +3,8 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import connectDB from '@/lib/db';
 import HomepageSection from '@/models/HomepageSection';
+import '@/models/Product';
+import '@/models/Category';
 
 // GET - List sections (admin: all, public via /api/homepage)
 export async function GET(req: NextRequest) {

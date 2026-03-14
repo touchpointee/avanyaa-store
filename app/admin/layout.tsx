@@ -5,7 +5,7 @@ import { useRouter, usePathname } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { LayoutDashboard, Package, ShoppingBag, Loader2, Image as ImageIcon, Layout, FolderOpen, Ruler, MessageSquare, Star } from 'lucide-react';
+import { LayoutDashboard, Package, ShoppingBag, Loader2, Image as ImageIcon, Layout, FolderOpen, SlidersHorizontal, MessageSquare, Star, Users, ShieldCheck, HelpCircle, Info } from 'lucide-react';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
 
@@ -134,12 +134,22 @@ export default function AdminLayout({
             </Button>
             <Button
               variant="ghost"
-              className={cn('w-full justify-start text-blue-100 hover:text-white hover:bg-white/10 transition-colors', pathname?.startsWith('/admin/banners') && 'bg-white/20 text-white font-semibold')}
+              className={cn('w-full justify-start text-blue-100 hover:text-white hover:bg-white/10 transition-colors', pathname?.startsWith('/admin/inventory') && 'bg-white/20 text-white font-semibold')}
               asChild
             >
-              <Link href="/admin/banners">
-                <ImageIcon className="mr-3 h-4 w-4" />
-                Banners
+              <Link href="/admin/inventory">
+                <LayoutDashboard className="mr-3 h-4 w-4" />
+                Inventory
+              </Link>
+            </Button>
+            <Button
+              variant="ghost"
+              className={cn('w-full justify-start text-blue-100 hover:text-white hover:bg-white/10 transition-colors', pathname?.startsWith('/admin/orders') && 'bg-white/20 text-white font-semibold')}
+              asChild
+            >
+              <Link href="/admin/orders">
+                <ShoppingBag className="mr-3 h-4 w-4" />
+                Orders
               </Link>
             </Button>
             <Button
@@ -154,26 +164,6 @@ export default function AdminLayout({
             </Button>
             <Button
               variant="ghost"
-              className={cn('w-full justify-start text-blue-100 hover:text-white hover:bg-white/10 transition-colors', pathname?.startsWith('/admin/categories') && 'bg-white/20 text-white font-semibold')}
-              asChild
-            >
-              <Link href="/admin/categories">
-                <FolderOpen className="mr-3 h-4 w-4" />
-                Categories
-              </Link>
-            </Button>
-            <Button
-              variant="ghost"
-              className={cn('w-full justify-start text-blue-100 hover:text-white hover:bg-white/10 transition-colors', pathname?.startsWith('/admin/sizes') && 'bg-white/20 text-white font-semibold')}
-              asChild
-            >
-              <Link href="/admin/sizes">
-                <Ruler className="mr-3 h-4 w-4" />
-                Sizes
-              </Link>
-            </Button>
-            <Button
-              variant="ghost"
               className={cn('w-full justify-start text-blue-100 hover:text-white hover:bg-white/10 transition-colors', pathname?.startsWith('/admin/products') && 'bg-white/20 text-white font-semibold')}
               asChild
             >
@@ -184,12 +174,42 @@ export default function AdminLayout({
             </Button>
             <Button
               variant="ghost"
-              className={cn('w-full justify-start text-blue-100 hover:text-white hover:bg-white/10 transition-colors', pathname?.startsWith('/admin/orders') && 'bg-white/20 text-white font-semibold')}
+              className={cn('w-full justify-start text-blue-100 hover:text-white hover:bg-white/10 transition-colors', pathname?.startsWith('/admin/categories') && 'bg-white/20 text-white font-semibold')}
               asChild
             >
-              <Link href="/admin/orders">
-                <ShoppingBag className="mr-3 h-4 w-4" />
-                Orders
+              <Link href="/admin/categories">
+                <FolderOpen className="mr-3 h-4 w-4" />
+                Categories
+              </Link>
+            </Button>
+            <Button
+              variant="ghost"
+              className={cn('w-full justify-start text-blue-100 hover:text-white hover:bg-white/10 transition-colors', pathname?.startsWith('/admin/banners') && 'bg-white/20 text-white font-semibold')}
+              asChild
+            >
+              <Link href="/admin/banners">
+                <ImageIcon className="mr-3 h-4 w-4" />
+                Banners
+              </Link>
+            </Button>
+            <Button
+              variant="ghost"
+              className={cn('w-full justify-start text-blue-100 hover:text-white hover:bg-white/10 transition-colors', pathname?.startsWith('/admin/users') && 'bg-white/20 text-white font-semibold')}
+              asChild
+            >
+              <Link href="/admin/users">
+                <Users className="mr-3 h-4 w-4" />
+                Users
+              </Link>
+            </Button>
+            <Button
+              variant="ghost"
+              className={cn('w-full justify-start text-blue-100 hover:text-white hover:bg-white/10 transition-colors', pathname?.startsWith('/admin/sizes') && 'bg-white/20 text-white font-semibold')}
+              asChild
+            >
+              <Link href="/admin/sizes">
+                <SlidersHorizontal className="mr-3 h-4 w-4" />
+                Size & Colour
               </Link>
             </Button>
             <Button
@@ -217,6 +237,36 @@ export default function AdminLayout({
                     {unreadCount}
                   </span>
                 )}
+              </Link>
+            </Button>
+            <Button
+              variant="ghost"
+              className={cn('w-full justify-start text-blue-100 hover:text-white hover:bg-white/10 transition-colors', pathname?.startsWith('/admin/trust-badges') && 'bg-white/20 text-white font-semibold')}
+              asChild
+            >
+              <Link href="/admin/trust-badges">
+                <ShieldCheck className="mr-3 h-4 w-4" />
+                Trust Badges
+              </Link>
+            </Button>
+            <Button
+              variant="ghost"
+              className={cn('w-full justify-start text-blue-100 hover:text-white hover:bg-white/10 transition-colors', pathname?.startsWith('/admin/faq') && 'bg-white/20 text-white font-semibold')}
+              asChild
+            >
+              <Link href="/admin/faq">
+                <HelpCircle className="mr-3 h-4 w-4" />
+                FAQ
+              </Link>
+            </Button>
+            <Button
+              variant="ghost"
+              className={cn('w-full justify-start text-blue-100 hover:text-white hover:bg-white/10 transition-colors', pathname?.startsWith('/admin/about') && 'bg-white/20 text-white font-semibold')}
+              asChild
+            >
+              <Link href="/admin/about">
+                <Info className="mr-3 h-4 w-4" />
+                About Us
               </Link>
             </Button>
           </nav>

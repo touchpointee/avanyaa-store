@@ -12,14 +12,49 @@ import { Sparkles, Truck, RotateCcw, ShieldCheck, Star, ArrowRight } from 'lucid
 import AnimatedStat from '@/components/AnimatedStat';
 
 /* ───── Trust strip ───── */
-const TRUST = [
-  { icon: Truck, label: 'Free Shipping', sub: 'On orders above ₹999', iconBg: 'bg-blue-100', iconColor: 'text-blue-600' },
-  { icon: RotateCcw, label: '7-Day Returns', sub: 'Hassle-free exchanges', iconBg: 'bg-rose-100', iconColor: 'text-rose-500' },
-  { icon: ShieldCheck, label: 'Secure Payment', sub: 'COD & online accepted', iconBg: 'bg-emerald-100', iconColor: 'text-emerald-600' },
-  { icon: Sparkles, label: 'Premium Quality', sub: 'Curated fabrics & style', iconBg: 'bg-violet-100', iconColor: 'text-violet-600' },
+const ICON_MAP: Record<string, React.ElementType> = {
+  truck: Truck,
+  rotateCCW: RotateCcw,
+  shieldCheck: ShieldCheck,
+  sparkles: Sparkles,
+  star: Star,
+  heart: Star, // fallback
+  package: Truck,
+  zap: Sparkles,
+};
+
+const ICON_COLORS: Record<string, { bg: string; text: string }> = {
+  truck: { bg: 'bg-blue-100', text: 'text-blue-600' },
+  rotateCCW: { bg: 'bg-rose-100', text: 'text-rose-500' },
+  shieldCheck: { bg: 'bg-emerald-100', text: 'text-emerald-600' },
+  sparkles: { bg: 'bg-violet-100', text: 'text-violet-600' },
+  star: { bg: 'bg-amber-100', text: 'text-amber-500' },
+  heart: { bg: 'bg-pink-100', text: 'text-pink-500' },
+  package: { bg: 'bg-orange-100', text: 'text-orange-500' },
+  zap: { bg: 'bg-yellow-100', text: 'text-yellow-600' },
+};
+
+const DEFAULT_TRUST = [
+  { icon: 'truck', label: 'Free Shipping', sub: 'On orders above ₹999' },
+  { icon: 'rotateCCW', label: '7-Day Returns', sub: 'Hassle-free exchanges' },
+  { icon: 'shieldCheck', label: 'Secure Payment', sub: 'COD & online accepted' },
+  { icon: 'sparkles', label: 'Premium Quality', sub: 'Curated fabrics & style' },
 ];
 
-function TrustStrip() {
+async function getTrustBadges() {
+  try {
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+    const res = await fetch(`${baseUrl}/api/settings`, { next: { revalidate: 60 } });
+    if (res.ok) {
+      const data = await res.json();
+      if (Array.isArray(data.trustBadges) && data.trustBadges.length) return data.trustBadges;
+    }
+  } catch {}
+  return DEFAULT_TRUST;
+}
+
+async function TrustStrip() {
+  const badges = await getTrustBadges();
   return (
     <section
       className="relative pt-1 pb-1  md:pt-3 md:pb-3"
@@ -27,20 +62,24 @@ function TrustStrip() {
     >
       <div className="container mx-auto px-4 py-4">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
-          {TRUST.map(({ icon: Icon, label, sub, iconBg, iconColor }) => (
-            <div
-              key={label}
-              className="bg-white/10 border border-white/15 rounded-2xl flex items-center gap-3 px-4 py-4 hover:bg-white/15 transition-colors duration-200"
-            >
-              <div className={`w-10 h-10 rounded-xl ${iconBg} flex items-center justify-center shrink-0`}>
-                <Icon className={`h-5 w-5 ${iconColor}`} />
+          {badges.map(({ icon, label, sub }: { icon: string; label: string; sub: string }) => {
+            const Icon = ICON_MAP[icon] || Sparkles;
+            const colors = ICON_COLORS[icon] || { bg: 'bg-violet-100', text: 'text-violet-600' };
+            return (
+              <div
+                key={label}
+                className="bg-white/10 border border-white/15 rounded-2xl flex items-center gap-3 px-4 py-4 hover:bg-white/15 transition-colors duration-200"
+              >
+                <div className={`w-10 h-10 rounded-xl ${colors.bg} flex items-center justify-center shrink-0`}>
+                  <Icon className={`h-5 w-5 ${colors.text}`} />
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-white leading-tight">{label}</p>
+                  <p className="text-[11px] text-white/60 mt-0.5">{sub}</p>
+                </div>
               </div>
-              <div>
-                <p className="text-sm font-semibold text-white leading-tight">{label}</p>
-                <p className="text-[11px] text-white/60 mt-0.5">{sub}</p>
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
     </section>
@@ -48,13 +87,24 @@ function TrustStrip() {
 }
 
 /* ───── Reviews ───── */
-const REVIEWS = [
+const DEFAULT_REVIEWS = [
   { name: 'Priya M.', text: 'Absolutely love the quality! Fits perfectly and looks stunning.', stars: 5 },
   { name: 'Divya R.', text: 'Fast delivery and the packaging was beautiful. Will order again!', stars: 5 },
   { name: 'Ananya K.', text: 'The dress looked even better in person. Highly recommend AVANYAA!', stars: 5 },
   { name: 'Meera S.', text: 'Great customer service and the return process was so easy.', stars: 5 },
 ];
 
+async function getTestimonials() {
+  try {
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+    const res = await fetch(`${baseUrl}/api/settings`, { next: { revalidate: 60 } });
+    if (res.ok) {
+      const data = await res.json();
+      if (Array.isArray(data.testimonials) && data.testimonials.length) return data.testimonials;
+    }
+  } catch {}
+  return DEFAULT_REVIEWS;
+}
 
 /* ─── Creative category showcase ─── */
 function CategoryShowcase({ categories }: { categories: HomepageCategory[] }) {
@@ -101,40 +151,8 @@ function CategoryShowcase({ categories }: { categories: HomepageCategory[] }) {
           </div>
         )}
 
-        {/* Small cards — grid (≤6) or horizontal carousel (>6) */}
-        {small.length > 0 && (() => {
-          const cardInner = (cat: HomepageCategory) => (
-            <div className="relative rounded-xl overflow-hidden bg-muted shadow-sm" style={{ aspectRatio: '3/4' }}>
-              {cat.image ? (
-                <Image src={cat.image} alt={cat.name} fill className="object-cover transition-transform duration-500 group-hover:scale-105" />
-              ) : (
-                <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-primary/5" />
-              )}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/65 via-black/15 to-transparent" />
-              <div className="absolute bottom-0 left-0 p-3">
-                <p className="text-white/70 text-[10px] uppercase tracking-widest mb-0.5">Category</p>
-                <h3 className="font-heading text-white text-sm font-semibold leading-tight">{cat.name}</h3>
-                <span className="inline-flex items-center gap-1 mt-2 text-white text-[10px] font-medium border border-white/40 rounded-full px-2.5 py-0.5 group-hover:bg-white group-hover:text-black transition-colors duration-300">
-                  Shop Now <ArrowRight className="h-2.5 w-2.5" />
-                </span>
-              </div>
-            </div>
-          );
-
-          if (small.length > 6) {
-            return <CategoryCarousel categories={small} />;
-          }
-
-          return (
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {small.map((cat) => (
-                <Link key={cat._id} href={`/products?categoryId=${cat._id}`} className="group block">
-                  {cardInner(cat)}
-                </Link>
-              ))}
-            </div>
-          );
-        })()}
+        {/* Small cards — always horizontal carousel */}
+        {small.length > 0 && <CategoryCarousel categories={small} />}
       </div>
     </section>
   );
@@ -237,7 +255,8 @@ function StatsBand() {
 }
 
 /* ─── Reviews ─── */
-function ReviewsStrip() {
+async function ReviewsStrip() {
+  const reviews = await getTestimonials();
   return (
     <section className="pt-6 md:pt-10 bg-accent/20 border-y border-border">
       <div className="container mx-auto px-4">
@@ -246,11 +265,11 @@ function ReviewsStrip() {
           <h2 className="font-heading text-2xl md:text-3xl font-semibold tracking-tight">What Our Customers Say</h2>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-          {REVIEWS.map((r) => (
-            <div key={r.name} className="bg-card border border-border rounded-2xl p-5 shadow-sm flex flex-col gap-3 hover:shadow-md transition-shadow">
+          {reviews.map((r: { name: string; text: string; stars: number }, i: number) => (
+            <div key={i} className="bg-card border border-border rounded-2xl p-5 shadow-sm flex flex-col gap-3 hover:shadow-md transition-shadow">
               <div className="flex gap-0.5">
-                {Array.from({ length: r.stars }).map((_, i) => (
-                  <Star key={i} className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
+                {Array.from({ length: r.stars }).map((_, s) => (
+                  <Star key={s} className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
                 ))}
               </div>
               <p className="text-sm text-muted-foreground leading-relaxed flex-1">&ldquo;{r.text}&rdquo;</p>
@@ -264,7 +283,38 @@ function ReviewsStrip() {
 }
 
 /* ─── Why AVANYAA ─── */
-function WhyUs() {
+const DEFAULT_WHY_CARDS = [
+  { icon: 'sparkles', title: 'Premium Quality', desc: 'Curated fabrics and finishes made to last, not just a season.' },
+  { icon: 'truck', title: 'Fast Delivery', desc: 'Reliable pan-India shipping with real-time tracking.' },
+  { icon: 'rotateCCW', title: 'Easy Returns', desc: '7-day no-questions-asked returns policy.' },
+  { icon: 'shieldCheck', title: 'Cash on Delivery', desc: 'Pay only when your package arrives safely.' },
+];
+
+const WHY_ICON_STYLES: Record<string, string> = {
+  sparkles: 'text-violet-500 bg-violet-50',
+  truck: 'text-blue-500 bg-blue-50',
+  rotateCCW: 'text-rose-500 bg-rose-50',
+  shieldCheck: 'text-emerald-500 bg-emerald-50',
+  star: 'text-amber-500 bg-amber-50',
+  heart: 'text-pink-500 bg-pink-50',
+  package: 'text-orange-500 bg-orange-50',
+  zap: 'text-yellow-500 bg-yellow-50',
+};
+
+async function getWhyCards() {
+  try {
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+    const res = await fetch(`${baseUrl}/api/settings`, { next: { revalidate: 60 } });
+    if (res.ok) {
+      const data = await res.json();
+      if (Array.isArray(data.whyCards) && data.whyCards.length) return data.whyCards;
+    }
+  } catch {}
+  return DEFAULT_WHY_CARDS;
+}
+
+async function WhyUs() {
+  const cards = await getWhyCards();
   return (
     <section className="pt-6 md:pt-10 bg-background">
       <div className="container mx-auto px-4">
@@ -273,22 +323,21 @@ function WhyUs() {
           <h2 className="font-heading text-2xl md:text-3xl font-semibold tracking-tight">Why Choose AVANYAA</h2>
         </div>
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 max-w-5xl mx-auto">
-          {[
-            { icon: Sparkles, color: 'text-violet-500 bg-violet-50', title: 'Premium Quality', desc: 'Curated fabrics and finishes made to last, not just a season.' },
-            { icon: Truck, color: 'text-blue-500 bg-blue-50', title: 'Fast Delivery', desc: 'Reliable pan-India shipping with real-time tracking.' },
-            { icon: RotateCcw, color: 'text-rose-500 bg-rose-50', title: 'Easy Returns', desc: '7-day no-questions-asked returns policy.' },
-            { icon: ShieldCheck, color: 'text-emerald-500 bg-emerald-50', title: 'Cash on Delivery', desc: 'Pay only when your package arrives safely.' },
-          ].map(({ icon: Icon, color, title, desc }) => (
-            <div key={title} className="flex flex-col items-center text-center gap-4 p-6 rounded-2xl border border-border bg-card shadow-sm hover:shadow-md transition-shadow">
-              <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${color}`}>
-                <Icon className="h-[22px] w-[22px]" />
+          {cards.map((card: { icon: string; title: string; desc: string }, i: number) => {
+            const Icon = ICON_MAP[card.icon] || Sparkles;
+            const color = WHY_ICON_STYLES[card.icon] || 'text-violet-500 bg-violet-50';
+            return (
+              <div key={i} className="flex flex-col items-center text-center gap-4 p-6 rounded-2xl border border-border bg-card shadow-sm hover:shadow-md transition-shadow">
+                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${color}`}>
+                  <Icon className="h-[22px] w-[22px]" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-sm mb-1.5">{card.title}</h3>
+                  <p className="text-xs text-muted-foreground leading-relaxed">{card.desc}</p>
+                </div>
               </div>
-              <div>
-                <h3 className="font-semibold text-sm mb-1.5">{title}</h3>
-                <p className="text-xs text-muted-foreground leading-relaxed">{desc}</p>
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
     </section>

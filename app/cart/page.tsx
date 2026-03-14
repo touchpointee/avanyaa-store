@@ -38,7 +38,7 @@ export default function CartPage() {
       <div className="grid lg:grid-cols-3 gap-6 lg:gap-8">
         <div className="lg:col-span-2 space-y-4">
           {items.map((item) => (
-            <Card key={`${item.productId}-${item.size}`} className="rounded-xl border border-border shadow overflow-hidden">
+            <Card key={`${item.productId}-${item.size}-${item.color}`} className="rounded-xl border border-border shadow overflow-hidden">
               <CardContent className="p-4">
                 <div className="flex flex-col sm:flex-row gap-4">
                   <div className="relative w-full h-52 max-w-[140px] sm:max-w-none sm:w-24 sm:h-32 rounded-xl overflow-hidden bg-muted shrink-0 mx-auto sm:mx-0">
@@ -49,8 +49,12 @@ export default function CartPage() {
                       <h3 className="font-semibold text-sm line-clamp-2 flex-1 min-w-0">{item.name}</h3>
                       <p className="font-bold text-sm shrink-0">{formatPrice(item.price * item.quantity)}</p>
                     </div>
-                    {item.size && (
-                      <p className="text-xs text-muted-foreground">Size: {item.size}</p>
+                    {(item.size || item.color) && (
+                      <div className="flex gap-2 text-xs text-muted-foreground">
+                        {item.size && <span>Size: {item.size}</span>}
+                        {item.size && item.color && <span>•</span>}
+                        {item.color && <span>Color: {item.color}</span>}
+                      </div>
                     )}
                     <p className="text-sm text-muted-foreground">{formatPrice(item.price)} each</p>
                     <div className="flex items-center gap-2 mt-auto">
@@ -58,7 +62,7 @@ export default function CartPage() {
                         variant="outline"
                         size="icon"
                         className="h-10 w-10 rounded-lg shrink-0 touch-manipulation"
-                        onClick={() => updateQuantity(item.productId, item.quantity - 1, item.size)}
+                        onClick={() => updateQuantity(item.productId, item.quantity - 1, item.size, item.color)}
                       >
                         <Minus className="h-3 w-3" />
                       </Button>
@@ -67,7 +71,7 @@ export default function CartPage() {
                         variant="outline"
                         size="icon"
                         className="h-10 w-10 rounded-lg shrink-0 touch-manipulation"
-                        onClick={() => updateQuantity(item.productId, item.quantity + 1, item.size)}
+                        onClick={() => updateQuantity(item.productId, item.quantity + 1, item.size, item.color)}
                         disabled={item.quantity >= item.stock}
                       >
                         <Plus className="h-3 w-3" />
@@ -76,7 +80,7 @@ export default function CartPage() {
                         variant="ghost"
                         size="icon"
                         className="h-10 w-10 rounded-lg ml-auto shrink-0 text-destructive touch-manipulation"
-                        onClick={() => removeItem(item.productId, item.size)}
+                        onClick={() => removeItem(item.productId, item.size, item.color)}
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>

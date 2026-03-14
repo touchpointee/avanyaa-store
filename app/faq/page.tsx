@@ -1,118 +1,84 @@
 'use client';
 
-import { useState } from 'react';
-import { ChevronDown, Truck, RotateCcw, Ruler, CreditCard } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { ChevronDown, Truck, RotateCcw, Ruler, CreditCard, HelpCircle, Package, ShieldCheck, Star, Sparkles } from 'lucide-react';
 import Link from 'next/link';
 
-const FAQ_CATEGORIES = [
+/* ── Icon map (must match admin) ── */
+const ICON_MAP: Record<string, React.ElementType> = {
+  truck: Truck,
+  rotateCCW: RotateCcw,
+  ruler: Ruler,
+  creditCard: CreditCard,
+  helpCircle: HelpCircle,
+  package: Package,
+  shieldCheck: ShieldCheck,
+  star: Star,
+  sparkles: Sparkles,
+};
+
+/* ── Color cycle (matches admin preview) ── */
+const CAT_COLORS = [
+    { color: 'text-blue-600', bg: 'bg-blue-50 dark:bg-blue-950/30', border: 'border-blue-100 dark:border-blue-900', iconBg: 'bg-blue-100 dark:bg-blue-900/50' },
+    { color: 'text-rose-600', bg: 'bg-rose-50 dark:bg-rose-950/30', border: 'border-rose-100 dark:border-rose-900', iconBg: 'bg-rose-100 dark:bg-rose-900/50' },
+    { color: 'text-violet-600', bg: 'bg-violet-50 dark:bg-violet-950/30', border: 'border-violet-100 dark:border-violet-900', iconBg: 'bg-violet-100 dark:bg-violet-900/50' },
+    { color: 'text-emerald-600', bg: 'bg-emerald-50 dark:bg-emerald-950/30', border: 'border-emerald-100 dark:border-emerald-900', iconBg: 'bg-emerald-100 dark:bg-emerald-900/50' },
+    { color: 'text-amber-600', bg: 'bg-amber-50 dark:bg-amber-950/30', border: 'border-amber-100 dark:border-amber-900', iconBg: 'bg-amber-100 dark:bg-amber-900/50' },
+    { color: 'text-pink-600', bg: 'bg-pink-50 dark:bg-pink-950/30', border: 'border-pink-100 dark:border-pink-900', iconBg: 'bg-pink-100 dark:bg-pink-900/50' },
+];
+
+const DEFAULT_FAQ_CATEGORIES = [
     {
-        icon: Truck,
-        color: 'text-blue-600',
-        bg: 'bg-blue-50 dark:bg-blue-950/30',
-        border: 'border-blue-100 dark:border-blue-900',
-        iconBg: 'bg-blue-100 dark:bg-blue-900/50',
-        category: 'Orders & Delivery',
+        category: 'Orders & Delivery', icon: 'truck',
         faqs: [
-            {
-                q: 'How long does delivery take?',
-                a: 'Standard delivery takes 4–7 business days across India. Express delivery (2–3 days) is available in select metro cities at checkout.',
-            },
-            {
-                q: 'How do I track my order?',
-                a: "Once your order ships, you'll receive a tracking link via email and WhatsApp. You can also check order status under My Orders.",
-            },
-            {
-                q: 'Can I change or cancel my order?',
-                a: 'Orders can be modified or cancelled within 12 hours of placement. After that, contact us immediately via WhatsApp.',
-            },
-            {
-                q: 'Do you offer Cash on Delivery?',
-                a: 'Yes, COD is available for orders across India. Additional handling charges may apply for certain pin codes.',
-            },
+            { q: 'How long does delivery take?', a: 'Standard delivery takes 4–7 business days across India. Express delivery (2–3 days) is available in select metro cities at checkout.' },
+            { q: 'How do I track my order?', a: "Once your order ships, you'll receive a tracking link via email and WhatsApp. You can also check order status under My Orders." },
+            { q: 'Can I change or cancel my order?', a: 'Orders can be modified or cancelled within 12 hours of placement. After that, contact us immediately via WhatsApp.' },
+            { q: 'Do you offer Cash on Delivery?', a: 'Yes, COD is available for orders across India. Additional handling charges may apply for certain pin codes.' },
         ],
     },
     {
-        icon: RotateCcw,
-        color: 'text-rose-600',
-        bg: 'bg-rose-50 dark:bg-rose-950/30',
-        border: 'border-rose-100 dark:border-rose-900',
-        iconBg: 'bg-rose-100 dark:bg-rose-900/50',
-        category: 'Returns & Exchanges',
+        category: 'Returns & Exchanges', icon: 'rotateCCW',
         faqs: [
-            {
-                q: 'What is your return policy?',
-                a: 'We accept returns within 7 days of delivery. Items must be unused, unwashed, and in original packaging with tags attached.',
-            },
-            {
-                q: 'How do I initiate a return?',
-                a: 'Contact us via WhatsApp or email with your order ID and reason. Our team will arrange a pickup from your address.',
-            },
-            {
-                q: 'When will I get my refund?',
-                a: 'Refunds are processed within 5–7 business days after we receive and inspect the returned item.',
-            },
-            {
-                q: 'Are sale items returnable?',
-                a: 'Sale items are eligible for exchange only — not refunds — unless the item is defective or damaged.',
-            },
+            { q: 'What is your return policy?', a: 'We accept returns within 7 days of delivery. Items must be unused, unwashed, and in original packaging with tags attached.' },
+            { q: 'How do I initiate a return?', a: 'Contact us via WhatsApp or email with your order ID and reason. Our team will arrange a pickup from your address.' },
+            { q: 'When will I get my refund?', a: 'Refunds are processed within 5–7 business days after we receive and inspect the returned item.' },
+            { q: 'Are sale items returnable?', a: 'Sale items are eligible for exchange only — not refunds — unless the item is defective or damaged.' },
         ],
     },
     {
-        icon: Ruler,
-        color: 'text-violet-600',
-        bg: 'bg-violet-50 dark:bg-violet-950/30',
-        border: 'border-violet-100 dark:border-violet-900',
-        iconBg: 'bg-violet-100 dark:bg-violet-900/50',
-        category: 'Sizing & Products',
+        category: 'Sizing & Products', icon: 'ruler',
         faqs: [
-            {
-                q: 'How do I find my size?',
-                a: "Each product page has a size chart with bust, waist, and hip measurements. If you're between sizes, we recommend sizing up.",
-            },
-            {
-                q: 'Are the colours accurate?',
-                a: 'We maintain colour accuracy as far as possible, but slight variations may occur due to screen settings and lighting.',
-            },
-            {
-                q: 'Do you offer custom stitching?',
-                a: "We don't currently offer custom stitching, but reach out via WhatsApp and we'll try our best to help.",
-            },
-            {
-                q: 'Are all products in stock?',
-                a: 'Most products are in stock. If an item shows as unavailable, you can contact us to check restock timelines.',
-            },
+            { q: 'How do I find my size?', a: "Each product page has a size chart with bust, waist, and hip measurements. If you're between sizes, we recommend sizing up." },
+            { q: 'Are the colours accurate?', a: 'We maintain colour accuracy as far as possible, but slight variations may occur due to screen settings and lighting.' },
+            { q: 'Do you offer custom stitching?', a: "We don't currently offer custom stitching, but reach out via WhatsApp and we'll try our best to help." },
+            { q: 'Are all products in stock?', a: 'Most products are in stock. If an item shows as unavailable, you can contact us to check restock timelines.' },
         ],
     },
     {
-        icon: CreditCard,
-        color: 'text-emerald-600',
-        bg: 'bg-emerald-50 dark:bg-emerald-950/30',
-        border: 'border-emerald-100 dark:border-emerald-900',
-        iconBg: 'bg-emerald-100 dark:bg-emerald-900/50',
-        category: 'Payments & Offers',
+        category: 'Payments & Offers', icon: 'creditCard',
         faqs: [
-            {
-                q: 'What payment methods are accepted?',
-                a: 'We currently accept Cash on Delivery (COD). Online payment options (UPI, cards) are coming soon.',
-            },
-            {
-                q: 'How do I apply a discount code?',
-                a: 'Enter your promo code at checkout. Only one code can be applied per order.',
-            },
-            {
-                q: 'Do you have a loyalty programme?',
-                a: "We're working on it! Subscribe to our newsletter to be the first to know when our rewards programme launches.",
-            },
-            {
-                q: 'Do you ship outside India?',
-                a: 'Currently we ship within India only. International shipping is coming soon — stay tuned!',
-            },
+            { q: 'What payment methods are accepted?', a: 'We currently accept Cash on Delivery (COD). Online payment options (UPI, cards) are coming soon.' },
+            { q: 'How do I apply a discount code?', a: 'Enter your promo code at checkout. Only one code can be applied per order.' },
+            { q: 'Do you have a loyalty programme?', a: "We're working on it! Subscribe to our newsletter to be the first to know when our rewards programme launches." },
+            { q: 'Do you ship outside India?', a: 'Currently we ship within India only. International shipping is coming soon — stay tuned!' },
         ],
     },
 ];
 
+interface FaqItem { q: string; a: string; }
+interface FaqCategory { category: string; icon: string; faqs: FaqItem[]; }
+
 export default function FAQPage() {
     const [openItem, setOpenItem] = useState<string | null>(null);
+    const [faqCategories, setFaqCategories] = useState<FaqCategory[]>(DEFAULT_FAQ_CATEGORIES);
+
+    useEffect(() => {
+        fetch('/api/settings')
+            .then(r => r.json())
+            .then(data => { if (data.faqCategories?.length) setFaqCategories(data.faqCategories); })
+            .catch(() => {});
+    }, []);
 
     const toggle = (key: string) => setOpenItem(openItem === key ? null : key);
 
@@ -139,25 +105,26 @@ export default function FAQPage() {
             {/* ── 4-pillar card grid ──────────────────────────── */}
             <section className="container mx-auto px-4 py-14">
                 <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
-                    {FAQ_CATEGORIES.map((cat) => {
-                        const Icon = cat.icon;
+                    {faqCategories.map((cat, idx) => {
+                        const Icon = ICON_MAP[cat.icon] || HelpCircle;
+                        const palette = CAT_COLORS[idx % CAT_COLORS.length];
                         return (
                             <div
                                 key={cat.category}
-                                className={`rounded-2xl border ${cat.border} ${cat.bg} flex flex-col overflow-hidden shadow-sm`}
+                                className={`rounded-2xl border ${palette.border} ${palette.bg} flex flex-col overflow-hidden shadow-sm`}
                             >
                                 {/* Card header */}
                                 <div className="px-5 pt-6 pb-4 flex flex-col items-start gap-3">
-                                    <div className={`w-10 h-10 rounded-xl ${cat.iconBg} flex items-center justify-center`}>
-                                        <Icon className={`h-5 w-5 ${cat.color}`} />
+                                    <div className={`w-10 h-10 rounded-xl ${palette.iconBg} flex items-center justify-center`}>
+                                        <Icon className={`h-5 w-5 ${palette.color}`} />
                                     </div>
-                                    <h2 className={`font-heading text-base font-semibold tracking-tight ${cat.color}`}>
+                                    <h2 className={`font-heading text-base font-semibold tracking-tight ${palette.color}`}>
                                         {cat.category}
                                     </h2>
                                 </div>
 
                                 {/* Divider */}
-                                <div className={`mx-5 mb-3 border-t ${cat.border}`} />
+                                <div className={`mx-5 mb-3 border-t ${palette.border}`} />
 
                                 {/* FAQ accordion items */}
                                 <div className="flex-1 px-4 pb-5 space-y-1.5">
@@ -174,10 +141,9 @@ export default function FAQPage() {
                                                     onClick={() => toggle(key)}
                                                     className="flex w-full items-center justify-between px-4 py-3 text-left text-sm font-medium hover:bg-muted/30 transition-colors"
                                                 >
-                                                    <span className={isOpen ? cat.color : 'text-foreground'}>{faq.q}</span>
+                                                    <span className={isOpen ? palette.color : 'text-foreground'}>{faq.q}</span>
                                                     <ChevronDown
-                                                        className={`h-3.5 w-3.5 shrink-0 transition-transform duration-200 ${isOpen ? `rotate-180 ${cat.color}` : 'text-muted-foreground'
-                                                            }`}
+                                                        className={`h-3.5 w-3.5 shrink-0 transition-transform duration-200 ${isOpen ? `rotate-180 ${palette.color}` : 'text-muted-foreground'}`}
                                                     />
                                                 </button>
                                                 {isOpen && (

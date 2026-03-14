@@ -7,7 +7,7 @@ import { ProductWithId } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { Heart, ShoppingCart, Loader2, Star } from 'lucide-react';
+import { Heart, ShoppingCart, Loader2, Star, X, ChevronLeft, ChevronRight, ZoomIn } from 'lucide-react';
 import { useCartStore } from '@/store/cartStore';
 import { useWishlistStore } from '@/store/wishlistStore';
 import { formatPrice } from '@/lib/utils';
@@ -25,8 +25,24 @@ export default function ProductDetailPage() {
   const [product, setProduct] = useState<ProductWithId | null>(null);
   const [loading, setLoading] = useState(true);
   const [selectedSize, setSelectedSize] = useState('');
+  const [selectedColor, setSelectedColor] = useState('');
   const [selectedImage, setSelectedImage] = useState(0);
   const [reviewStats, setReviewStats] = useState({ total: 0, avg: 0 });
+  const [lightboxOpen, setLightboxOpen] = useState(false);
+
+  // Close lightbox on Escape key
+  useEffect(() => {
+    const handleKey = (e: KeyboardEvent) => {
+      if (!lightboxOpen) return;
+      if (e.key === 'Escape') setLightboxOpen(false);
+      if (e.key === 'ArrowRight' && product)
+        setSelectedImage((i) => (i + 1) % product.images.length);
+      if (e.key === 'ArrowLeft' && product)
+        setSelectedImage((i) => (i - 1 + product.images.length) % product.images.length);
+    };
+    window.addEventListener('keydown', handleKey);
+    return () => window.removeEventListener('keydown', handleKey);
+  }, [lightboxOpen, product]);
 
   const addToCart = useCartStore((state) => state.addItem);
   const toggleWishlist = useWishlistStore((state) => state.toggleItem);
@@ -44,7 +60,19 @@ export default function ProductDetailPage() {
       if (response.ok) {
         const data = await response.json();
         setProduct(data);
-        setSelectedSize(data.sizes[0] || '');
+        if (data.sizes && data.sizes.length > 0) setSelectedSize(data.sizes[0]);
+        if (data.colors && data.colors.length > 0) {
+          const initialColor = data.colors[0];
+          setSelectedColor(initialColor);
+          // Auto-select the image mapped to the initial color
+          const colorMap = (data.colorImages || []).find(
+            (ci: { color: string; image: string }) => ci.color === initialColor
+          );
+          if (colorMap?.image) {
+            const imgIndex = (data.images || []).indexOf(colorMap.image);
+            if (imgIndex !== -1) setSelectedImage(imgIndex);
+          }
+        }
 
         // Fetch review stats
         try {
@@ -72,10 +100,24 @@ export default function ProductDetailPage() {
     }
   };
 
+  const getVariantStock = () => {
+    if (!product) return 0;
+    if (product.variants && product.variants.length > 0 && selectedSize && selectedColor) {
+      const variant = product.variants.find(
+        (v) => v.size === selectedSize && v.color === selectedColor
+      );
+      return variant ? variant.stock : 0;
+    }
+    // If there are no variants or selections, stock is fundamentally 0 in the new concept
+    return 0;
+  };
+
+  const currentStock = getVariantStock();
+
   const handleAddToCart = () => {
     if (!product) return;
 
-    if (!selectedSize) {
+    if (!selectedSize && product.sizes.length > 0) {
       toast({
         title: 'Please select a size',
         variant: 'destructive',
@@ -83,7 +125,15 @@ export default function ProductDetailPage() {
       return;
     }
 
-    if (product.stock === 0) {
+    if (!selectedColor && product.colors.length > 0) {
+      toast({
+        title: 'Please select a color',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (currentStock === 0) {
       toast({
         title: 'Out of stock',
         variant: 'destructive',
@@ -96,8 +146,9 @@ export default function ProductDetailPage() {
       name: product.name,
       price: product.price,
       image: product.images[0],
-      size: selectedSize,
-      stock: product.stock,
+      size: selectedSize || undefined,
+      color: selectedColor || undefined,
+      stock: currentStock,
     });
 
     toast({
@@ -162,34 +213,58 @@ export default function ProductDetailPage() {
   return (
     <div className="container mx-auto px-4 py-6 md:py-10 pb-28 md:pb-10">
       <div className="grid md:grid-cols-2 gap-6 md:gap-8 items-start">
-        {/* Images */}
-        <div className="space-y-3 w-full max-w-md md:max-w-full">
-          <div className="relative w-full aspect-[4/5] max-h-[400px] md:max-h-[420px] rounded-xl overflow-hidden bg-muted shadow border border-border">
+        {/* Images: main image left + vertical thumbnail strip right */}
+        <div className="flex flex-row gap-4 w-full max-w-md md:max-w-full items-start">
+          {/* Main image on the LEFT — fixed narrower width, taller height */}
+          <div
+            className="relative rounded-xl overflow-hidden bg-muted shadow border border-border group cursor-zoom-in shrink-0"
+            style={{ width: '480px', height: '560px' }}
+            onClick={() => setLightboxOpen(true)}
+            title="Click to enlarge"
+          >
             <Image
               src={product.images[selectedImage]}
               alt={product.name}
               fill
-              className="object-cover object-top"
+              className="object-cover object-top transition-transform duration-300 group-hover:scale-[1.03]"
               priority
-              sizes="(max-width: 768px) 100vw, 50vw"
+              sizes="480px"
             />
             {discountPercent > 0 && (
               <Badge className="absolute top-2 left-2 rounded-md bg-primary text-primary-foreground text-xs font-semibold">
                 -{discountPercent}%
               </Badge>
             )}
+            {/* Zoom hint icon */}
+            <div className="absolute bottom-2 right-2 bg-black/40 rounded-full p-1.5 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+              <ZoomIn className="h-4 w-4 text-white" />
+            </div>
           </div>
+
+          {/* Vertical thumbnail strip on the RIGHT — larger thumbnails */}
           {product.images.length > 1 && (
-            <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
+            <div
+              className="flex flex-col gap-3 shrink-0"
+              style={{
+                maxHeight: '560px',
+                overflowY: 'auto',
+                overflowX: 'hidden',
+                scrollbarWidth: 'thin',
+                scrollbarColor: 'hsl(var(--border)) transparent',
+              }}
+            >
               {product.images.map((image, index) => (
                 <button
                   key={index}
                   type="button"
                   onClick={() => setSelectedImage(index)}
-                  className={`relative aspect-square w-16 shrink-0 rounded-lg overflow-hidden border-2 transition-all ${selectedImage === index ? 'border-primary ring-2 ring-primary/20' : 'border-border'
-                    }`}
+                  className={`relative w-32 h-32 shrink-0 rounded-xl overflow-hidden border-2 transition-all ${
+                    selectedImage === index
+                      ? 'border-primary ring-2 ring-primary/20 scale-105'
+                      : 'border-border hover:border-primary/50'
+                  }`}
                 >
-                  <Image src={image} alt="" fill className="object-cover object-top" sizes="64px" />
+                  <Image src={image} alt="" fill className="object-cover object-top" sizes="128px" />
                 </button>
               ))}
             </div>
@@ -257,16 +332,30 @@ export default function ProductDetailPage() {
             <h3 className="font-heading font-semibold mb-2 text-sm uppercase tracking-wide text-muted-foreground">Colors</h3>
             <div className="flex flex-wrap gap-2">
               {product.colors.map((color) => (
-                <Badge key={color} variant="outline" className="rounded-lg border-border">
+                <Button
+                  key={color}
+                  variant={selectedColor === color ? 'default' : 'outline'}
+                  size="sm"
+                  className="rounded-lg border-border"
+                  onClick={() => {
+                    setSelectedColor(color);
+                    // Auto-switch to the mapped image for this color (if configured)
+                    const colorMap = (product.colorImages || []).find((ci) => ci.color === color);
+                    if (colorMap?.image) {
+                      const imgIndex = product.images.indexOf(colorMap.image);
+                      if (imgIndex !== -1) setSelectedImage(imgIndex);
+                    }
+                  }}
+                >
                   {color}
-                </Badge>
+                </Button>
               ))}
             </div>
           </div>
 
           <div>
-            {product.stock > 0 ? (
-              <Badge variant="secondary" className="rounded-lg border-border">In Stock ({product.stock})</Badge>
+            {currentStock > 0 ? (
+              <Badge variant="secondary" className="rounded-lg border-border">In Stock ({currentStock})</Badge>
             ) : (
               <Badge variant="destructive" className="rounded-lg">Out of Stock</Badge>
             )}
@@ -276,7 +365,7 @@ export default function ProductDetailPage() {
           <div className="hidden md:flex gap-3 pt-2">
             <Button
               onClick={handleAddToCart}
-              disabled={product.stock === 0}
+              disabled={currentStock === 0}
               className="flex-1 rounded-lg h-12"
               size="lg"
             >
@@ -295,6 +384,82 @@ export default function ProductDetailPage() {
         </div>
       </div>
 
+      {/* Lightbox Modal */}
+      {lightboxOpen && (
+        <div
+          className="fixed inset-0 z-[999] flex items-center justify-center bg-black/90 backdrop-blur-sm"
+          onClick={() => setLightboxOpen(false)}
+        >
+          {/* Close button */}
+          <button
+            className="absolute top-4 right-4 z-10 bg-white/10 hover:bg-white/25 text-white rounded-full p-2 transition-colors"
+            onClick={() => setLightboxOpen(false)}
+            aria-label="Close"
+          >
+            <X className="h-6 w-6" />
+          </button>
+
+          {/* Previous arrow */}
+          {product.images.length > 1 && (
+            <button
+              className="absolute left-3 md:left-6 z-10 bg-white/10 hover:bg-white/25 text-white rounded-full p-2 transition-colors"
+              onClick={(e) => { e.stopPropagation(); setSelectedImage((i) => (i - 1 + product.images.length) % product.images.length); }}
+              aria-label="Previous image"
+            >
+              <ChevronLeft className="h-7 w-7" />
+            </button>
+          )}
+
+          {/* Image */}
+          <div
+            className="relative w-[90vw] max-w-2xl h-[85vh] rounded-xl overflow-hidden shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <Image
+              src={product.images[selectedImage]}
+              alt={product.name}
+              fill
+              className="object-contain"
+              sizes="90vw"
+              priority
+            />
+            {/* Caption bar */}
+            <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent px-4 py-3">
+              <p className="text-white text-sm font-medium">{product.name}</p>
+              {product.images.length > 1 && (
+                <p className="text-white/60 text-xs mt-0.5">{selectedImage + 1} / {product.images.length}</p>
+              )}
+            </div>
+          </div>
+
+          {/* Next arrow */}
+          {product.images.length > 1 && (
+            <button
+              className="absolute right-3 md:right-6 z-10 bg-white/10 hover:bg-white/25 text-white rounded-full p-2 transition-colors"
+              onClick={(e) => { e.stopPropagation(); setSelectedImage((i) => (i + 1) % product.images.length); }}
+              aria-label="Next image"
+            >
+              <ChevronRight className="h-7 w-7" />
+            </button>
+          )}
+
+          {/* Dot indicators */}
+          {product.images.length > 1 && (
+            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-1.5">
+              {product.images.map((_, idx) => (
+                <button
+                  key={idx}
+                  onClick={(e) => { e.stopPropagation(); setSelectedImage(idx); }}
+                  className={`w-2 h-2 rounded-full transition-all ${
+                    idx === selectedImage ? 'bg-white scale-125' : 'bg-white/40'
+                  }`}
+                />
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Product Reviews */}
       <ProductReviews productId={product._id} />
 
@@ -311,7 +476,7 @@ export default function ProductDetailPage() {
           </Button>
           <Button
             onClick={handleAddToCart}
-            disabled={product.stock === 0}
+            disabled={currentStock === 0}
             className="flex-1 rounded-lg h-12 text-base font-semibold"
             size="lg"
           >

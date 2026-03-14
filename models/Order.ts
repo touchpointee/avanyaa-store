@@ -7,6 +7,7 @@ export interface IOrderItem {
   price: number;
   quantity: number;
   size?: string;
+  color?: string;
 }
 
 export interface IAddress {
@@ -57,6 +58,9 @@ const OrderItemSchema = new Schema({
     min: 1,
   },
   size: {
+    type: String,
+  },
+  color: {
     type: String,
   },
 });

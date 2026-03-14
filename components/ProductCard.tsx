@@ -26,6 +26,8 @@ export default function ProductCard({ product }: ProductCardProps) {
   const [isWishlistLoading, setIsWishlistLoading] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [reviewStats, setReviewStats] = useState<{ total: number; avg: number } | null>(null);
+  const [activeImageIdx, setActiveImageIdx] = useState(0);
+  const images = product.images ?? [];
 
   useEffect(() => {
     setMounted(true);
@@ -50,6 +52,15 @@ export default function ProductCard({ product }: ProductCardProps) {
 
     fetchReviews();
   }, [product._id]);
+
+  // Auto-cycle images every 6 seconds — always running, no hover pause
+  useEffect(() => {
+    if (images.length <= 1) return;
+    const timer = setInterval(() => {
+      setActiveImageIdx((i) => (i + 1) % images.length);
+    }, 6000);
+    return () => clearInterval(timer);
+  }, [images.length]);
 
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -122,30 +133,42 @@ export default function ProductCard({ product }: ProductCardProps) {
     ? Math.round(((product.compareAtPrice - product.price) / product.compareAtPrice) * 100)
     : 0;
 
-  const secondaryImage = product.images?.[1];
-
   return (
     <Link href={`/products/${product.slug}`} className="group block h-full">
-      <div className="h-full flex flex-col overflow-hidden rounded-xl border border-border bg-card shadow transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5">
-        {/* Image - fixed aspect square, secondary on hover if available */}
+      <div
+        className="h-full flex flex-col overflow-hidden rounded-xl border border-border bg-card shadow transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5"
+      >
+        {/* Image — auto-cycles every 6 s, crossfade */}
         <div className="relative aspect-square w-full shrink-0 overflow-hidden bg-muted/50">
-          <Image
-            src={product.images[0]}
-            alt={product.name}
-            fill
-            className="object-cover object-top transition-transform duration-300 group-hover:scale-105"
-            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-          />
-          {secondaryImage && (
+          {/* Crossfade image stack */}
+          {images.map((src, i) => (
             <Image
-              src={secondaryImage}
-              alt=""
-              aria-hidden
+              key={i}
+              src={src}
+              alt={i === 0 ? product.name : ''}
+              aria-hidden={i !== activeImageIdx}
               fill
-              className="object-cover object-top opacity-0 group-hover:opacity-100 transition-opacity duration-300 absolute inset-0"
+              className={`object-cover object-top absolute inset-0 transition-opacity duration-700 ${i === activeImageIdx ? 'opacity-100' : 'opacity-0'}`}
               sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+              priority={i === 0}
             />
+          ))}
+
+          {/* Dot indicators — always visible when multiple images */}
+          {images.length > 1 && (
+            <div className="absolute bottom-2 left-0 right-0 flex justify-center gap-1.5 z-10">
+              {images.map((_, i) => (
+                <button
+                  key={i}
+                  type="button"
+                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); setActiveImageIdx(i); }}
+                  className={`rounded-full transition-all duration-300 ${i === activeImageIdx ? 'bg-white w-4 h-1.5' : 'bg-white/50 w-1.5 h-1.5'}`}
+                  aria-label={`Image ${i + 1}`}
+                />
+              ))}
+            </div>
           )}
+
           {/* Wishlist - top right */}
           <button
             onClick={handleToggleWishlist}
