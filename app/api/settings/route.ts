@@ -84,9 +84,11 @@ export async function GET() {
     return NextResponse.json({
       trustBadges: doc?.trustBadges?.length ? doc.trustBadges : DEFAULT_BADGES,
       marqueeMessages: doc?.marqueeMessages?.length ? doc.marqueeMessages : DEFAULT_MARQUEE,
-      testimonials: doc?.testimonials?.length ? doc.testimonials : DEFAULT_TESTIMONIALS,
+       testimonials: doc?.testimonials?.length ? doc.testimonials : DEFAULT_TESTIMONIALS,
       whyCards: doc?.whyCards?.length ? doc.whyCards : DEFAULT_WHY_CARDS,
       faqCategories: doc?.faqCategories?.length ? doc.faqCategories : DEFAULT_FAQ_CATEGORIES,
+      shippingCharge: doc?.shippingCharge || 0,
+      freeShippingThreshold: doc?.freeShippingThreshold || 0,
     });
   } catch {
     return NextResponse.json({
@@ -95,6 +97,8 @@ export async function GET() {
       testimonials: DEFAULT_TESTIMONIALS,
       whyCards: DEFAULT_WHY_CARDS,
       faqCategories: DEFAULT_FAQ_CATEGORIES,
+      shippingCharge: 0,
+      freeShippingThreshold: 0,
     });
   }
 }
@@ -109,7 +113,7 @@ export async function PUT(req: NextRequest) {
 
     await connectDB();
     const body = await req.json();
-    const { trustBadges, marqueeMessages, testimonials, whyCards, faqCategories } = body;
+    const { trustBadges, marqueeMessages, testimonials, whyCards, faqCategories, shippingCharge, freeShippingThreshold } = body;
 
     const updateData: Record<string, any> = {};
     if (trustBadges !== undefined) updateData.trustBadges = trustBadges;
@@ -117,6 +121,8 @@ export async function PUT(req: NextRequest) {
     if (testimonials !== undefined) updateData.testimonials = testimonials;
     if (whyCards !== undefined) updateData.whyCards = whyCards;
     if (faqCategories !== undefined) updateData.faqCategories = faqCategories;
+    if (shippingCharge !== undefined) updateData.shippingCharge = shippingCharge;
+    if (freeShippingThreshold !== undefined) updateData.freeShippingThreshold = freeShippingThreshold;
 
     const doc = await Settings.findOneAndUpdate(
       { key: 'global' },
@@ -130,6 +136,8 @@ export async function PUT(req: NextRequest) {
       testimonials: doc.testimonials,
       whyCards: doc.whyCards,
       faqCategories: doc.faqCategories,
+      shippingCharge: doc.shippingCharge,
+      freeShippingThreshold: doc.freeShippingThreshold,
     });
   } catch (error: any) {
     return NextResponse.json({ error: error.message || 'Failed to save' }, { status: 500 });

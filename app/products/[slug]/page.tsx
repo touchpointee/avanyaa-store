@@ -102,14 +102,16 @@ export default function ProductDetailPage() {
 
   const getVariantStock = () => {
     if (!product) return 0;
-    if (product.variants && product.variants.length > 0 && selectedSize && selectedColor) {
+    if (product.variants && product.variants.length > 0) {
+      if (product.sizes.length > 0 && !selectedSize) return 0;
+      if (product.colors.length > 0 && !selectedColor) return 0;
       const variant = product.variants.find(
-        (v) => v.size === selectedSize && v.color === selectedColor
+        (v) => (!v.size || v.size === selectedSize) && (!v.color || v.color === selectedColor)
       );
       return variant ? variant.stock : 0;
     }
-    // If there are no variants or selections, stock is fundamentally 0 in the new concept
-    return 0;
+    // If there are no variants or selections, stock is fundamentally the product's master stock
+    return product.stock || 0;
   };
 
   const currentStock = getVariantStock();

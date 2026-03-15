@@ -180,9 +180,17 @@ export default function GuestOrderLookupPage() {
                     <p>{order.address.street}, {order.address.city}, {order.address.state} – {order.address.zipCode}</p>
                     <p>Phone: {order.address.phone}</p>
                   </div>
-                  <div className="text-right shrink-0">
+                  <div className="text-right shrink-0 flex flex-col items-end">
+                    <div className="flex justify-between w-40 text-sm text-muted-foreground mb-1">
+                      <span>Subtotal:</span>
+                      <span>{formatPrice(order.totalAmount - (order.shippingFee || 0))}</span>
+                    </div>
+                    <div className="flex justify-between w-40 text-sm text-muted-foreground mb-3">
+                      <span>Shipping:</span>
+                      <span>{order.shippingFee ? formatPrice(order.shippingFee) : <span className="text-emerald-600 font-medium">Free</span>}</span>
+                    </div>
                     <p className="text-xs text-muted-foreground uppercase tracking-wide mb-0.5">Total</p>
-                    <p className="text-lg font-semibold">{formatPrice(order.totalAmount)}</p>
+                    <p className="text-lg font-semibold text-primary">{formatPrice(order.totalAmount)}</p>
                   </div>
                 </div>
               </CardContent>

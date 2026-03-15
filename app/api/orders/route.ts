@@ -5,6 +5,7 @@ import connectDB from '@/lib/db';
 import Order from '@/models/Order';
 import User from '@/models/User';
 import Product from '@/models/Product';
+import Settings from '@/models/Settings';
 import InventoryHistory from '@/models/InventoryHistory';
 import { generateOrderId } from '@/lib/utils';
 import { sendOrderConfirmationEmail, sendAdminOrderNotification } from '@/lib/email';
@@ -109,7 +110,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Verify products and calculate total
-    let totalAmount = 0;
+    let itemsTotal = 0;
     const orderItems = [];
 
     for (const item of items) {
@@ -122,15 +123,13 @@ export async function POST(req: NextRequest) {
         );
       }
 
-      // Find the specific variant
-      let variantIndex = -1;
-      if (product.variants && product.variants.length > 0 && item.size && item.color) {
-        variantIndex = product.variants.findIndex(
+      let availableStock = product.stock || 0;
+      if (product.variants && product.variants.length > 0) {
+        const variantIndex = product.variants.findIndex(
           (v: any) => v.size === item.size && v.color === item.color
         );
+        availableStock = variantIndex > -1 ? product.variants[variantIndex].stock : 0;
       }
-
-      const availableStock = variantIndex > -1 ? product.variants[variantIndex].stock : 0;
 
       if (availableStock < item.quantity) {
         return NextResponse.json(
@@ -139,7 +138,7 @@ export async function POST(req: NextRequest) {
         );
       }
 
-      totalAmount += product.price * item.quantity;
+      itemsTotal += product.price * item.quantity;
 
       orderItems.push({
         productId: product._id,
@@ -154,6 +153,18 @@ export async function POST(req: NextRequest) {
       // We will reduce stock and record history after order is fully validated
     }
 
+    // Fetch settings for shipping charge calculations
+    const settingsDoc = await Settings.findOne({ key: 'global' }).lean() as any;
+    const shippingCharge = settingsDoc?.shippingCharge || 0;
+    const freeShippingThreshold = settingsDoc?.freeShippingThreshold || 0;
+
+    let appliedShippingFee = 0;
+    if (itemsTotal > 0 && itemsTotal < freeShippingThreshold) {
+      appliedShippingFee = shippingCharge;
+    }
+
+    const totalAmount = itemsTotal + appliedShippingFee;
+
     const orderId = generateOrderId();
     // Admin sessions → guest order (no userId); customers → link to their account
     const userId = (session && !isAdmin) ? (session.user as any).id : null;
@@ -163,6 +174,7 @@ export async function POST(req: NextRequest) {
       userId,
       items: orderItems,
       totalAmount,
+      shippingFee: appliedShippingFee,
       address,
       status: 'placed',
       paymentMethod: 'cod',
@@ -172,28 +184,37 @@ export async function POST(req: NextRequest) {
     for (const item of orderItems) {
       const product = await Product.findById(item.productId);
       if (product) {
-        let variantIndex = -1;
-        if (product.variants && product.variants.length > 0 && item.size && item.color) {
-          variantIndex = product.variants.findIndex(
+        if (product.variants && product.variants.length > 0) {
+          const variantIndex = product.variants.findIndex(
             (v: any) => v.size === item.size && v.color === item.color
           );
-        }
+          
+          if (variantIndex > -1) {
+            product.variants[variantIndex].stock -= item.quantity;
+            product.stock = product.variants.reduce((total: number, v: any) => total + (Number(v.stock) || 0), 0);
 
-        if (variantIndex > -1) {
-          product.variants[variantIndex].stock -= item.quantity;
-          product.stock = product.variants.reduce((total: number, v: any) => total + (Number(v.stock) || 0), 0);
-
+            await InventoryHistory.create({
+              productId: product._id,
+              productName: product.name,
+              variant: { size: item.size, color: item.color },
+              changeAmount: -item.quantity,
+              reason: 'Order Placed',
+              referenceId: orderId,
+            });
+          }
+        } else {
+          // No variants, directly reduce master stock
+          product.stock -= item.quantity;
+          
           await InventoryHistory.create({
             productId: product._id,
             productName: product.name,
-            variant: { size: item.size, color: item.color },
             changeAmount: -item.quantity,
             reason: 'Order Placed',
             referenceId: orderId,
           });
         }
-        // No else block - we strictly use variants for stock reduction now. 
-        // Validation above ensures we only get here if variant existed.
+        
         await product.save();
       }
     }
@@ -212,6 +233,7 @@ export async function POST(req: NextRequest) {
           color: item.color,
         })),
         totalAmount,
+        shippingFee: appliedShippingFee,
         address,
       };
 

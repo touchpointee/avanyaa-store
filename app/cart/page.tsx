@@ -1,5 +1,7 @@
 'use client';
 
+import { useState, useEffect } from 'react';
+
 import { useCartStore } from '@/store/cartStore';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -10,7 +12,67 @@ import { Minus, Plus, Trash2, ShoppingCart } from 'lucide-react';
 import { formatPrice } from '@/lib/utils';
 
 export default function CartPage() {
-  const { items, updateQuantity, removeItem, getTotalPrice } = useCartStore();
+  const { items, updateQuantity, updateStock, removeItem, getTotalPrice } = useCartStore();
+  const [shippingCharge, setShippingCharge] = useState(0);
+  const [freeShippingThreshold, setFreeShippingThreshold] = useState(0);
+
+  useEffect(() => {
+    fetch('/api/settings')
+      .then(r => r.json())
+      .then(data => {
+        setShippingCharge(data.shippingCharge || 0);
+        setFreeShippingThreshold(data.freeShippingThreshold || 0);
+      }).catch(() => {});
+  }, []);
+
+  // Sync live stock
+  useEffect(() => {
+    if (items.length === 0) return;
+    const fetchLiveStock = async () => {
+      try {
+        const ids = items.map(i => i.productId).filter((id, index, self) => self.indexOf(id) === index);
+        const res = await fetch(`/api/products/batch?${ids.map(id => `ids=${id}`).join('&')}`);
+        if (!res.ok) return;
+        const products = await res.json();
+        
+        products.forEach((product: any) => {
+          items.forEach(item => {
+            if (item.productId === product._id) {
+              let liveStock = 0;
+              if (product.variants && product.variants.length > 0) {
+                let variant;
+                if (item.size && item.color) {
+                  variant = product.variants.find((v: any) => v.size === item.size && v.color === item.color);
+                } else if (item.size) {
+                  variant = product.variants.find((v: any) => v.size === item.size);
+                } else if (item.color) {
+                  variant = product.variants.find((v: any) => v.color === item.color);
+                } else {
+                  variant = product.variants[0];
+                }
+                liveStock = variant ? Number(variant.stock) || 0 : 0;
+              } else {
+                liveStock = Number(product.stock) || 0;
+              }
+              
+              if (item.stock !== liveStock) {
+                updateStock(item.productId, liveStock, item.size, item.color);
+              }
+            }
+          });
+        });
+      } catch (e) {
+        console.error('Failed to sync live stock', e);
+      }
+    };
+    fetchLiveStock();
+  }, [items.length]); // Intentionally not including items as dependency to avoid loop, just length or mount.
+
+  const subtotal = getTotalPrice();
+  const shippingFee = (subtotal > 0 && subtotal < freeShippingThreshold) ? shippingCharge : 0;
+  const finalTotal = subtotal + shippingFee;
+
+  const hasOutOfStockItems = items.some(item => item.quantity > item.stock || item.stock === 0);
 
   if (items.length === 0) {
     return (
@@ -58,6 +120,12 @@ export default function CartPage() {
                     )}
                     <p className="text-sm text-muted-foreground">{formatPrice(item.price)} each</p>
                     <div className="flex items-center gap-2 mt-auto">
+                      {(item.quantity > item.stock || item.stock === 0) && (
+                        <span className="text-xs font-semibold text-destructive mr-auto">
+                          {item.stock === 0 ? 'Out of Stock' : `Only ${item.stock} left`}
+                        </span>
+                      )}
+                      
                       <Button
                         variant="outline"
                         size="icon"
@@ -100,23 +168,38 @@ export default function CartPage() {
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Subtotal</span>
-                  <span>{formatPrice(getTotalPrice())}</span>
+                  <span>{formatPrice(subtotal)}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Shipping</span>
-                  <span className="text-green-600 font-medium">FREE</span>
+                  {subtotal === 0 ? (
+                    <span className="text-green-600 font-medium">-</span>
+                  ) : shippingFee === 0 ? (
+                    <span className="text-green-600 font-medium">FREE</span>
+                  ) : (
+                    <span className="font-medium">{formatPrice(shippingFee)}</span>
+                  )}
                 </div>
               </div>
               <Separator className="bg-border" />
               <div className="flex justify-between text-lg font-semibold">
                 <span>Total</span>
-                <span className="text-primary">{formatPrice(getTotalPrice())}</span>
+                <span className="text-primary">{formatPrice(finalTotal)}</span>
               </div>
               <p className="text-xs text-muted-foreground rounded-lg bg-muted border border-border p-2.5">
                 Pay by <strong>Cash on Delivery (COD)</strong> when you receive your order.
               </p>
-              <Button className="w-full rounded-lg h-12 text-base font-semibold" size="lg" asChild>
-                <Link href="/checkout">Proceed to checkout</Link>
+              <Button 
+                className="w-full rounded-lg h-12 text-base font-semibold" 
+                size="lg" 
+                disabled={hasOutOfStockItems}
+                asChild={!hasOutOfStockItems}
+              >
+                {hasOutOfStockItems ? (
+                  <span>Remove out of stock items to proceed</span>
+                ) : (
+                  <Link href="/checkout">Proceed to checkout</Link>
+                )}
               </Button>
               <Button variant="outline" className="w-full rounded-lg border-border" asChild>
                 <Link href="/products">Continue shopping</Link>

@@ -37,6 +37,8 @@ export interface ISettings extends Document {
   whyCards: IWhyCard[];
   faqCategories: IFaqCategory[];
   aboutPage?: Record<string, any>;
+  shippingCharge?: number;
+  freeShippingThreshold?: number;
 }
 
 const TrustBadgeSchema = new Schema<ITrustBadge>({
@@ -76,6 +78,8 @@ const SettingsSchema = new Schema<ISettings>({
   whyCards: { type: [WhyCardSchema], default: [] },
   faqCategories: { type: [FaqCategorySchema], default: [] },
   aboutPage: { type: mongoose.Schema.Types.Mixed, default: null },
+  shippingCharge: { type: Number, default: 0 },
+  freeShippingThreshold: { type: Number, default: 0 },
 });
 
 if (mongoose.models.Settings) {

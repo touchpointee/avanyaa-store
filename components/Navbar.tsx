@@ -161,28 +161,27 @@ export default function Navbar() {
                 <Button size="sm" className="rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 hidden md:inline-flex" asChild>
                   <Link href="/auth/signin">Sign In</Link>
                 </Button>
-              ) : isCustomerSession(session) ? (
+              ) : session ? (
                 <>
-                  <Button variant="ghost" size="icon" className="rounded-lg hidden md:inline-flex" asChild>
-                    <Link href="/profile">
-                      <User className="h-5 w-5" />
-                    </Link>
-                  </Button>
+                  {isAdmin ? (
+                    <Button variant="outline" size="sm" className="rounded-lg border-border hidden sm:inline-flex" asChild>
+                      <Link href="/admin">Admin Panel</Link>
+                    </Button>
+                  ) : (
+                    <Button variant="ghost" size="icon" className="rounded-lg hidden md:inline-flex" asChild>
+                      <Link href="/profile">
+                        <User className="h-5 w-5" />
+                      </Link>
+                    </Button>
+                  )}
                   <Button variant="ghost" size="icon" className="rounded-lg hidden md:inline-flex" onClick={() => signOut()}>
                     <LogOut className="h-5 w-5" />
                   </Button>
                 </>
               ) : (
-                <>
-                  {isAdmin && (
-                    <Button variant="outline" size="sm" className="rounded-lg border-border hidden sm:inline-flex" asChild>
-                      <Link href="/admin">Admin</Link>
-                    </Button>
-                  )}
-                  <Button size="sm" className="rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 hidden md:inline-flex" asChild>
-                    <Link href="/auth/signin">Sign In</Link>
-                  </Button>
-                </>
+                <Button size="sm" className="rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 hidden md:inline-flex" asChild>
+                  <Link href="/auth/signin">Sign In</Link>
+                </Button>
               )}
             </div>
           </div>
@@ -242,14 +241,33 @@ export default function Navbar() {
 
         {/* Drawer footer — auth */}
         <div className="border-t border-border px-4 py-4">
-          {isCustomerSession(session) ? (
-            <button
-              onClick={() => { setMenuOpen(false); signOut(); }}
-              className="flex items-center gap-3 w-full px-4 py-3 rounded-xl text-sm font-medium text-destructive hover:bg-destructive/10 transition-colors"
-            >
-              <LogOut className="h-4 w-4 shrink-0" />
-              Sign Out
-            </button>
+          {session ? (
+            <div className="space-y-2">
+              {isAdmin ? (
+                <Link
+                  href="/admin"
+                  onClick={() => setMenuOpen(false)}
+                  className="flex items-center justify-center w-full h-11 rounded-xl border border-border text-foreground text-sm font-semibold hover:bg-muted transition-colors"
+                >
+                  Admin Panel
+                </Link>
+              ) : (
+                <Link
+                  href="/profile"
+                  onClick={() => setMenuOpen(false)}
+                  className="flex items-center justify-center w-full h-11 rounded-xl border border-border text-foreground text-sm font-semibold hover:bg-muted transition-colors"
+                >
+                  My Profile
+                </Link>
+              )}
+              <button
+                onClick={() => { setMenuOpen(false); signOut(); }}
+                className="flex items-center gap-3 w-full px-4 py-3 rounded-xl text-sm font-medium text-destructive hover:bg-destructive/10 transition-colors"
+              >
+                <LogOut className="h-4 w-4 shrink-0" />
+                Sign Out
+              </button>
+            </div>
           ) : (
             <Link
               href="/auth/signin"

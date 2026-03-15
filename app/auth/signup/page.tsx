@@ -48,6 +48,17 @@ export default function SignUpPage() {
       return;
     }
 
+    const mobileDigits = formData.mobile.replace(/\D/g, '');
+    if (mobileDigits.length !== 10) {
+      toast({
+        title: 'Invalid mobile number',
+        description: 'Please enter a valid 10-digit mobile number',
+        variant: 'destructive',
+      });
+      setLoading(false);
+      return;
+    }
+
     try {
       const response = await fetch('/api/auth/register', {
         method: 'POST',
@@ -98,7 +109,7 @@ export default function SignUpPage() {
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="name">Full Name</Label>
+              <Label htmlFor="name">Full Name <span className="text-destructive">*</span></Label>
               <Input
                 id="name"
                 type="text"
@@ -113,7 +124,7 @@ export default function SignUpPage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email">Email <span className="text-destructive">*</span></Label>
               <Input
                 id="email"
                 type="email"
@@ -128,22 +139,29 @@ export default function SignUpPage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="mobile">Mobile Number *</Label>
+              <Label htmlFor="mobile">Mobile Number <span className="text-destructive">*</span></Label>
               <Input
                 id="mobile"
                 type="tel"
-                placeholder="+91 98765 43210"
+                placeholder="98765 43210"
                 value={formData.mobile}
-                onChange={(e) =>
-                  setFormData({ ...formData, mobile: e.target.value })
-                }
+                onChange={(e) => {
+                  const digits = e.target.value.replace(/\D/g, '').slice(0, 10);
+                  setFormData({ ...formData, mobile: digits });
+                }}
                 required
+                maxLength={10}
+                inputMode="numeric"
+                pattern="[0-9]{10}"
                 className="rounded-lg border-border"
               />
+              {formData.mobile && formData.mobile.replace(/\D/g, '').length !== 10 && (
+                <p className="text-xs text-destructive">Enter a valid 10-digit mobile number</p>
+              )}
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
+              <Label htmlFor="password">Password <span className="text-destructive">*</span></Label>
               <div className="relative">
                 <Input
                   id="password"
@@ -168,7 +186,7 @@ export default function SignUpPage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="confirmPassword">Confirm Password</Label>
+              <Label htmlFor="confirmPassword">Confirm Password <span className="text-destructive">*</span></Label>
               <div className="relative">
                 <Input
                   id="confirmPassword"

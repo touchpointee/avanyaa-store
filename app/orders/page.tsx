@@ -414,12 +414,24 @@ export default function OrdersPage() {
                   </p>
                 </div>
 
+                {/* Subtotal & Shipping */}
+                <div className="space-y-2 text-sm pt-2">
+                  <div className="flex justify-between text-muted-foreground">
+                    <span>Subtotal</span>
+                    <span>{formatPrice(order.totalAmount - (order.shippingFee || 0))}</span>
+                  </div>
+                  <div className="flex justify-between text-muted-foreground">
+                    <span>Shipping</span>
+                    <span>{order.shippingFee ? formatPrice(order.shippingFee) : <span className="text-emerald-600 font-medium">Free</span>}</span>
+                  </div>
+                </div>
+
                 <Separator className="bg-border" />
 
                 {/* Total */}
                 <div className="flex justify-between items-center">
                   <span className="font-semibold">Total Amount</span>
-                  <span className="text-xl font-semibold">{formatPrice(order.totalAmount)}</span>
+                  <span className="text-xl font-bold text-primary">{formatPrice(order.totalAmount)}</span>
                 </div>
               </CardContent>
             </Card>

@@ -30,6 +30,7 @@ interface Order {
   orderId: string;
   status: string;
   totalAmount: number;
+  shippingFee?: number;
   paymentMethod: string;
   createdAt: string;
   updatedAt: string;
@@ -329,11 +330,11 @@ export default function AdminOrderDetailPage() {
             <div className="mt-6 pt-4 border-t border-border space-y-2">
               <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground">Subtotal</span>
-                <span>{formatPrice(order.totalAmount)}</span>
+                <span>{formatPrice(order.totalAmount - (order.shippingFee || 0))}</span>
               </div>
               <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground">Shipping</span>
-                <span className="text-emerald-600 font-semibold">Free</span>
+                <span>{order.shippingFee ? formatPrice(order.shippingFee) : <span className="text-emerald-600 font-medium">Free</span>}</span>
               </div>
               <div className="flex justify-between items-center pt-3 border-t border-border">
                 <span className="font-bold">Total</span>

@@ -9,6 +9,7 @@ interface CartStore {
   addItem: (item: Omit<CartItem, 'quantity'>) => void;
   removeItem: (productId: string, size?: string, color?: string) => void;
   updateQuantity: (productId: string, quantity: number, size?: string, color?: string) => void;
+  updateStock: (productId: string, newStock: number, size?: string, color?: string) => void;
   clearCart: () => void;
   getTotalItems: () => number;
   getTotalPrice: () => number;
@@ -59,6 +60,16 @@ export const useCartStore = create<CartStore>()(
           items: state.items.map((item) =>
             item.productId === productId && item.size === size && item.color === color
               ? { ...item, quantity: Math.min(quantity, item.stock) }
+              : item
+          ),
+        }));
+      },
+
+      updateStock: (productId, newStock, size, color) => {
+        set((state) => ({
+          items: state.items.map((item) =>
+            item.productId === productId && item.size === size && item.color === color
+              ? { ...item, stock: newStock, quantity: Math.min(item.quantity, newStock) }
               : item
           ),
         }));

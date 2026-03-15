@@ -5,10 +5,11 @@ import { useRouter } from 'next/navigation';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
 import { formatPrice } from '@/lib/utils';
 import {
   Loader2, Search, ChevronRight, Package,
-  RefreshCw, ShoppingBag, TrendingUp, Clock, CheckCircle2,
+  RefreshCw, ShoppingBag, TrendingUp, Clock, CheckCircle2, Settings
 } from 'lucide-react';
 
 interface OrderSummary {
@@ -66,7 +67,12 @@ export default function AdminOrdersPage() {
   const [statusFilter, setStatusFilter] = useState('all');
   const [refreshing, setRefreshing] = useState(false);
 
-  useEffect(() => { fetchOrders(); }, []);
+  const [shippingCharge, setShippingCharge] = useState(0);
+  const [freeShippingThreshold, setFreeShippingThreshold] = useState(0);
+  const [savingSettings, setSavingSettings] = useState(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+
+  useEffect(() => { fetchOrders(); fetchSettings(); }, []);
 
   useEffect(() => {
     let result = orders;
@@ -91,6 +97,31 @@ export default function AdminOrdersPage() {
     } catch { } finally { setLoading(false); setRefreshing(false); }
   };
 
+  const fetchSettings = async () => {
+    try {
+      const res = await fetch('/api/settings');
+      if (res.ok) {
+        const data = await res.json();
+        setShippingCharge(data.shippingCharge || 0);
+        setFreeShippingThreshold(data.freeShippingThreshold || 0);
+      }
+    } catch {}
+  };
+
+  const saveSettings = async () => {
+    setSavingSettings(true);
+    try {
+      const res = await fetch('/api/settings', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ shippingCharge, freeShippingThreshold }),
+      });
+      if (res.ok) setIsSettingsOpen(false);
+    } catch {} finally {
+      setSavingSettings(false);
+    }
+  };
+
   /* ── Derived stats ── */
   const totalRevenue = orders.filter(o => o.status === 'delivered').reduce((s, o) => s + o.totalAmount, 0);
   const pending = orders.filter(o => ['placed', 'packed', 'shipped', 'out_for_delivery'].includes(o.status)).length;
@@ -111,10 +142,42 @@ export default function AdminOrdersPage() {
           <h1 className="text-3xl font-bold tracking-tight">Orders</h1>
           <p className="text-sm text-muted-foreground mt-1">{orders.length} total order{orders.length !== 1 ? 's' : ''} received</p>
         </div>
-        <Button variant="outline" size="sm" onClick={() => fetchOrders(true)} disabled={refreshing}>
-          <RefreshCw className={`h-4 w-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
-          Refresh
-        </Button>
+        <div className="flex gap-2 items-center">
+          <Dialog open={isSettingsOpen} onOpenChange={setIsSettingsOpen}>
+            <DialogTrigger asChild>
+              <Button variant="outline" size="sm">
+                <Settings className="h-4 w-4 mr-2" />
+                Shipping Config
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Shipping Configuration</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4 py-4">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Shipping Charge (₹)</label>
+                  <Input type="number" min="0" value={shippingCharge} onChange={e => setShippingCharge(Number(e.target.value))} />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Free Shipping Threshold (₹)</label>
+                  <Input type="number" min="0" value={freeShippingThreshold} onChange={e => setFreeShippingThreshold(Number(e.target.value))} />
+                  <p className="text-xs text-muted-foreground">Orders below this amount will have the shipping charge applied.</p>
+                </div>
+              </div>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setIsSettingsOpen(false)}>Cancel</Button>
+                <Button onClick={saveSettings} disabled={savingSettings}>
+                  {savingSettings && <Loader2 className="h-4 w-4 mr-2 animate-spin" />} Save
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+          <Button variant="outline" size="sm" onClick={() => fetchOrders(true)} disabled={refreshing}>
+            <RefreshCw className={`h-4 w-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
+            Refresh
+          </Button>
+        </div>
       </div>
 
       {/* ── Stat cards ── */}

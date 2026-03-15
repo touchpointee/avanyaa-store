@@ -62,11 +62,17 @@ export default function ProductCard({ product }: ProductCardProps) {
     return () => clearInterval(timer);
   }, [images.length]);
 
+  let computedStock = product.stock || 0;
+  if (product.variants && product.variants.length > 0) {
+    computedStock = product.variants.reduce((sum, v) => sum + (Number(v.stock) || 0), 0);
+  }
+  const isOutOfStock = computedStock <= 0;
+
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
 
-    if (product.stock === 0) {
+    if (isOutOfStock) {
       toast({
         title: 'Out of stock',
         description: 'This product is currently out of stock',
@@ -75,13 +81,33 @@ export default function ProductCard({ product }: ProductCardProps) {
       return;
     }
 
+    let defaultSize = product.sizes?.[0];
+    let defaultColor = product.colors?.[0];
+    let addedStock = computedStock;
+
+    if (product.variants && product.variants.length > 0) {
+      const inStockVariant = product.variants.find(v => (Number(v.stock) || 0) > 0);
+      if (inStockVariant) {
+        defaultSize = inStockVariant.size;
+        defaultColor = inStockVariant.color;
+        addedStock = Number(inStockVariant.stock) || 0;
+      } else {
+        defaultSize = product.variants[0]?.size || defaultSize;
+        defaultColor = product.variants[0]?.color || defaultColor;
+        addedStock = 0;
+      }
+    } else {
+      addedStock = product.stock || 0;
+    }
+
     addToCart({
       productId: product._id,
       name: product.name,
       price: product.price,
       image: product.images[0],
-      size: product.sizes[0],
-      stock: product.stock,
+      size: defaultSize || undefined,
+      color: defaultColor || undefined,
+      stock: addedStock,
     });
 
     toast({
@@ -190,26 +216,25 @@ export default function ProductCard({ product }: ProductCardProps) {
               -{discountPercent}%
             </span>
           )}
-          {product.stock === 0 && (
-            <div className="absolute inset-0 flex items-center justify-center bg-black/40">
+          {isOutOfStock && (
+            <div className="absolute inset-0 flex items-center justify-center bg-black/40 z-20 pointer-events-none">
               <span className="rounded-lg bg-card px-3 py-1.5 text-sm font-medium border border-border">
                 Out of Stock
               </span>
             </div>
           )}
           {/* Quick add on hover (desktop) */}
-          {product.stock > 0 && (
-            <div className="absolute bottom-0 left-0 right-0 p-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 md:block hidden">
-              <Button
-                onClick={handleAddToCart}
-                className="w-full rounded-lg h-10 text-sm font-medium shadow"
-                size="sm"
-              >
-                <ShoppingCart className="mr-2 h-4 w-4" />
-                Add to bag
-              </Button>
-            </div>
-          )}
+          <div className="absolute bottom-0 left-0 right-0 p-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 md:block hidden z-30">
+            <Button
+              onClick={handleAddToCart}
+              disabled={isOutOfStock}
+              className="w-full rounded-lg h-10 text-sm font-medium shadow disabled:opacity-50 disabled:cursor-not-allowed"
+              size="sm"
+            >
+              <ShoppingCart className="mr-2 h-4 w-4" />
+              Add to bag
+            </Button>
+          </div>
         </div>
         {/* Content */}
         <div className="flex flex-1 flex-col p-3 md:p-4">
@@ -247,7 +272,7 @@ export default function ProductCard({ product }: ProductCardProps) {
           </div>
           <Button
             onClick={handleAddToCart}
-            disabled={product.stock === 0}
+            disabled={isOutOfStock}
             className="mt-auto w-full rounded-lg h-10 text-sm font-medium md:hidden"
             size="sm"
           >

@@ -99,11 +99,74 @@ const EMPTY_FORM: FormData = {
 export default function CheckoutPage() {
   const router = useRouter();
   const { data: session, status: sessionStatus } = useSession();
-  const { items, getTotalPrice, clearCart, hasHydrated } = useCartStore();
+  const { items, getTotalPrice, updateStock, clearCart, hasHydrated } = useCartStore();
   const { toast } = useToast();
 
   const [loading, setLoading] = useState(false);
   const [placedOrderId, setPlacedOrderId] = useState<string | null>(null);
+
+  /* ── Shipping Config ──────────────────────────────── */
+  const [shippingCharge, setShippingCharge] = useState(0);
+  const [freeShippingThreshold, setFreeShippingThreshold] = useState(0);
+
+  useEffect(() => {
+    fetch('/api/settings')
+      .then(r => r.json())
+      .then(data => {
+        setShippingCharge(data.shippingCharge || 0);
+        setFreeShippingThreshold(data.freeShippingThreshold || 0);
+      }).catch(() => {});
+  }, []);
+
+  // Sync live stock
+  useEffect(() => {
+    // Only fetch if hydrated and we have items
+    if (!hasHydrated || items.length === 0) return;
+    const fetchLiveStock = async () => {
+      try {
+        const ids = items.map(i => i.productId).filter((id, index, self) => self.indexOf(id) === index);
+        const res = await fetch(`/api/products/batch?${ids.map(id => `ids=${id}`).join('&')}`);
+        if (!res.ok) return;
+        const products = await res.json();
+        
+        products.forEach((product: any) => {
+          items.forEach(item => {
+            if (item.productId === product._id) {
+              let liveStock = 0;
+              if (product.variants && product.variants.length > 0) {
+                let variant;
+                if (item.size && item.color) {
+                  variant = product.variants.find((v: any) => v.size === item.size && v.color === item.color);
+                } else if (item.size) {
+                  variant = product.variants.find((v: any) => v.size === item.size);
+                } else if (item.color) {
+                  variant = product.variants.find((v: any) => v.color === item.color);
+                } else {
+                  variant = product.variants[0];
+                }
+                liveStock = variant ? Number(variant.stock) || 0 : 0;
+              } else {
+                liveStock = Number(product.stock) || 0;
+              }
+              
+              if (item.stock !== liveStock) {
+                updateStock(item.productId, liveStock, item.size, item.color);
+              }
+            }
+          });
+        });
+      } catch (e) {
+        console.error('Failed to sync live stock', e);
+      }
+    };
+    fetchLiveStock();
+  }, [hasHydrated]); // Run once when cart hydration finishes
+
+  const subtotal = getTotalPrice();
+  const shippingFee = (subtotal > 0 && subtotal < freeShippingThreshold) ? shippingCharge : 0;
+  const finalTotal = subtotal + shippingFee;
+
+  const hasOutOfStockItems = items.some(item => item.quantity > item.stock || item.stock === 0);
 
   /* ── Saved addresses ──────────────────────────────── */
   const [savedAddresses, setSavedAddresses] = useState<SavedAddress[]>([]);
@@ -188,6 +251,11 @@ export default function CheckoutPage() {
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
+    if (name === 'phone') {
+      const digits = value.replace(/\D/g, '').slice(0, 10);
+      setFormData({ ...formData, phone: digits });
+      return;
+    }
     setFormData({ ...formData, [name]: value });
     if (name === 'zipCode') { setPincodeStatus('idle'); setPincodeError(''); }
     if ((name === 'city' || name === 'state') && pincodeStatus === 'valid') {
@@ -258,6 +326,12 @@ export default function CheckoutPage() {
     }
     if (!/\S+@\S+\.\S+/.test(address.email)) {
       toast({ title: 'Invalid email', description: 'Please enter a valid email address', variant: 'destructive' });
+      setLoading(false); return;
+    }
+
+    const phoneDigits = address.phone.replace(/\D/g, '');
+    if (phoneDigits.length !== 10) {
+      toast({ title: 'Invalid phone number', description: 'Please enter a valid 10-digit mobile number', variant: 'destructive' });
       setLoading(false); return;
     }
 
@@ -419,23 +493,26 @@ export default function CheckoutPage() {
 
                     <div className="grid md:grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <Label htmlFor="fullName">Full Name *</Label>
+                        <Label htmlFor="fullName">Full Name <span className="text-destructive">*</span></Label>
                         <Input id="fullName" name="fullName" value={formData.fullName} onChange={handleInputChange} required className="rounded-lg border-border" />
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="phone">Phone Number *</Label>
-                        <Input id="phone" name="phone" type="tel" value={formData.phone} onChange={handleInputChange} required className="rounded-lg border-border" />
+                        <Label htmlFor="phone">Phone Number <span className="text-destructive">*</span></Label>
+                        <Input id="phone" name="phone" type="tel" inputMode="numeric" maxLength={10} placeholder="98765 43210" value={formData.phone} onChange={handleInputChange} required className="rounded-lg border-border" />
+                        {formData.phone && formData.phone.replace(/\D/g, '').length !== 10 && (
+                          <p className="text-xs text-destructive">Enter a valid 10-digit mobile number</p>
+                        )}
                       </div>
                     </div>
 
                     <div className="grid md:grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <Label htmlFor="email">Email Address *</Label>
+                        <Label htmlFor="email">Email Address <span className="text-destructive">*</span></Label>
                         <Input id="email" name="email" type="email" value={formData.email} onChange={handleInputChange} required className="rounded-lg border-border" />
                       </div>
                       {/* Country dropdown */}
                       <div className="space-y-2" ref={countryRef}>
-                        <Label htmlFor="country-btn">Country *</Label>
+                        <Label htmlFor="country-btn">Country <span className="text-destructive">*</span></Label>
                         <div className="relative">
                           <button id="country-btn" type="button" onClick={() => { setCountryOpen((o) => !o); setCountrySearch(''); }}
                             className="flex h-10 w-full items-center justify-between gap-2 rounded-lg border border-border bg-background px-3 py-2 text-sm hover:bg-muted/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring transition-colors">
@@ -480,7 +557,7 @@ export default function CheckoutPage() {
                     <div className="grid md:grid-cols-3 gap-4">
                       {/* STATE */}
                       <div className="space-y-2" ref={isIndia ? stateRef : undefined}>
-                        <Label htmlFor={isIndia ? 'state-btn' : 'state'}>State *</Label>
+                        <Label htmlFor={isIndia ? 'state-btn' : 'state'}>State <span className="text-destructive">*</span></Label>
                         {isIndia ? (
                           <div className="relative">
                             <button id="state-btn" type="button" disabled={!formData.country}
@@ -511,7 +588,7 @@ export default function CheckoutPage() {
                       </div>
                       {/* CITY */}
                       <div className="space-y-2" ref={isIndia ? cityRef : undefined}>
-                        <Label htmlFor={isIndia ? 'city-btn' : 'city'}>City *</Label>
+                        <Label htmlFor={isIndia ? 'city-btn' : 'city'}>City <span className="text-destructive">*</span></Label>
                         {isIndia ? (
                           <div className="relative">
                             <button id="city-btn" type="button" disabled={!formData.state}
@@ -542,7 +619,7 @@ export default function CheckoutPage() {
                       </div>
                       {/* ZIP */}
                       <div className="space-y-2">
-                        <Label htmlFor="zipCode">ZIP / Pincode *</Label>
+                        <Label htmlFor="zipCode">ZIP / Pincode <span className="text-destructive">*</span></Label>
                         <Input
                           id="zipCode"
                           name="zipCode"
@@ -558,7 +635,7 @@ export default function CheckoutPage() {
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="street">Street Address *</Label>
+                      <Label htmlFor="street">Street Address <span className="text-destructive">*</span></Label>
                       <Input id="street" name="street" value={formData.street} onChange={handleInputChange} required className="rounded-lg border-border" />
                     </div>
 
@@ -618,26 +695,41 @@ export default function CheckoutPage() {
                 <div className="space-y-3">
                   {items.map((item) => (
                     <div key={`${item.productId}-${item.size}`} className="flex justify-between gap-2 text-sm">
-                      <span className="text-muted-foreground min-w-0 truncate">
-                        {item.name} × {item.quantity}
-                        {(item.size || item.color) && ` (`}
-                        {item.size && item.size}
-                        {item.size && item.color && `, `}
-                        {item.color && item.color}
-                        {(item.size || item.color) && `)`}
-                      </span>
+                      <div className="min-w-0 flex-1">
+                        <span className="text-muted-foreground truncate block">
+                          {item.name} × {item.quantity}
+                          {(item.size || item.color) && ` (`}
+                          {item.size && item.size}
+                          {item.size && item.color && `, `}
+                          {item.color && item.color}
+                          {(item.size || item.color) && `)`}
+                        </span>
+                        {(item.quantity > item.stock || item.stock === 0) && (
+                          <span className="text-[10px] font-semibold text-destructive mt-0.5 block">
+                            {item.stock === 0 ? 'Out of Stock' : `Only ${item.stock} left`}
+                          </span>
+                        )}
+                      </div>
                       <span className="shrink-0">{formatPrice(item.price * item.quantity)}</span>
                     </div>
                   ))}
                 </div>
                 <Separator className="bg-border" />
                 <div className="space-y-2">
-                  <div className="flex justify-between"><span className="text-muted-foreground">Subtotal</span><span>{formatPrice(getTotalPrice())}</span></div>
-                  <div className="flex justify-between"><span className="text-muted-foreground">Shipping</span><span className="text-green-600 font-medium">FREE</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">Subtotal</span><span>{formatPrice(subtotal)}</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">Shipping</span>
+                    {subtotal === 0 ? (
+                      <span className="text-green-600 font-medium">-</span>
+                    ) : shippingFee === 0 ? (
+                      <span className="text-green-600 font-medium">FREE</span>
+                    ) : (
+                      <span className="font-medium">{formatPrice(shippingFee)}</span>
+                    )}
+                  </div>
                 </div>
                 <Separator className="bg-border" />
                 <div className="flex justify-between text-lg font-semibold">
-                  <span>Total</span><span>{formatPrice(getTotalPrice())}</span>
+                  <span>Total</span><span>{formatPrice(finalTotal)}</span>
                 </div>
 
                 {/* Selected address preview */}
@@ -668,10 +760,10 @@ export default function CheckoutPage() {
           form="checkout-form"
           size="lg"
           className="w-full h-12 text-base font-semibold overflow-hidden mt-2"
-          disabled={loading}
+          disabled={loading || hasOutOfStockItems}
         >
           {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-          Place Order
+          {hasOutOfStockItems ? 'Remove out of stock items to proceed' : 'Place Order'}
         </Button>
       </div>
     </>

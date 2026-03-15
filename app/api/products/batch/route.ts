@@ -12,7 +12,7 @@ export async function GET(req: NextRequest) {
       return NextResponse.json([]);
     }
 
-    const products = await Product.find({ _id: { $in: ids } }, 'name images slug').lean();
+    const products = await Product.find({ _id: { $in: ids } }, 'name images slug stock variants sizes colors').lean();
     
     // Convert _id ObjectIds to strings before returning
     const formatted = products.map(p => ({

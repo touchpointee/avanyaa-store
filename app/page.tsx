@@ -23,17 +23,6 @@ const ICON_MAP: Record<string, React.ElementType> = {
   zap: Sparkles,
 };
 
-const ICON_COLORS: Record<string, { bg: string; text: string }> = {
-  truck: { bg: 'bg-blue-100', text: 'text-blue-600' },
-  rotateCCW: { bg: 'bg-rose-100', text: 'text-rose-500' },
-  shieldCheck: { bg: 'bg-emerald-100', text: 'text-emerald-600' },
-  sparkles: { bg: 'bg-violet-100', text: 'text-violet-600' },
-  star: { bg: 'bg-amber-100', text: 'text-amber-500' },
-  heart: { bg: 'bg-pink-100', text: 'text-pink-500' },
-  package: { bg: 'bg-orange-100', text: 'text-orange-500' },
-  zap: { bg: 'bg-yellow-100', text: 'text-yellow-600' },
-};
-
 const DEFAULT_TRUST = [
   { icon: 'truck', label: 'Free Shipping', sub: 'On orders above ₹999' },
   { icon: 'rotateCCW', label: '7-Day Returns', sub: 'Hassle-free exchanges' },
@@ -57,25 +46,27 @@ async function TrustStrip() {
   const badges = await getTrustBadges();
   return (
     <section
-      className="relative pt-1 pb-1  md:pt-3 md:pb-3"
-      style={{ background: 'linear-gradient(135deg, hsl(212 51% 20%) 0%, hsl(212 51% 28%) 100%)' }}
+      className="relative pt-8 pb-8 md:pt-12 md:pb-12 border-b border-border"
+      style={{ background: 'linear-gradient(135deg, hsl(var(--background)) 0%, hsl(var(--muted)) 100%)' }}
     >
-      <div className="container mx-auto px-4 py-4">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
+      <div className="container mx-auto px-4">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
           {badges.map(({ icon, label, sub }: { icon: string; label: string; sub: string }) => {
             const Icon = ICON_MAP[icon] || Sparkles;
-            const colors = ICON_COLORS[icon] || { bg: 'bg-violet-100', text: 'text-violet-600' };
             return (
               <div
                 key={label}
-                className="bg-white/10 border border-white/15 rounded-2xl flex items-center gap-3 px-4 py-4 hover:bg-white/15 transition-colors duration-200"
+                className="group relative overflow-hidden bg-white/40 backdrop-blur-md border border-white/60 rounded-3xl flex flex-col items-center text-center gap-4 px-4 py-8 md:py-10 hover:bg-white/80 hover:border-white shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] transition-all duration-500 hover:-translate-y-1"
               >
-                <div className={`w-10 h-10 rounded-xl ${colors.bg} flex items-center justify-center shrink-0`}>
-                  <Icon className={`h-5 w-5 ${colors.text}`} />
+                {/* Subtle gradient glow inside card */}
+                <div className="absolute -inset-2 bg-gradient-to-br from-white/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-3xl" />
+                
+                <div className="relative w-14 h-14 rounded-2xl bg-white shadow-sm flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform duration-500">
+                  <Icon className="h-6 w-6 text-primary" strokeWidth={1.5} />
                 </div>
-                <div>
-                  <p className="text-sm font-semibold text-white leading-tight">{label}</p>
-                  <p className="text-[11px] text-white/60 mt-0.5">{sub}</p>
+                <div className="relative z-10">
+                  <p className="text-[15px] font-semibold text-foreground tracking-tight mb-1">{label}</p>
+                  <p className="text-xs text-muted-foreground leading-relaxed max-w-[180px] mx-auto">{sub}</p>
                 </div>
               </div>
             );
@@ -118,32 +109,29 @@ function CategoryShowcase({ categories }: { categories: HomepageCategory[] }) {
     <section className="pt-6 md:pt-10 bg-background">
       <div className="container mx-auto px-4">
         {/* Section header */}
-        <div className="mb-8 md:mb-10">
-          <p className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground mb-1.5">Collections</p>
-          <h2 className="font-heading text-2xl md:text-4xl font-semibold tracking-tight">
+        <div className="mb-10 md:mb-14 text-center max-w-2xl mx-auto">
+          <p className="text-xs uppercase tracking-[0.3em] text-muted-foreground/80 mb-3 font-medium">Collections</p>
+          <h2 className="font-heading text-3xl md:text-5xl font-semibold tracking-tight leading-tight">
             Shop by Category
           </h2>
         </div>
 
         {/* Large cards row */}
         {large.length > 0 && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6 mb-6">
             {large.map((cat) => (
               <Link key={cat._id} href={`/products?categoryId=${cat._id}`} className="group block">
-                <div className="relative aspect-[1.5/1] md:aspect-[2/1] rounded-2xl overflow-hidden bg-muted shadow-sm">
+                <div className="relative aspect-[4/5] sm:aspect-[4/3] md:aspect-[3/2] rounded-[24px] overflow-hidden bg-muted shadow-sm">
                   {cat.image ? (
-                    <Image src={cat.image} alt={cat.name} fill className="object-cover transition-transform duration-700 group-hover:scale-105" />
+                    <Image src={cat.image} alt={cat.name} fill className="object-cover transition-transform duration-1000 group-hover:scale-110" />
                   ) : (
                     <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-primary/5" />
                   )}
                   {/* Dark overlay + label */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/65 via-black/15 to-transparent" />
-                  <div className="absolute bottom-0 left-0 p-6">
-                    <p className="text-white/70 text-xs uppercase tracking-widest mb-1">Category</p>
-                    <h3 className="font-heading text-white text-2xl font-semibold">{cat.name}</h3>
-                    <span className="inline-flex items-center gap-1.5 mt-3 text-white text-xs font-medium border border-white/40 rounded-full px-3 py-1 group-hover:bg-white group-hover:text-black transition-colors duration-300">
-                      Shop Now <ArrowRight className="h-3 w-3" />
-                    </span>
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-80 group-hover:opacity-100 transition-opacity duration-500" />
+                  <div className="absolute bottom-0 left-0 p-8 md:p-10">
+                    <p className="text-white/80 text-[10px] uppercase tracking-[0.3em] font-medium mb-2 opacity-0 -translate-y-4 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-500 delay-100">Category</p>
+                    <h3 className="font-heading text-white text-3xl md:text-4xl font-semibold transform group-hover:-translate-y-1 transition-transform duration-500">{cat.name}</h3>
                   </div>
                 </div>
               </Link>
@@ -196,29 +184,30 @@ function EditorialBanner({ banners }: { banners: HomepageBanner[] }) {
   if (promo.length === 0) return null;
   const b = promo[0];
   return (
-    <section className="relative overflow-hidden">
-      <div className="relative h-[55vh] md:h-[70vh] w-full">
+    <section className="relative overflow-hidden my-12 md:my-20">
+      <div className="relative h-[60vh] md:h-[80vh] w-full">
         <Image src={b.image} alt={b.title || 'Promo'} fill className="object-cover" priority={false} />
-        {/* Left gradient */}
-        <div className="absolute inset-0 bg-gradient-to-r from-black/75 via-black/40 to-transparent" />
+        {/* Sleek Gradient */}
+        <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/40 to-transparent" />
+        
         {/* Content */}
         <div className="absolute inset-0 flex items-center">
-          <div className="container mx-auto px-8 md:px-16">
-            <div className="max-w-lg">
-              <p className="text-white/60 text-xs uppercase tracking-[0.3em] mb-4">Limited Time</p>
+          <div className="container mx-auto px-6 md:px-16">
+            <div className="max-w-xl">
+              <p className="text-white/70 text-[11px] uppercase tracking-[0.4em] font-medium mb-5">Limited Time</p>
               {b.title && (
-                <h2 className="font-heading text-3xl md:text-5xl font-semibold text-white leading-tight mb-4">
+                <h2 className="font-heading text-4xl md:text-6xl font-semibold text-white leading-[1.1] tracking-tight mb-5">
                   {b.title}
                 </h2>
               )}
               {b.subtitle && (
-                <p className="text-white/85 text-sm md:text-base mb-7 leading-relaxed">{b.subtitle}</p>
+                <p className="text-white/80 text-sm md:text-lg mb-10 leading-relaxed font-light">{b.subtitle}</p>
               )}
               <Link
                 href={b.link || '/products'}
-                className="inline-flex items-center gap-2 bg-white text-black text-sm font-semibold rounded-full px-7 py-3 hover:bg-primary hover:text-white transition-all duration-300"
+                className="inline-flex items-center justify-center bg-white text-black text-[13px] uppercase tracking-[0.2em] font-semibold rounded-none px-10 py-5 hover:bg-black hover:text-white border border-transparent hover:border-white transition-all duration-400 group"
               >
-                {b.buttonText || 'Shop the Collection'} <ArrowRight className="h-4 w-4" />
+                {b.buttonText || 'Shop the Collection'} 
               </Link>
             </div>
           </div>
@@ -231,9 +220,9 @@ function EditorialBanner({ banners }: { banners: HomepageBanner[] }) {
 /* ─── Stats band ─── */
 function StatsBand() {
   return (
-    <section className="bg-primary text-primary-foreground pt-10 mt-10 pb-5 md:pt-10 md:pb-10">
-      <div className="container mx-auto px-4 pb-4 md:pb-0">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+    <section className="bg-primary text-primary-foreground py-16 md:py-24">
+      <div className="container mx-auto px-4">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-10 md:gap-14">
           {[
             { value: '5,000+', label: 'Happy Customers' },
             { value: '200+', label: 'Styles Available' },
@@ -244,8 +233,8 @@ function StatsBand() {
               key={label}
               value={value}
               label={label}
-              className="text-3xl md:text-4xl"
-              labelClassName="text-sm opacity-70 uppercase tracking-widest"
+              className="text-4xl md:text-5xl font-light tracking-tight"
+              labelClassName="text-[11px] md:text-xs opacity-80 uppercase tracking-[0.2em] mt-3 font-medium"
             />
           ))}
         </div>
@@ -316,24 +305,24 @@ async function getWhyCards() {
 async function WhyUs() {
   const cards = await getWhyCards();
   return (
-    <section className="pt-6 md:pt-10 bg-background">
+    <section className="py-16 md:py-24 bg-background">
       <div className="container mx-auto px-4">
-        <div className="text-center mb-12">
-          <p className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground mb-2">Our Promise</p>
-          <h2 className="font-heading text-2xl md:text-3xl font-semibold tracking-tight">Why Choose AVANYAA</h2>
+        <div className="text-center mb-16 max-w-2xl mx-auto">
+          <p className="text-[11px] uppercase tracking-[0.3em] font-medium text-muted-foreground/80 mb-3">Our Promise</p>
+          <h2 className="font-heading text-3xl md:text-5xl font-semibold tracking-tight leading-tight">Why Choose AVANYAA</h2>
         </div>
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 max-w-5xl mx-auto">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8 max-w-6xl mx-auto">
           {cards.map((card: { icon: string; title: string; desc: string }, i: number) => {
             const Icon = ICON_MAP[card.icon] || Sparkles;
             const color = WHY_ICON_STYLES[card.icon] || 'text-violet-500 bg-violet-50';
             return (
-              <div key={i} className="flex flex-col items-center text-center gap-4 p-6 rounded-2xl border border-border bg-card shadow-sm hover:shadow-md transition-shadow">
-                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${color}`}>
-                  <Icon className="h-[22px] w-[22px]" />
+              <div key={i} className="group flex flex-col items-center text-center gap-5 p-8 rounded-[24px] border border-border/50 bg-card/50 shadow-sm hover:shadow-xl hover:bg-card transition-all duration-500 hover:-translate-y-2">
+                <div className={`w-16 h-16 rounded-full flex items-center justify-center ${color} group-hover:scale-110 transition-transform duration-500`}>
+                  <Icon className="h-7 w-7" strokeWidth={1.5} />
                 </div>
                 <div>
-                  <h3 className="font-semibold text-sm mb-1.5">{card.title}</h3>
-                  <p className="text-xs text-muted-foreground leading-relaxed">{card.desc}</p>
+                  <h3 className="font-semibold text-lg tracking-tight mb-2.5">{card.title}</h3>
+                  <p className="text-[13px] text-muted-foreground leading-relaxed">{card.desc}</p>
                 </div>
               </div>
             );
@@ -413,21 +402,21 @@ function DynamicSections({ sections }: { sections: HomepageSectionData[] }) {
       ];
 
       renderBlocks.push(
-        <section key={section._id} className="pt-6 md:pt-10">
+        <section key={section._id} className="pt-10 md:pt-16">
           <div className="container mx-auto px-4">
-            <div className={`grid grid-cols-1 ${images.length > 1 ? 'sm:grid-cols-2 md:grid-cols-2' : ''} gap-4`}>
+            <div className={`grid grid-cols-1 ${images.length > 1 ? 'md:grid-cols-2' : ''} gap-4 md:gap-6`}>
               {images.map((img) => {
                 const ImgContent = (
-                  <div className={`relative w-full rounded-2xl overflow-hidden shadow-sm aspect-video ${images.length > 1 ? 'sm:aspect-[4/3] md:aspect-[21/9]' : 'md:aspect-[4/1]'}`}>
-                    <Image src={img.url} alt={section.title || 'Semi Banner'} fill className="object-cover hover:scale-105 transition-transform duration-500" />
+                  <div className={`relative w-full rounded-[24px] overflow-hidden shadow-sm ${images.length > 1 ? 'aspect-[4/3] sm:aspect-[16/9] md:aspect-[21/9]' : 'aspect-square sm:aspect-video md:aspect-[4/1]'}`}>
+                    <Image src={img.url} alt={section.title || 'Semi Banner'} fill className="object-cover hover:scale-105 transition-transform duration-700" />
                   </div>
                 );
                 return img.link ? (
-                  <Link key={img.id} href={img.link} className="block w-full h-full group hover:scale-[1.02] transition-transform duration-300">
+                  <Link key={img.id} href={img.link} className="block w-full h-full group hover:shadow-md transition-shadow duration-300 rounded-[24px]">
                     {ImgContent}
                   </Link>
                 ) : (
-                  <div key={img.id}>{ImgContent}</div>
+                  <div key={img.id} className="w-full">{ImgContent}</div>
                 );
               })}
             </div>

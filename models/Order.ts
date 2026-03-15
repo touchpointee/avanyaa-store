@@ -25,6 +25,7 @@ export interface IOrder extends Document {
   userId?: mongoose.Types.ObjectId;
   items: IOrderItem[];
   totalAmount: number;
+  shippingFee: number;
   address: IAddress;
   status: 'placed' | 'packed' | 'shipped' | 'out_for_delivery' | 'delivered' | 'cancelled' | 'returned';
   paymentMethod: 'cod';
@@ -120,6 +121,11 @@ const OrderSchema = new Schema<IOrder>(
     totalAmount: {
       type: Number,
       required: true,
+      min: 0,
+    },
+    shippingFee: {
+      type: Number,
+      default: 0,
       min: 0,
     },
     address: {

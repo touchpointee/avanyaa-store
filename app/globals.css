@@ -54,12 +54,7 @@
 }
 
 @layer utilities {
-
-  /* Force all buttons to 10px border-radius — wins over any rounded-* className prop */
-  button,
-  [role="button"] {
-    border-radius: 10px !important;
-  }
+  /* Utility overrides can go here as needed */
 }
 
 /* Hide scrollbar for horizontal scroll (category chips) */
@@ -293,4 +288,13 @@ aside a:active, aside button:active {
   background: hsl(var(--muted));
   border-radius: 6px;
   animation: skeleton-pulse 1.5s ease-in-out infinite;
+}
+
+/* Custom Animations */
+@keyframes slow-pan {
+  0% { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
+.animate-slow-pan {
+  animation: slow-pan 8s ease-out forwards;
 }
