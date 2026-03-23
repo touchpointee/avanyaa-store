@@ -7,6 +7,7 @@ import { useCartStore } from '@/store/cartStore';
 import { useWishlistStore } from '@/store/wishlistStore';
 import { useSession } from 'next-auth/react';
 import { cn } from '@/lib/utils';
+import { useState, useEffect } from 'react';
 
 const items = [
   { href: '/', icon: Home, label: 'Home', protected: false },
@@ -23,6 +24,11 @@ export default function BottomNav() {
 
   const totalItems = useCartStore((state) => state.getTotalItems());
   const wishlistCount = useWishlistStore((state) => state.items.length);
+
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const isLoggedIn = !!session?.user;
 
@@ -62,7 +68,7 @@ export default function BottomNav() {
             >
               <span className="relative inline-flex">
                 <Icon className="h-6 w-6" strokeWidth={active ? 2.2 : 1.8} />
-                {count > 0 && (isCart || isWishlist) && (
+                {mounted && count > 0 && (isCart || isWishlist) && (
                   <span className="absolute -top-1.5 -right-2.5 h-4 w-4 rounded-full bg-primary text-[10px] font-semibold text-primary-foreground flex items-center justify-center">
                     {count > 99 ? '99+' : count}
                   </span>

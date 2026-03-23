@@ -12,6 +12,7 @@ import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { formatPrice } from '@/lib/utils';
 import { useToast } from '@/components/ui/use-toast';
+import Script from 'next/script';
 import { Loader2, ChevronDown, Search, Plus, MapPin, Home, Briefcase, MoreHorizontal, Trash2, CheckCircle2 } from 'lucide-react';
 import { INDIA_DATA } from '@/lib/locationData';
 import OrderStatusPopup from '@/components/OrderStatusPopup';
@@ -349,18 +350,89 @@ export default function CheckoutPage() {
         }
       }
 
-      const response = await fetch('/api/orders', {
+      // 1. Create Razorpay Order
+      const createOrderRes = await fetch('/api/payment/razorpay/create-order', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ items: items.map((item) => ({ productId: item.productId, quantity: item.quantity, size: item.size, color: item.color })), address }),
+        body: JSON.stringify({
+          items: items.map((item) => ({
+            productId: item.productId,
+            quantity: item.quantity,
+            size: item.size,
+            color: item.color
+          }))
+        }),
       });
-      const data = await response.json();
-      if (response.ok) { clearCart(); setPlacedOrderId(data.orderId); }
-      else toast({ title: 'Order failed', description: data.error || 'Something went wrong', variant: 'destructive' });
+      const orderData = await createOrderRes.json();
+      
+      if (!createOrderRes.ok) {
+        toast({ title: 'Payment Intialization Failed', description: orderData.error || 'Something went wrong', variant: 'destructive' });
+        setLoading(false);
+        return;
+      }
+
+      // 2. Initialize Razorpay Checkout
+      const options = {
+        key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
+        amount: orderData.amount,
+        currency: "INR",
+        name: "Avanyaa",
+        description: "Order Payment",
+        order_id: orderData.id,
+        handler: async function (response: any) {
+          try {
+            // 3. Verify Payment and Create DB Order
+            const verifyRes = await fetch('/api/orders', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                items: items.map((item) => ({ productId: item.productId, quantity: item.quantity, size: item.size, color: item.color })),
+                address,
+                razorpay_order_id: response.razorpay_order_id,
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_signature: response.razorpay_signature
+              }),
+            });
+            const verifyData = await verifyRes.json();
+            
+            if (verifyRes.ok) {
+              clearCart();
+              setPlacedOrderId(verifyData.orderId);
+            } else {
+              setLoading(false);
+              toast({ title: 'Order verification failed', description: verifyData.error || 'There was an issue verifying your payment.', variant: 'destructive' });
+            }
+          } catch (err) {
+            setLoading(false);
+            console.error('Order verification error:', err);
+            toast({ title: 'Error', description: 'Failed to verify order. Please contact support.', variant: 'destructive' });
+          }
+        },
+        prefill: {
+          name: address.fullName,
+          email: address.email,
+          contact: address.phone,
+        },
+        theme: {
+          color: "#000000",
+        },
+        modal: {
+          ondismiss: function() {
+            setLoading(false);
+          }
+        }
+      };
+
+      const rzp1 = new (window as any).Razorpay(options);
+      rzp1.on('payment.failed', function (response: any){
+        toast({ title: 'Payment Failed', description: response.error.description, variant: 'destructive' });
+        setLoading(false);
+      });
+      rzp1.open();
+
     } catch (error) {
       console.error('Checkout error:', error);
-      toast({ title: 'Error', description: 'Failed to place order. Please try again.', variant: 'destructive' });
-    } finally {
+      toast({ title: 'Error', description: 'Failed to initialize checkout. Please try again.', variant: 'destructive' });
       setLoading(false);
     }
   };
@@ -389,13 +461,14 @@ export default function CheckoutPage() {
 
   return (
     <>
+      <Script src="https://checkout.razorpay.com/v1/checkout.js" strategy="lazyOnload" />
       {placedOrderId && (
         <OrderStatusPopup type="placed" onDone={() => { router.push(`/order-success?orderId=${placedOrderId}`); }} />
       )}
       <div className="container mx-auto px-4 pt-10 pb-6 md:py-8 md:pb-8 overflow-x-hidden">
         <h1 className="font-heading text-2xl md:text-3xl font-semibold mb-2 tracking-tight">Checkout</h1>
         <p className="text-sm text-muted-foreground mb-6">
-          Pay by <strong>Cash on Delivery (COD)</strong> when you receive your order.
+          Complete your order securely using our online payment gateway.
         </p>
 
         <div className="grid lg:grid-cols-3 gap-6 lg:gap-8">
@@ -673,10 +746,10 @@ export default function CheckoutPage() {
               <CardContent>
                 <div className="flex items-center gap-3 p-4 rounded-lg border-2 border-primary bg-primary/5">
                   <div className="flex-1">
-                    <p className="font-semibold">Cash on Delivery (COD)</p>
-                    <p className="text-sm text-muted-foreground">Pay when you receive your order</p>
+                    <p className="font-semibold">Online Payment (Razorpay)</p>
+                    <p className="text-sm text-muted-foreground">Pay securely via UPI, Cards, or Netbanking</p>
                   </div>
-                  <span className="text-2xl">💵</span>
+                  <span className="text-2xl">💳</span>
                 </div>
               </CardContent>
             </Card>
@@ -763,7 +836,7 @@ export default function CheckoutPage() {
           disabled={loading || hasOutOfStockItems}
         >
           {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-          {hasOutOfStockItems ? 'Remove out of stock items to proceed' : 'Place Order'}
+          {hasOutOfStockItems ? 'Remove out of stock items to proceed' : 'Pay Now'}
         </Button>
       </div>
     </>

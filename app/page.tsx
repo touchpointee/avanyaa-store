@@ -276,7 +276,7 @@ const DEFAULT_WHY_CARDS = [
   { icon: 'sparkles', title: 'Premium Quality', desc: 'Curated fabrics and finishes made to last, not just a season.' },
   { icon: 'truck', title: 'Fast Delivery', desc: 'Reliable pan-India shipping with real-time tracking.' },
   { icon: 'rotateCCW', title: 'Easy Returns', desc: '7-day no-questions-asked returns policy.' },
-  { icon: 'shieldCheck', title: 'Cash on Delivery', desc: 'Pay only when your package arrives safely.' },
+  { icon: 'shieldCheck', title: 'Secure Payment', desc: '100% secure online payments.' },
 ];
 
 const WHY_ICON_STYLES: Record<string, string> = {

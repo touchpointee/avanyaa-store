@@ -10,6 +10,7 @@ import InventoryHistory from '@/models/InventoryHistory';
 import { generateOrderId } from '@/lib/utils';
 import { sendOrderConfirmationEmail, sendAdminOrderNotification } from '@/lib/email';
 import mongoose from 'mongoose';
+import crypto from 'crypto';
 
 // GET /api/orders - Get orders (user's own, admin all, or guest lookup by email+phone)
 export async function GET(req: NextRequest) {
@@ -97,7 +98,7 @@ export async function POST(req: NextRequest) {
     // If session belongs to an admin, treat this as a guest order (no userId)
     const isAdmin = session && (session.user as any).role === 'admin';
     const body = await req.json();
-    const { items, address } = body;
+    const { items, address, razorpay_order_id, razorpay_payment_id, razorpay_signature } = body;
 
     // Validate items
     if (!items || items.length === 0) {
@@ -107,6 +108,10 @@ export async function POST(req: NextRequest) {
     // Validate address
     if (!address || !address.fullName || !address.email || !address.phone || !address.street || !address.city || !address.state || !address.zipCode) {
       return NextResponse.json({ error: 'Invalid address' }, { status: 400 });
+    }
+
+    if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
+      return NextResponse.json({ error: 'Missing Razorpay payment details' }, { status: 400 });
     }
 
     // Verify products and calculate total
@@ -165,6 +170,17 @@ export async function POST(req: NextRequest) {
 
     const totalAmount = itemsTotal + appliedShippingFee;
 
+    // Verify Razorpay Signature
+    const bodyString = razorpay_order_id + "|" + razorpay_payment_id;
+    const expectedSignature = crypto
+      .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET!)
+      .update(bodyString)
+      .digest('hex');
+
+    if (expectedSignature !== razorpay_signature) {
+      return NextResponse.json({ error: 'Invalid payment signature' }, { status: 400 });
+    }
+
     const orderId = generateOrderId();
     // Admin sessions → guest order (no userId); customers → link to their account
     const userId = (session && !isAdmin) ? (session.user as any).id : null;
@@ -177,7 +193,11 @@ export async function POST(req: NextRequest) {
       shippingFee: appliedShippingFee,
       address,
       status: 'placed',
-      paymentMethod: 'cod',
+      paymentMethod: 'razorpay',
+      isPaid: true,
+      razorpayOrderId: razorpay_order_id,
+      razorpayPaymentId: razorpay_payment_id,
+      razorpaySignature: razorpay_signature,
     });
 
     // Reduce stock and create history logs

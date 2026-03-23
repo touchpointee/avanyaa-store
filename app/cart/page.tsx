@@ -187,7 +187,7 @@ export default function CartPage() {
                 <span className="text-primary">{formatPrice(finalTotal)}</span>
               </div>
               <p className="text-xs text-muted-foreground rounded-lg bg-muted border border-border p-2.5">
-                Pay by <strong>Cash on Delivery (COD)</strong> when you receive your order.
+                Complete your order securely using our online payment gateway.
               </p>
               <Button 
                 className="w-full rounded-lg h-12 text-base font-semibold" 

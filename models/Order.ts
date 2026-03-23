@@ -28,7 +28,11 @@ export interface IOrder extends Document {
   shippingFee: number;
   address: IAddress;
   status: 'placed' | 'packed' | 'shipped' | 'out_for_delivery' | 'delivered' | 'cancelled' | 'returned';
-  paymentMethod: 'cod';
+  paymentMethod: 'razorpay';
+  isPaid: boolean;
+  razorpayOrderId?: string;
+  razorpayPaymentId?: string;
+  razorpaySignature?: string;
   cancellationReason?: string;
   createdAt: Date;
   updatedAt: Date;
@@ -139,8 +143,21 @@ const OrderSchema = new Schema<IOrder>(
     },
     paymentMethod: {
       type: String,
-      enum: ['cod'],
-      default: 'cod',
+      enum: ['razorpay'],
+      default: 'razorpay',
+    },
+    isPaid: {
+      type: Boolean,
+      default: false,
+    },
+    razorpayOrderId: {
+      type: String,
+    },
+    razorpayPaymentId: {
+      type: String,
+    },
+    razorpaySignature: {
+      type: String,
     },
   },
   {
