@@ -130,7 +130,7 @@ export default function HeroCarousel({ banners }: HeroCarouselProps) {
               type="button"
               aria-label={`Slide ${i + 1}`}
               onClick={() => setIndex(i)}
-              className={`transition-all duration-500 rounded-full ${i === index
+              className={`transition-all duration-500 rounded-full !min-h-0 ${i === index
                 ? 'w-8 h-2 bg-white shadow-[0_0_10px_rgba(255,255,255,0.5)]'
                 : 'w-2 h-2 bg-white/40 hover:bg-white/80'
                 }`}

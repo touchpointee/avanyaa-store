@@ -188,7 +188,7 @@ export default function ProductCard({ product }: ProductCardProps) {
                   key={i}
                   type="button"
                   onClick={(e) => { e.preventDefault(); e.stopPropagation(); setActiveImageIdx(i); }}
-                  className={`rounded-full transition-all duration-300 ${i === activeImageIdx ? 'bg-white w-4 h-1.5' : 'bg-white/50 w-1.5 h-1.5'}`}
+                  className={`rounded-full transition-all duration-300 !min-h-0 ${i === activeImageIdx ? 'bg-white w-4 h-1.5' : 'bg-white/50 w-1.5 h-1.5'}`}
                   aria-label={`Image ${i + 1}`}
                 />
               ))}
