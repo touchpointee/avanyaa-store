@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
@@ -166,6 +167,12 @@ export async function POST(req: NextRequest) {
 
         product.variants = [...(product.variants || []), { size, color, stock: Number(stock) || 0 }];
         product.stock = product.variants.reduce((s: number, v: any) => s + (Number(v.stock) || 0), 0);
+        
+        // Sync variant size and color to product's global mapping
+        if (!product.sizes) product.sizes = [];
+        if (!product.colors) product.colors = [];
+        if (size && !product.sizes.includes(size)) product.sizes.push(size);
+        if (color && !product.colors.includes(color)) product.colors.push(color);
         await product.save();
 
         await InventoryHistory.create({

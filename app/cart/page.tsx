@@ -76,7 +76,7 @@ export default function CartPage() {
 
   if (items.length === 0) {
     return (
-      <div className="container mx-auto px-4 py-16 md:py-20 pb-24 md:pb-20">
+      <div className="container mx-auto px-4 py-16 md:py-20">
         <div className="text-center space-y-5 max-w-sm mx-auto">
           <div className="w-20 h-20 mx-auto rounded-xl bg-muted border border-border flex items-center justify-center">
             <ShoppingCart className="h-10 w-10 text-muted-foreground" />
@@ -94,7 +94,7 @@ export default function CartPage() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-6 md:py-8 pb-24 md:pb-8">
+    <div className="container mx-auto px-4 py-6 md:py-8">
       <h1 className="font-heading text-2xl md:text-3xl font-semibold mb-6 tracking-tight">Shopping Cart</h1>
 
       <div className="grid lg:grid-cols-3 gap-6 lg:gap-8">
@@ -102,9 +102,9 @@ export default function CartPage() {
           {items.map((item) => (
             <Card key={`${item.productId}-${item.size}-${item.color}`} className="rounded-xl border border-border shadow overflow-hidden">
               <CardContent className="p-4">
-                <div className="flex flex-col sm:flex-row gap-4">
-                  <div className="relative w-full h-52 max-w-[140px] sm:max-w-none sm:w-24 sm:h-32 rounded-xl overflow-hidden bg-muted shrink-0 mx-auto sm:mx-0">
-                    <Image src={item.image} alt={item.name} fill className="object-cover" sizes="96px" />
+                <div className="flex flex-row gap-3 sm:gap-4">
+                  <div className="relative w-24 h-32 sm:w-24 sm:h-32 rounded-xl overflow-hidden bg-muted shrink-0">
+                    <Image src={item.image} alt={item.name} fill className="object-cover object-top" sizes="96px" />
                   </div>
                   <div className="flex-1 min-w-0 space-y-2 flex flex-col">
                     <div className="flex justify-between gap-2">

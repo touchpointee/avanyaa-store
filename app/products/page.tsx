@@ -99,6 +99,12 @@ function ProductsContent() {
     const featured = searchParams.get('featured');
     if (featured) params.set('featured', featured);
 
+    const sectionId = searchParams.get('sectionId');
+    if (sectionId) params.set('sectionId', sectionId);
+
+    const tag = searchParams.get('tag');
+    if (tag) params.set('tag', tag);
+
     const bigSize = searchParams.get('bigSize');
     if (bigSize === 'true') params.set('bigSize', 'true');
 
@@ -129,12 +135,14 @@ function ProductsContent() {
     handleFilterChange({ ...filters, ...patch });
 
   const isBigSize = searchParams.get('bigSize') === 'true';
+  const sectionId = searchParams.get('sectionId');
+  const tag = searchParams.get('tag');
   const sortLabel = SORT_OPTIONS.find((o) => o.value === sort)?.label ?? 'Recommended';
 
   return (
-    <div className="container mx-auto px-4 py-6 md:py-8 pb-28 md:pb-8">
-      <h1 className="font-heading text-2xl md:text-3xl font-semibold mb-6 tracking-tight">
-        {isBigSize ? 'Big Size' : 'Shop Dresses'}
+    <div className="container mx-auto px-4 py-6 md:py-8">
+      <h1 className="font-heading text-2xl md:text-3xl font-semibold mb-6 tracking-tight capitalize">
+        {isBigSize ? 'Big Size' : sectionId ? 'Featured Collection' : tag ? tag.replace(/-/g, ' ') : 'Shop Dresses'}
       </h1>
       {isBigSize && (
         <p className="text-muted-foreground mb-4 -mt-2">Dresses available in XL, XXL and beyond</p>
@@ -159,6 +167,86 @@ function ProductsContent() {
             Main content
         ════════════════ */}
         <div className="flex-1 min-w-0">
+
+          {/* ════════════════════════════════════════
+              MOBILE — sticky top "Filter & Sort" bar
+          ════════════════════════════════════════ */}
+          <div className="md:hidden sticky top-14 z-30 -mx-4 flex border-b border-border bg-background/95 backdrop-blur-sm shadow-sm mb-4">
+            {/* Filter */}
+            <BottomSheet open={mobileSheetOpen} onOpenChange={setMobileSheetOpen}>
+              <BottomSheetTrigger asChild>
+                <button
+                  type="button"
+                  className="flex flex-1 items-center justify-center gap-2 py-3.5 text-sm font-semibold text-foreground border-r border-border hover:bg-muted/50 transition-colors !min-h-0"
+                >
+                  <SlidersHorizontal className="h-4 w-4" />
+                  Filter
+                  {activeFilterCount > 0 && (
+                    <span className="rounded-full bg-primary text-primary-foreground min-w-[18px] h-[18px] flex items-center justify-center text-xs font-bold px-1">
+                      {activeFilterCount}
+                    </span>
+                  )}
+                </button>
+              </BottomSheetTrigger>
+              <BottomSheetContent>
+                {mobileSheetOpen && (
+                  <FilterSidebar
+                    categories={categories}
+                    initialFilters={filters}
+                    inDrawer
+                    onFilterChange={(f) => {
+                      handleFilterChange(f);
+                      setMobileSheetOpen(false);
+                    }}
+                  />
+                )}
+              </BottomSheetContent>
+            </BottomSheet>
+
+            {/* Sort */}
+            <BottomSheet open={mobileSortOpen} onOpenChange={setMobileSortOpen}>
+              <BottomSheetTrigger asChild>
+                <button
+                  type="button"
+                  className="flex flex-1 items-center justify-center gap-2 py-3.5 text-sm font-semibold text-foreground hover:bg-muted/50 transition-colors !min-h-0"
+                >
+                  <ArrowUpDown className="h-4 w-4" />
+                  Sort
+                  {sort !== 'newest' && (
+                    <span className="rounded-full bg-primary/15 text-primary min-w-[6px] h-[6px] inline-block" />
+                  )}
+                </button>
+              </BottomSheetTrigger>
+              <BottomSheetContent>
+                <div className="py-2">
+                  <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground px-1 mb-3">Sort By</p>
+                  {SORT_OPTIONS.map((opt) => (
+                    <button
+                      key={opt.value}
+                      type="button"
+                      onClick={() => {
+                        setSort(opt.value);
+                        setPagination((p) => ({ ...p, page: 1 }));
+                        setMobileSortOpen(false);
+                      }}
+                      className={`flex w-full items-center justify-between px-2 py-3.5 text-sm rounded-lg transition-colors ${
+                        sort === opt.value
+                          ? 'text-primary font-semibold bg-primary/8'
+                          : 'text-foreground hover:bg-muted/60'
+                      }`}
+                    >
+                      {opt.label}
+                      {sort === opt.value && (
+                        <svg className="h-4 w-4 text-primary" fill="none" viewBox="0 0 16 16">
+                          <path d="M3 8l3.5 3.5 6.5-7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              </BottomSheetContent>
+            </BottomSheet>
+          </div>
 
           {/* ── Desktop top bar: count + Sort ── */}
           <div className="hidden md:flex items-center justify-between mb-4">
@@ -268,85 +356,6 @@ function ProductsContent() {
             </div>
           )}
         </div>
-      </div>
-
-      {/* ════════════════════════════════════════
-          MOBILE — sticky "Filter & Sort" bar
-      ════════════════════════════════════════ */}
-      <div className="md:hidden fixed bottom-16 left-0 right-0 z-40 flex border-t border-border bg-background shadow-lg">
-        {/* Filter */}
-        <BottomSheet open={mobileSheetOpen} onOpenChange={setMobileSheetOpen}>
-          <BottomSheetTrigger asChild>
-            <button
-              type="button"
-              className="flex flex-1 items-center justify-center gap-2 py-3.5 text-sm font-semibold text-foreground border-r border-border hover:bg-muted/50 transition-colors"
-            >
-              <SlidersHorizontal className="h-4 w-4" />
-              Filter
-              {activeFilterCount > 0 && (
-                <span className="rounded-full bg-primary text-primary-foreground min-w-[18px] h-[18px] flex items-center justify-center text-xs font-bold px-1">
-                  {activeFilterCount}
-                </span>
-              )}
-            </button>
-          </BottomSheetTrigger>
-          <BottomSheetContent>
-            {mobileSheetOpen && (
-              <FilterSidebar
-                categories={categories}
-                initialFilters={filters}
-                inDrawer
-                onFilterChange={(f) => {
-                  handleFilterChange(f);
-                  setMobileSheetOpen(false);
-                }}
-              />
-            )}
-          </BottomSheetContent>
-        </BottomSheet>
-
-        {/* Sort */}
-        <BottomSheet open={mobileSortOpen} onOpenChange={setMobileSortOpen}>
-          <BottomSheetTrigger asChild>
-            <button
-              type="button"
-              className="flex flex-1 items-center justify-center gap-2 py-3.5 text-sm font-semibold text-foreground hover:bg-muted/50 transition-colors"
-            >
-              <ArrowUpDown className="h-4 w-4" />
-              Sort
-              {sort !== 'newest' && (
-                <span className="rounded-full bg-primary/15 text-primary min-w-[6px] h-[6px] inline-block" />
-              )}
-            </button>
-          </BottomSheetTrigger>
-          <BottomSheetContent>
-            <div className="py-2">
-              <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground px-1 mb-3">Sort By</p>
-              {SORT_OPTIONS.map((opt) => (
-                <button
-                  key={opt.value}
-                  type="button"
-                  onClick={() => {
-                    setSort(opt.value);
-                    setPagination((p) => ({ ...p, page: 1 }));
-                    setMobileSortOpen(false);
-                  }}
-                  className={`flex w-full items-center justify-between px-2 py-3.5 text-sm rounded-lg transition-colors ${sort === opt.value
-                    ? 'text-primary font-semibold bg-primary/8'
-                    : 'text-foreground hover:bg-muted/60'
-                    }`}
-                >
-                  {opt.label}
-                  {sort === opt.value && (
-                    <svg className="h-4 w-4 text-primary" fill="none" viewBox="0 0 16 16">
-                      <path d="M3 8l3.5 3.5 6.5-7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                    </svg>
-                  )}
-                </button>
-              ))}
-            </div>
-          </BottomSheetContent>
-        </BottomSheet>
       </div>
     </div>
   );

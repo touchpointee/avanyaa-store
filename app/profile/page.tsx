@@ -91,7 +91,7 @@ export default function ProfilePage() {
 
     if (status === 'loading') {
         return (
-            <div className="container mx-auto px-4 py-16 pb-24 md:pb-16 flex items-center justify-center">
+            <div className="container mx-auto px-4 py-16 flex items-center justify-center">
                 <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
             </div>
         );
@@ -108,7 +108,7 @@ export default function ProfilePage() {
         : '?';
 
     return (
-        <div className="container mx-auto px-4 py-8 pb-28 md:pb-10 max-w-lg">
+        <div className="container mx-auto px-4 py-8 max-w-lg">
             <h1 className="font-heading text-2xl md:text-3xl font-semibold mb-6 tracking-tight">
                 My Profile
             </h1>

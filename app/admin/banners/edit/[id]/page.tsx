@@ -66,7 +66,7 @@ export default function EditBannerPage() {
       })
       .catch(() => toast({ title: 'Failed to load banner', variant: 'destructive' }))
       .finally(() => setLoading(false));
-  }, [params.id]);
+  }, [params.id, toast]);
 
   const uploadBlob = useCallback(
     async (blob: Blob) => {

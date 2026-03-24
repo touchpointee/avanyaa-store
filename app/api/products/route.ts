@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import connectDB from '@/lib/db';
 import Product from '@/models/Product';
+import HomepageSection from '@/models/HomepageSection';
 import { generateSlug } from '@/lib/utils';
 import { getBigSizeNames } from '@/lib/sizes';
 
@@ -21,6 +22,8 @@ export async function GET(req: NextRequest) {
     // Filters
     const category = searchParams.get('category');
     const categoryId = searchParams.get('categoryId');
+    const sectionId = searchParams.get('sectionId');
+    const tag = searchParams.get('tag'); // Add tag filtering
     const minPrice = searchParams.get('minPrice');
     const maxPrice = searchParams.get('maxPrice');
     const size = searchParams.get('size');
@@ -35,6 +38,31 @@ export async function GET(req: NextRequest) {
 
     // Build query
     const query: any = {};
+
+    if (sectionId) {
+      const section = await HomepageSection.findById(sectionId);
+      if (section && section.linkedProductIds && section.linkedProductIds.length > 0) {
+        query._id = { $in: section.linkedProductIds };
+      } else {
+        query._id = { $in: [] }; // Return no products if section requested but empty
+      }
+    }
+
+    if (tag) {
+      const ProductTag = require('@/models/ProductTag').default;
+      const tagDoc = await ProductTag.findOne({ tag: tag.toLowerCase() });
+      if (tagDoc && tagDoc.productIds && tagDoc.productIds.length > 0) {
+        const tagProductIds = tagDoc.productIds.map((id: any) => id.toString());
+        if (query._id && query._id.$in) {
+          // INTERSECT if another ID filter is already present (e.g. sectionId)
+          query._id.$in = query._id.$in.filter((id: any) => tagProductIds.includes(id.toString()));
+        } else {
+          query._id = { $in: tagProductIds };
+        }
+      } else {
+        query._id = { $in: [] }; // Return no products if tag requested but empty
+      }
+    }
 
     if (categoryId) {
       const ids = categoryId.split(',');

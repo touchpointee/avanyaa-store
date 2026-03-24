@@ -38,7 +38,7 @@ async function getTrustBadges() {
       const data = await res.json();
       if (Array.isArray(data.trustBadges) && data.trustBadges.length) return data.trustBadges;
     }
-  } catch {}
+  } catch { }
   return DEFAULT_TRUST;
 }
 
@@ -46,27 +46,27 @@ async function TrustStrip() {
   const badges = await getTrustBadges();
   return (
     <section
-      className="relative pt-8 pb-8 md:pt-12 md:pb-12 border-b border-border"
+      className="relative pt-4 pb-4 md:pt-12 md:pb-12 border-b border-border"
       style={{ background: 'linear-gradient(135deg, hsl(var(--background)) 0%, hsl(var(--muted)) 100%)' }}
     >
-      <div className="container mx-auto px-4">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
+      <div className="container mx-auto px-2 md:px-4">
+        <div className="grid grid-cols-4 gap-1.5 md:gap-6">
           {badges.map(({ icon, label, sub }: { icon: string; label: string; sub: string }) => {
             const Icon = ICON_MAP[icon] || Sparkles;
             return (
               <div
                 key={label}
-                className="group relative overflow-hidden bg-white/40 backdrop-blur-md border border-white/60 rounded-3xl flex flex-col items-center text-center gap-4 px-4 py-8 md:py-10 hover:bg-white/80 hover:border-white shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] transition-all duration-500 hover:-translate-y-1"
+                className="group relative overflow-hidden bg-white/40 backdrop-blur-md border border-white/60 rounded-xl md:rounded-3xl flex flex-col items-center text-center gap-1.5 md:gap-4 px-1 py-3 md:px-4 md:py-10 hover:bg-white/80 hover:border-white shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] transition-all duration-500 hover:-translate-y-1"
               >
                 {/* Subtle gradient glow inside card */}
-                <div className="absolute -inset-2 bg-gradient-to-br from-white/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-3xl" />
-                
-                <div className="relative w-14 h-14 rounded-2xl bg-white shadow-sm flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform duration-500">
-                  <Icon className="h-6 w-6 text-primary" strokeWidth={1.5} />
+                <div className="absolute -inset-2 bg-gradient-to-br from-white/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-xl md:rounded-3xl" />
+
+                <div className="relative w-8 h-8 md:w-14 md:h-14 rounded-lg md:rounded-2xl bg-white shadow-sm flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform duration-500">
+                  <Icon className="h-4 w-4 md:h-6 md:w-6 text-primary" strokeWidth={1.5} />
                 </div>
-                <div className="relative z-10">
-                  <p className="text-[15px] font-semibold text-foreground tracking-tight mb-1">{label}</p>
-                  <p className="text-xs text-muted-foreground leading-relaxed max-w-[180px] mx-auto">{sub}</p>
+                <div className="relative z-10 w-full">
+                  <p className="text-[9px] sm:text-[10px] md:text-[15px] font-semibold text-foreground tracking-tight mb-0 md:mb-1 leading-tight whitespace-nowrap overflow-hidden text-ellipsis px-0.5">{label}</p>
+                  <p className="hidden md:block text-xs text-muted-foreground leading-relaxed w-full max-w-[180px] mx-auto">{sub}</p>
                 </div>
               </div>
             );
@@ -93,7 +93,7 @@ async function getTestimonials() {
       const data = await res.json();
       if (Array.isArray(data.testimonials) && data.testimonials.length) return data.testimonials;
     }
-  } catch {}
+  } catch { }
   return DEFAULT_REVIEWS;
 }
 
@@ -189,7 +189,7 @@ function EditorialBanner({ banners }: { banners: HomepageBanner[] }) {
         <Image src={b.image} alt={b.title || 'Promo'} fill className="object-cover" priority={false} />
         {/* Sleek Gradient */}
         <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/40 to-transparent" />
-        
+
         {/* Content */}
         <div className="absolute inset-0 flex items-center">
           <div className="container mx-auto px-6 md:px-16">
@@ -207,7 +207,7 @@ function EditorialBanner({ banners }: { banners: HomepageBanner[] }) {
                 href={b.link || '/products'}
                 className="inline-flex items-center justify-center bg-white text-black text-[13px] uppercase tracking-[0.2em] font-semibold rounded-none px-10 py-5 hover:bg-black hover:text-white border border-transparent hover:border-white transition-all duration-400 group"
               >
-                {b.buttonText || 'Shop the Collection'} 
+                {b.buttonText || 'Shop the Collection'}
               </Link>
             </div>
           </div>
@@ -298,7 +298,7 @@ async function getWhyCards() {
       const data = await res.json();
       if (Array.isArray(data.whyCards) && data.whyCards.length) return data.whyCards;
     }
-  } catch {}
+  } catch { }
   return DEFAULT_WHY_CARDS;
 }
 
@@ -379,10 +379,14 @@ function DynamicSections({ sections }: { sections: HomepageSectionData[] }) {
           <Image src={section.image} alt={section.title || 'Banner'} fill className="object-cover" />
         </div>
       );
+      const targetUrl = Array.isArray(section.products) && section.products.length > 0
+        ? `/products?sectionId=${section._id}`
+        : section.link;
+
       renderBlocks.push(
         <section key={section._id} className="w-full mt-5 mb-5">
-          {section.link ? (
-            <Link href={section.link} className="block w-full h-full group hover:opacity-95 transition-opacity">
+          {targetUrl ? (
+            <Link href={targetUrl} className="block w-full h-full group hover:opacity-95 transition-opacity">
               {ImgContent}
             </Link>
           ) : (
@@ -396,9 +400,13 @@ function DynamicSections({ sections }: { sections: HomepageSectionData[] }) {
 
     // Single semi_banner pair side-by-side
     if (section.type === 'semi_banner' && section.image) {
+      const hasProducts = Array.isArray(section.products) && section.products.length > 0;
+      const targetUrl1 = hasProducts ? `/products?sectionId=${section._id}` : section.link;
+      const targetUrl2 = hasProducts ? `/products?sectionId=${section._id}` : section.link2;
+
       const images = [
-        { id: `semi-1-${section._id}`, url: section.image, link: section.link },
-        ...(section.image2 ? [{ id: `semi-2-${section._id}`, url: section.image2, link: section.link2 }] : [])
+        { id: `semi-1-${section._id}`, url: section.image, link: targetUrl1 },
+        ...(section.image2 ? [{ id: `semi-2-${section._id}`, url: section.image2, link: targetUrl2 }] : [])
       ];
 
       renderBlocks.push(

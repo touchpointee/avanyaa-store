@@ -31,7 +31,7 @@ function OrderSuccessContent() {
         />
       )}
 
-      <div className="container mx-auto px-4 py-16 md:py-20 pb-24 md:pb-20">
+      <div className="container mx-auto px-4 py-16 md:py-20">
         <Card className="max-w-2xl mx-auto rounded-xl border border-border shadow overflow-hidden">
           <CardContent className="p-8 md:p-12 text-center space-y-6">
             <div className="w-20 h-20 mx-auto rounded-xl bg-muted border border-border flex items-center justify-center">

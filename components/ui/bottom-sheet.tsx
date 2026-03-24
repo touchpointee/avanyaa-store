@@ -49,10 +49,10 @@ const BottomSheetContent = React.forwardRef<
         )}
         {!hideCloseButton && (
           <DialogPrimitive.Close
-            className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full p-2 text-muted-foreground hover:bg-muted hover:text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+            className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full p-1.5 bg-muted text-muted-foreground hover:bg-muted-foreground/20 hover:text-foreground focus:outline-none focus:ring-2 focus:ring-ring transition-colors"
             aria-label="Close"
           >
-            <X className="h-5 w-5" />
+            <X className="h-4 w-4" />
           </DialogPrimitive.Close>
         )}
       </div>

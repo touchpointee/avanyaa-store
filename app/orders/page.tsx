@@ -236,7 +236,7 @@ export default function OrdersPage() {
   /* ── Loading skeleton ────────────────── */
   if (loading) {
     return (
-      <div className="container mx-auto px-4 py-16 pb-24 md:pb-16">
+      <div className="container mx-auto px-4 py-16">
         <div className="space-y-4">
           {[1, 2, 3].map((i) => (
             <div key={i} className="h-32 rounded-xl border border-border bg-card shadow animate-pulse" />
@@ -249,7 +249,7 @@ export default function OrdersPage() {
   /* ── Empty state ─────────────────────── */
   if (orders.length === 0) {
     return (
-      <div className="container mx-auto px-4 py-16 md:py-20 pb-24 md:pb-20">
+      <div className="container mx-auto px-4 py-16 md:py-20">
         <div className="text-center space-y-5 max-w-sm mx-auto">
           <div className="w-20 h-20 mx-auto rounded-xl bg-muted border border-border flex items-center justify-center">
             <Package className="h-10 w-10 text-muted-foreground" />
@@ -298,7 +298,7 @@ export default function OrdersPage() {
         />
       )}
 
-      <div className="container mx-auto px-4 py-6 md:py-8 pb-24 md:pb-8">
+      <div className="container mx-auto px-4 py-6 md:py-8">
         <h1 className="font-heading text-2xl md:text-3xl font-semibold mb-6 tracking-tight">My Orders</h1>
 
         <div className="space-y-4">

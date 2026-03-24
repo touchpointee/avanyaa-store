@@ -58,7 +58,7 @@ export default function GuestOrderLookupPage() {
   };
 
   return (
-    <div className="container mx-auto px-4 py-10 pb-24 md:pb-10 max-w-2xl">
+    <div className="container mx-auto px-4 py-10 max-w-2xl">
       <Link
         href="/"
         className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground mb-6 transition-colors"

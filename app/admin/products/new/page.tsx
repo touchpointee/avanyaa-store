@@ -79,6 +79,22 @@ export default function NewProductPage() {
       .catch(() => setHomepageSections([]));
   }, []);
 
+  useEffect(() => {
+    if (formData.variants.length > 0) {
+      setFormData((prev) => {
+        const derivedSizes = Array.from(new Set(prev.variants.map(v => v.size).filter(Boolean)));
+        const derivedColors = Array.from(new Set(prev.variants.map(v => v.color).filter(Boolean)));
+        
+        // Only update if strictly different
+        if (JSON.stringify(derivedSizes.sort()) !== JSON.stringify([...prev.sizes].sort()) || 
+            JSON.stringify(derivedColors.sort()) !== JSON.stringify([...prev.colors].sort())) {
+          return { ...prev, sizes: derivedSizes, colors: derivedColors };
+        }
+        return prev;
+      });
+    }
+  }, [formData.variants]);
+
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files || files.length === 0) return;
@@ -316,37 +332,6 @@ export default function NewProductPage() {
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Sizes *</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {sizes.length === 0 ? (
-              <p className="text-sm text-muted-foreground">Loading sizes…</p>
-            ) : (
-              <div className="grid grid-cols-3 gap-2">
-                {sizes.map((size) => (
-                  <Button
-                    key={size}
-                    type="button"
-                    variant={formData.sizes.includes(size) ? 'default' : 'outline'}
-                    onClick={() => {
-                      setFormData((prev) => ({
-                        ...prev,
-                        sizes: prev.sizes.includes(size)
-                          ? prev.sizes.filter((s) => s !== size)
-                          : [...prev.sizes, size],
-                      }));
-                    }}
-                  >
-                    {size}
-                  </Button>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
         {homepageSections.length > 0 && (
           <Card>
             <CardHeader>
@@ -371,43 +356,6 @@ export default function NewProductPage() {
             </CardContent>
           </Card>
         )}
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Colors *</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {colors.length === 0 ? (
-              <p className="text-sm text-muted-foreground">Loading colours…</p>
-            ) : (
-              <div className="grid grid-cols-2 gap-2">
-                {colors.map((color) => (
-                  <div key={color.name} className="flex items-center space-x-2">
-                    <Checkbox
-                      id={`color-${color.name}`}
-                      checked={formData.colors.includes(color.name)}
-                      onCheckedChange={(checked) => {
-                        setFormData((prev) => ({
-                          ...prev,
-                          colors: checked
-                            ? [...prev.colors, color.name]
-                            : prev.colors.filter((c) => c !== color.name),
-                        }));
-                      }}
-                    />
-                    <div
-                      className="h-4 w-4 rounded-full border border-border shadow-sm shrink-0"
-                      style={{ backgroundColor: color.hex }}
-                    />
-                    <Label htmlFor={`color-${color.name}`} className="cursor-pointer">
-                      {color.name}
-                    </Label>
-                  </div>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
 
         <Card>
           <CardHeader>
@@ -448,7 +396,7 @@ export default function NewProductPage() {
                         <SelectValue placeholder="Select size" />
                       </SelectTrigger>
                       <SelectContent>
-                        {formData.sizes.map((s) => (
+                        {sizes.map((s) => (
                           <SelectItem key={s} value={s}>{s}</SelectItem>
                         ))}
                       </SelectContent>
@@ -465,8 +413,8 @@ export default function NewProductPage() {
                         <SelectValue placeholder="Select color" />
                       </SelectTrigger>
                       <SelectContent>
-                        {formData.colors.map((c) => (
-                          <SelectItem key={c} value={c}>{c}</SelectItem>
+                        {colors.map((c) => (
+                          <SelectItem key={c.name} value={c.name}>{c.name}</SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
@@ -514,6 +462,82 @@ export default function NewProductPage() {
             >
               <Plus className="h-4 w-4 mr-2" /> Add Variant
             </Button>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Sizes *</CardTitle>
+            {formData.variants.length > 0 && (
+              <p className="text-sm text-muted-foreground font-normal">Auto-derived from selected variants.</p>
+            )}
+          </CardHeader>
+          <CardContent>
+            {sizes.length === 0 ? (
+              <p className="text-sm text-muted-foreground">Loading sizes…</p>
+            ) : (
+              <div className="grid grid-cols-3 gap-2">
+                {sizes.map((size) => (
+                  <Button
+                    key={size}
+                    type="button"
+                    variant={formData.sizes.includes(size) ? 'default' : 'outline'}
+                    disabled={formData.variants.length > 0}
+                    onClick={() => {
+                      setFormData((prev) => ({
+                        ...prev,
+                        sizes: prev.sizes.includes(size)
+                          ? prev.sizes.filter((s) => s !== size)
+                          : [...prev.sizes, size],
+                      }));
+                    }}
+                  >
+                    {size}
+                  </Button>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Colors *</CardTitle>
+            {formData.variants.length > 0 && (
+              <p className="text-sm text-muted-foreground font-normal">Auto-derived from selected variants.</p>
+            )}
+          </CardHeader>
+          <CardContent>
+            {colors.length === 0 ? (
+              <p className="text-sm text-muted-foreground">Loading colours…</p>
+            ) : (
+              <div className="grid grid-cols-2 gap-2">
+                {colors.map((color) => (
+                  <div key={color.name} className="flex items-center space-x-2">
+                    <Checkbox
+                      id={`color-${color.name}`}
+                      disabled={formData.variants.length > 0}
+                      checked={formData.colors.includes(color.name)}
+                      onCheckedChange={(checked) => {
+                        setFormData((prev) => ({
+                          ...prev,
+                          colors: checked
+                            ? [...prev.colors, color.name]
+                            : prev.colors.filter((c) => c !== color.name),
+                        }));
+                      }}
+                    />
+                    <div
+                      className="h-4 w-4 rounded-full border border-border shadow-sm shrink-0"
+                      style={{ backgroundColor: color.hex }}
+                    />
+                    <Label htmlFor={`color-${color.name}`} className="cursor-pointer">
+                      {color.name}
+                    </Label>
+                  </div>
+                ))}
+              </div>
+            )}
           </CardContent>
         </Card>
 

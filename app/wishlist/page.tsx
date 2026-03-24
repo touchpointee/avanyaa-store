@@ -58,7 +58,7 @@ export default function WishlistPage() {
 
   if (loading) {
     return (
-      <div className="container mx-auto px-4 py-12 pb-24 md:pb-12">
+      <div className="container mx-auto px-4 py-12">
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
           {[...Array(6)].map((_, i) => (
             <div key={i} className="rounded-xl overflow-hidden border border-border bg-card shadow">
@@ -76,7 +76,7 @@ export default function WishlistPage() {
 
   if (products.length === 0) {
     return (
-      <div className="container mx-auto px-4 py-16 md:py-20 pb-24 md:pb-20">
+      <div className="container mx-auto px-4 py-16 md:py-20">
         <div className="text-center space-y-5 max-w-sm mx-auto">
           <div className="w-20 h-20 mx-auto rounded-xl bg-muted border border-border flex items-center justify-center">
             <Heart className="h-10 w-10 text-muted-foreground" />
@@ -94,7 +94,7 @@ export default function WishlistPage() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-6 md:py-8 pb-24 md:pb-8">
+    <div className="container mx-auto px-4 py-6 md:py-8">
       <h1 className="font-heading text-2xl md:text-3xl font-semibold mb-2 tracking-tight">My Wishlist</h1>
       <p className="text-sm text-muted-foreground mb-6">
         {products.length} {products.length === 1 ? 'item' : 'items'}

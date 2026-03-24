@@ -147,7 +147,7 @@ export default function ProductDetailPage() {
       productId: product._id,
       name: product.name,
       price: product.price,
-      image: product.images[0],
+      image: product.images[selectedImage] || product.images[0],
       size: selectedSize || undefined,
       color: selectedColor || undefined,
       stock: currentStock,
@@ -213,14 +213,13 @@ export default function ProductDetailPage() {
     : 0;
 
   return (
-    <div className="container mx-auto px-4 py-6 md:py-10 pb-28 md:pb-10">
+    <div className="container mx-auto px-4 py-6 md:py-10">
       <div className="grid md:grid-cols-2 gap-6 md:gap-8 items-start">
-        {/* Images: main image left + vertical thumbnail strip right */}
-        <div className="flex flex-row gap-4 w-full max-w-md md:max-w-full items-start">
-          {/* Main image on the LEFT — fixed narrower width, taller height */}
+        {/* Images: main image + thumbnails */}
+        <div className="flex flex-col lg:flex-row gap-4 w-full items-start">
+          {/* Main image */}
           <div
-            className="relative rounded-xl overflow-hidden bg-muted shadow border border-border group cursor-zoom-in shrink-0"
-            style={{ width: '480px', height: '560px' }}
+            className="relative rounded-xl overflow-hidden bg-muted shadow border border-border group cursor-zoom-in w-full aspect-[4/5] lg:w-[480px] lg:h-[560px] lg:shrink-0"
             onClick={() => setLightboxOpen(true)}
             title="Click to enlarge"
           >
@@ -230,27 +229,39 @@ export default function ProductDetailPage() {
               fill
               className="object-cover object-top transition-transform duration-300 group-hover:scale-[1.03]"
               priority
-              sizes="480px"
+              sizes="(max-width: 768px) 100vw, 480px"
             />
             {discountPercent > 0 && (
               <Badge className="absolute top-2 left-2 rounded-md bg-primary text-primary-foreground text-xs font-semibold">
                 -{discountPercent}%
               </Badge>
             )}
+            
+            {/* Mobile Wishlist Button */}
+            <button
+              type="button"
+              className="absolute top-3 right-3 z-10 p-2.5 rounded-full bg-white/80 backdrop-blur-md shadow-sm border border-border/50 text-foreground hover:bg-white transition-colors sm:hidden"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleToggleWishlist();
+              }}
+              aria-label="Toggle wishlist"
+            >
+              <Heart className={`h-5 w-5 ${isInWishlist ? 'fill-rose-500 text-rose-500' : ''}`} />
+            </button>
+
             {/* Zoom hint icon */}
             <div className="absolute bottom-2 right-2 bg-black/40 rounded-full p-1.5 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
               <ZoomIn className="h-4 w-4 text-white" />
             </div>
           </div>
 
-          {/* Vertical thumbnail strip on the RIGHT — larger thumbnails */}
+          {/* Thumbnails */}
           {product.images.length > 1 && (
             <div
-              className="flex flex-col gap-3 shrink-0"
+              className="flex flex-row lg:flex-col gap-3 w-full lg:w-auto overflow-x-auto lg:overflow-x-hidden lg:overflow-y-auto pb-2 lg:pb-0"
               style={{
                 maxHeight: '560px',
-                overflowY: 'auto',
-                overflowX: 'hidden',
                 scrollbarWidth: 'thin',
                 scrollbarColor: 'hsl(var(--border)) transparent',
               }}
@@ -260,13 +271,13 @@ export default function ProductDetailPage() {
                   key={index}
                   type="button"
                   onClick={() => setSelectedImage(index)}
-                  className={`relative w-32 h-32 shrink-0 rounded-xl overflow-hidden border-2 transition-all ${
+                  className={`relative w-20 h-20 lg:w-32 lg:h-32 shrink-0 rounded-xl overflow-hidden border-2 transition-all ${
                     selectedImage === index
                       ? 'border-primary ring-2 ring-primary/20 scale-105'
                       : 'border-border hover:border-primary/50'
                   }`}
                 >
-                  <Image src={image} alt="" fill className="object-cover object-top" sizes="128px" />
+                  <Image src={image} alt="" fill className="object-cover object-top" sizes="(max-width: 768px) 80px, 128px" />
                 </button>
               ))}
             </div>
@@ -363,8 +374,8 @@ export default function ProductDetailPage() {
             )}
           </div>
 
-          {/* Desktop Actions */}
-          <div className="hidden md:flex gap-3 pt-2">
+          {/* Actions */}
+          <div className="flex flex-col sm:flex-row gap-3 pt-4 w-full">
             <Button
               onClick={handleAddToCart}
               disabled={currentStock === 0}
@@ -378,7 +389,7 @@ export default function ProductDetailPage() {
               onClick={handleToggleWishlist}
               variant="outline"
               size="lg"
-              className="rounded-lg h-12 border-border"
+              className="hidden sm:flex rounded-lg h-12 border-border"
             >
               <Heart className={`h-5 w-5 ${isInWishlist ? 'fill-rose-500 text-rose-500' : ''}`} />
             </Button>
@@ -465,28 +476,6 @@ export default function ProductDetailPage() {
       {/* Product Reviews */}
       <ProductReviews productId={product._id} />
 
-      {/* Sticky bottom CTA - Mobile only */}
-      <div className="md:hidden fixed bottom-16 left-0 right-0 z-40 p-4 bg-card border-t border-border shadow-lg safe-area-pb">
-        <div className="container mx-auto flex gap-3">
-          <Button
-            onClick={handleToggleWishlist}
-            variant="outline"
-            size="lg"
-            className="rounded-lg shrink-0 h-12 px-4 border-border"
-          >
-            <Heart className={`h-5 w-5 ${isInWishlist ? 'fill-rose-500 text-rose-500' : ''}`} />
-          </Button>
-          <Button
-            onClick={handleAddToCart}
-            disabled={currentStock === 0}
-            className="flex-1 rounded-lg h-12 text-base font-semibold"
-            size="lg"
-          >
-            <ShoppingCart className="mr-2 h-5 w-5" />
-            Add to bag · {formatPrice(product.price)}
-          </Button>
-        </div>
       </div>
-    </div>
   );
 }

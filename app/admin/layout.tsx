@@ -5,7 +5,7 @@ import { useRouter, usePathname } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { LayoutDashboard, Package, ShoppingBag, Loader2, Image as ImageIcon, Layout, FolderOpen, SlidersHorizontal, MessageSquare, Star, Users, ShieldCheck, HelpCircle, Info } from 'lucide-react';
+import { LayoutDashboard, Package, ShoppingBag, Loader2, Image as ImageIcon, Layout, FolderOpen, SlidersHorizontal, MessageSquare, Star, Users, ShieldCheck, HelpCircle, Info, Tag } from 'lucide-react';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
 
@@ -180,6 +180,16 @@ export default function AdminLayout({
               <Link href="/admin/categories">
                 <FolderOpen className="mr-3 h-4 w-4" />
                 Categories
+              </Link>
+            </Button>
+            <Button
+              variant="ghost"
+              className={cn('w-full justify-start text-blue-100 hover:text-white hover:bg-white/10 transition-colors', pathname?.startsWith('/admin/tags') && 'bg-white/20 text-white font-semibold')}
+              asChild
+            >
+              <Link href="/admin/tags">
+                <Tag className="mr-3 h-4 w-4" />
+                Product Tags
               </Link>
             </Button>
             <Button

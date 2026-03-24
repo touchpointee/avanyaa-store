@@ -3,7 +3,8 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { useSession, signOut } from 'next-auth/react';
-import { ShoppingCart, Heart, User, LogOut, MapPin, Menu, X, Home, ShoppingBag, Info, Phone, HelpCircle, Package } from 'lucide-react';
+import { useRouter, usePathname } from 'next/navigation';
+import { ShoppingCart, Heart, User, LogOut, MapPin, Menu, X, Home, ShoppingBag, Info, Phone, HelpCircle, Package, ChevronLeft } from 'lucide-react';
 import { isCustomerSession } from '@/lib/customerSession';
 import { useCartStore } from '@/store/cartStore';
 import { useWishlistStore } from '@/store/wishlistStore';
@@ -23,6 +24,8 @@ const NAV_LINKS = [
 ];
 
 export default function Navbar() {
+  const router = useRouter();
+  const pathname = usePathname();
   const { data: session } = useSession();
   const [mounted, setMounted] = useState(false);
   const [location, setLocation] = useState<string>('');
@@ -87,16 +90,29 @@ export default function Navbar() {
         <div className="container mx-auto w-full min-w-0 px-4">
           <div className="flex h-14 md:h-16 items-center justify-between gap-2 md:gap-4">
 
-            {/* ── Mobile Menu Toggle ────────────────────────── */}
-            <Button
-              variant="ghost"
-              size="icon"
-              className="lg:hidden shrink-0"
-              onClick={() => setMenuOpen(true)}
-              aria-label="Open menu"
-            >
-              <Menu className="h-6 w-6" />
-            </Button>
+            {/* ── Mobile Menu & Back Toggle ────────────────────────── */}
+            <div className="flex items-center lg:hidden shrink-0 -ml-2 sm:-ml-0">
+              {mounted && pathname !== '/' && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="shrink-0"
+                  onClick={() => router.back()}
+                  aria-label="Go back"
+                >
+                  <ChevronLeft className="h-6 w-6" />
+                </Button>
+              )}
+              <Button
+                variant="ghost"
+                size="icon"
+                className="shrink-0"
+                onClick={() => setMenuOpen(true)}
+                aria-label="Open menu"
+              >
+                <Menu className="h-6 w-6" />
+              </Button>
+            </div>
 
             {/* ── Logo ─────────────────────────────────────── */}
             <Link href="/" className="shrink-0 flex items-center min-w-0 lg:-ml-2">
