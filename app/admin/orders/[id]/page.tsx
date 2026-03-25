@@ -32,6 +32,11 @@ interface Order {
   totalAmount: number;
   shippingFee?: number;
   paymentMethod: string;
+  isPaid?: boolean;
+  razorpayPaymentId?: string;
+  razorpayOrderId?: string;
+  isRefunded?: boolean;
+  razorpayRefundId?: string;
   createdAt: string;
   updatedAt: string;
   userId?: string;
@@ -55,6 +60,7 @@ const STATUS_CFG: Record<string, { label: string; pill: string; dot: string; bg:
   shipped:          { label: 'Shipped',          pill: 'bg-amber-100 text-amber-700 border-amber-200',    dot: 'bg-amber-500',   bg: 'from-amber-50' },
   out_for_delivery: { label: 'Out for Delivery', pill: 'bg-orange-100 text-orange-700 border-orange-200', dot: 'bg-orange-500',  bg: 'from-orange-50' },
   delivered:        { label: 'Delivered',        pill: 'bg-emerald-100 text-emerald-700 border-emerald-200', dot: 'bg-emerald-500', bg: 'from-emerald-50' },
+  return_requested: { label: 'Return Req.',      pill: 'bg-purple-100 text-purple-700 border-purple-200', dot: 'bg-purple-500', bg: 'from-purple-50' },
   cancelled:        { label: 'Cancelled',        pill: 'bg-red-100 text-red-700 border-red-200',          dot: 'bg-red-500',     bg: 'from-red-50' },
   returned:         { label: 'Returned',         pill: 'bg-gray-100 text-gray-600 border-gray-300',       dot: 'bg-gray-400',    bg: 'from-gray-50' },
 };
@@ -137,6 +143,26 @@ export default function AdminOrderDetailPage() {
     finally { setSaving(false); }
   };
 
+  const handleRefund = async () => {
+    if (!order) return;
+    if (!confirm('Are you sure you want to issue a full refund to the customer? This action cannot be reversed.')) return;
+    
+    setSaving(true);
+    try {
+      const res = await fetch(`/api/admin/orders/${order._id}/refund`, {
+        method: 'POST',
+      });
+      if (res.ok) {
+        setOrder(await res.json());
+        toast({ title: 'Refund issued successfully', description: 'The customer will receive the funds in 5-7 business days.' });
+      } else {
+        const e = await res.json();
+        toast({ title: 'Refund failed', description: e.error, variant: 'destructive' });
+      }
+    } catch { toast({ title: 'Network error', variant: 'destructive' }); }
+    finally { setSaving(false); }
+  };
+
   /* ── Loading / not found ── */
   if (loading) return (
     <div className="flex items-center justify-center min-h-[60vh]">
@@ -197,24 +223,42 @@ export default function AdminOrderDetailPage() {
             </div>
           </div>
 
-          {/* Status changer */}
-          <div className="flex items-center gap-2 shrink-0">
-            {saving && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />}
-            <Select value={order.status} onValueChange={handleStatusChange} disabled={saving}>
-              <SelectTrigger className="w-52 bg-white dark:bg-card shadow-sm">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {Object.entries(STATUS_CFG).map(([val, c]) => (
-                  <SelectItem key={val} value={val}>
-                    <span className="flex items-center gap-2">
-                      <span className={`w-2 h-2 rounded-full ${c.dot}`} />
-                      {c.label}
-                    </span>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+          {/* Actions: Status + Refund */}
+          <div className="flex flex-col items-end gap-3 shrink-0">
+            <div className="flex items-center gap-2">
+              {saving && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />}
+              <Select value={order.status} onValueChange={handleStatusChange} disabled={saving || order.isRefunded}>
+                <SelectTrigger className="w-52 bg-white dark:bg-card shadow-sm">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {Object.entries(STATUS_CFG).map(([val, c]) => (
+                    <SelectItem key={val} value={val}>
+                      <span className="flex items-center gap-2">
+                        <span className={`w-2 h-2 rounded-full ${c.dot}`} />
+                        {c.label}
+                      </span>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            
+            {order.isPaid && order.paymentMethod === 'razorpay' && !order.isRefunded && isTerminal && (
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="text-red-600 border-red-200 hover:bg-red-50 bg-white/80 dark:bg-red-950/20 w-full"
+                onClick={handleRefund}
+                disabled={saving}
+              >
+                Issue Full Refund
+              </Button>
+            )}
+
+            <Button variant="secondary" size="sm" className="w-full bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 dark:bg-blue-900/30 dark:text-blue-400 dark:border-blue-900/50" asChild>
+              <Link href={`/orders/${order._id}/invoice`} target="_blank">Print Invoice</Link>
+            </Button>
           </div>
         </div>
       </div>
@@ -258,13 +302,23 @@ export default function AdminOrderDetailPage() {
         </div>
       )}
 
-      {/* Cancellation reason */}
-      {isTerminal && order.cancellationReason && (
-        <div className="rounded-2xl border border-red-200 bg-red-50 p-4 flex items-start gap-3">
-          <AlertCircle className="h-4 w-4 text-red-500 mt-0.5 shrink-0" />
+      {/* Cancellation or Return reason */}
+      {(isTerminal || order.status === 'return_requested') && (
+        <div className={`rounded-2xl border p-4 flex items-start gap-3 ${
+          order.status === 'cancelled' 
+            ? 'border-red-200 bg-red-50' 
+            : 'border-purple-200 bg-purple-50 dark:bg-purple-900/10'
+        }`}>
+          <AlertCircle className={`h-4 w-4 mt-0.5 shrink-0 ${order.status === 'cancelled' ? 'text-red-500' : 'text-purple-600 dark:text-purple-400'}`} />
           <div>
-            <p className="text-sm font-semibold text-red-700">Reason for {order.status}</p>
-            <p className="text-sm text-red-600 mt-0.5">{order.cancellationReason}</p>
+            <p className={`text-sm font-semibold ${order.status === 'cancelled' ? 'text-red-700' : 'text-purple-900 dark:text-purple-300'}`}>
+              Reason for {STATUS_CFG[order.status]?.label ?? order.status}
+            </p>
+            <p className={`text-sm mt-0.5 ${order.status === 'cancelled' ? 'text-red-600' : 'text-purple-800 dark:text-purple-300/80'}`}>
+              {order.cancellationReason 
+                 ? order.cancellationReason.replace('Return Request: ', '') 
+                 : 'No reason provided.'}
+            </p>
           </div>
         </div>
       )}
@@ -393,13 +447,41 @@ export default function AdminOrderDetailPage() {
             <Row label="Amount">
               <span className="font-bold text-base text-primary">{formatPrice(order.totalAmount)}</span>
             </Row>
-            <Row label="Payment status">
+            <Row label="Status">
               {order.paymentMethod === 'cod' ? (
                 <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 text-[11px] font-semibold">Pending (COD)</span>
               ) : (
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 text-[11px] font-semibold">✓ Paid</span>
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 text-[11px] font-semibold">✓ Paid via Gateway</span>
               )}
             </Row>
+
+            {order.razorpayPaymentId && (
+              <Row label="Payment ID">
+                <span className="text-xs font-mono">{order.razorpayPaymentId}</span>
+              </Row>
+            )}
+            
+            {order.razorpayOrderId && (
+              <Row label="Gateway Order">
+                <span className="text-xs font-mono text-muted-foreground">{order.razorpayOrderId}</span>
+              </Row>
+            )}
+
+            {/* Refund Section */}
+            {order.isPaid && order.paymentMethod === 'razorpay' && order.isRefunded && (
+              <div className="mt-4 pt-4 border-t border-border">
+                <div className="space-y-2">
+                  <Row label="Refund Status">
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 text-[11px] font-semibold">✓ Refund Processed</span>
+                  </Row>
+                  {order.razorpayRefundId && (
+                    <Row label="Refund ID">
+                      <span className="text-xs font-mono text-blue-700">{order.razorpayRefundId}</span>
+                    </Row>
+                  )}
+                </div>
+              </div>
+            )}
           </SectionCard>
 
           {/* Order meta */}

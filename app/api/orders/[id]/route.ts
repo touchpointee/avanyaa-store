@@ -26,8 +26,12 @@ export async function GET(
 
     const userId = (session.user as any).id;
     const role = (session.user as any).role;
+    const userEmail = (session.user as any).email;
 
-    if (role !== 'admin' && order.userId?.toString() !== userId) {
+    const isOwner = order.userId?.toString() === userId || 
+                   (order.address?.email && userEmail && order.address.email.toLowerCase() === userEmail.toLowerCase());
+
+    if (role !== 'admin' && !isOwner) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -54,13 +58,25 @@ export async function PUT(
 
     const { status } = await req.json();
 
-    if (!['placed', 'packed', 'shipped', 'out_for_delivery', 'delivered', 'cancelled', 'returned'].includes(status)) {
+    if (!['placed', 'packed', 'shipped', 'out_for_delivery', 'delivered', 'cancelled', 'returned', 'return_requested'].includes(status)) {
       return NextResponse.json({ error: 'Invalid status' }, { status: 400 });
+    }
+
+    const currentOrder = await Order.findById(params.id);
+    if (!currentOrder) {
+      return NextResponse.json({ error: 'Order not found' }, { status: 404 });
+    }
+
+    const updates: any = { status };
+
+    // When marking as delivered for the very first time, lock in the timestamp.
+    if (status === 'delivered' && !currentOrder.deliveredAt) {
+      updates.deliveredAt = new Date();
     }
 
     const order = await Order.findByIdAndUpdate(
       params.id,
-      { status },
+      updates,
       { new: true }
     ).lean();
 

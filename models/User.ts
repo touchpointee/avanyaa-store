@@ -19,6 +19,8 @@ export interface IUser extends Document {
   email: string;
   mobile: string;
   password?: string;
+  resetToken?: string;
+  resetTokenExpiry?: Date;
   role: 'user' | 'admin';
   status: 'active' | 'blocked';
   addresses: IAddress[];
@@ -47,6 +49,14 @@ const UserSchema = new Schema<IUser>(
     },
     password: {
       type: String,
+      select: false,
+    },
+    resetToken: {
+      type: String,
+      select: false,
+    },
+    resetTokenExpiry: {
+      type: Date,
       select: false,
     },
     role: {

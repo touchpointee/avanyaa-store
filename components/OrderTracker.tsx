@@ -6,12 +6,13 @@ import { Check, Package, PackageCheck, Truck, MapPin, Star, X, RotateCcw } from 
 type OrderStatus =
     | 'placed' | 'packed' | 'shipped'
     | 'out_for_delivery' | 'delivered'
-    | 'cancelled' | 'returned';
+    | 'cancelled' | 'returned' | 'return_requested';
 
 interface Props {
     status: string;
     createdAt: string | Date;
     updatedAt?: string | Date;
+    isRefunded?: boolean;
 }
 
 /* ─── Step definitions ────────────────────────────────────────── */
@@ -134,7 +135,7 @@ function HConnector({ done, hue }: { done: boolean; hue: 'green' | 'red' | 'oran
 /* ════════════════════════════════════════════════════════════════
    Main component
 ════════════════════════════════════════════════════════════════ */
-export default function OrderTracker({ status, createdAt, updatedAt }: Props) {
+export default function OrderTracker({ status, createdAt, updatedAt, isRefunded }: Props) {
 
     /* ── CANCELLED ─── */
     if (status === 'cancelled') {
@@ -158,31 +159,46 @@ export default function OrderTracker({ status, createdAt, updatedAt }: Props) {
         );
     }
 
-    /* ── RETURNED ─── */
-    if (status === 'returned') {
+    /* ── RETURN FLOW (Requested, Received, or Refunded) ─── */
+    if (status === 'return_requested' || status === 'returned') {
+        const isReturned = status === 'returned';
+        const isFullyRefunded = !!isRefunded;
+        
         return (
             <div className="w-full">
                 <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-4">Order Timeline</p>
 
-                {/* Mobile */}
+                {/* Mobile vertical */}
                 <div className="flex flex-col md:hidden">
                     {STEPS.map((step, i) => (
                         <VStep key={step.key} Icon={step.Icon} label={step.label} state="done"
                             date={i === 0 ? fmt(createdAt) : undefined} hue="green"
                             isLast={false} connectorDone />
                     ))}
-                    <VStep Icon={RotateCcw} label="Returned" state="active" date={updatedAt ? fmt(updatedAt) : undefined} hue="orange" isLast connectorDone={false} />
+                    <VStep Icon={Package} label="Return Req." state={isReturned ? 'done' : 'active'} date={!isReturned && updatedAt ? fmt(updatedAt) : undefined} hue="orange" isLast={false} connectorDone={isReturned} />
+                    <VStep Icon={RotateCcw} label="Returned" state={isFullyRefunded ? 'done' : (isReturned ? 'active' : 'future')} date={isReturned && !isFullyRefunded && updatedAt ? fmt(updatedAt) : undefined} hue="orange" isLast={false} connectorDone={isFullyRefunded} />
+                    <VStep Icon={Check} label="Refunded" state={isFullyRefunded ? 'active' : 'future'} date={isFullyRefunded && updatedAt ? fmt(updatedAt) : undefined} hue="orange" isLast connectorDone={false} />
                 </div>
 
-                {/* Desktop */}
+                {/* Desktop horizontal */}
                 <div className="hidden md:flex items-start">
                     {STEPS.map((step, i) => (
-                        <>
-                            <HStep key={step.key} Icon={step.Icon} label={step.label} state="done" date={i === 0 ? fmt(createdAt) : undefined} hue="green" />
-                            <HConnector key={`c-${i}`} done hue="orange" />
-                        </>
+                        <div key={step.key} className="flex items-start flex-1">
+                            <HStep Icon={step.Icon} label={step.label} state="done" date={i === 0 ? fmt(createdAt) : undefined} hue="green" />
+                            <HConnector done hue={i === STEPS.length - 1 ? 'orange' : 'green'} />
+                        </div>
                     ))}
-                    <HStep Icon={RotateCcw} label="Returned" state="active" date={updatedAt ? fmt(updatedAt) : undefined} hue="orange" />
+                    <div className="flex items-start flex-1">
+                        <HStep Icon={Package} label="Return Req." state={isReturned ? 'done' : 'active'} date={!isReturned && updatedAt ? fmt(updatedAt) : undefined} hue="orange" />
+                        <HConnector done={isReturned} hue="orange" />
+                    </div>
+                    <div className="flex items-start flex-1">
+                        <HStep Icon={RotateCcw} label="Returned" state={isFullyRefunded ? 'done' : (isReturned ? 'active' : 'future')} date={isReturned && !isFullyRefunded && updatedAt ? fmt(updatedAt) : undefined} hue="orange" />
+                        <HConnector done={isFullyRefunded} hue="orange" />
+                    </div>
+                    <div className="flex items-start">
+                        <HStep Icon={Check} label="Refunded" state={isFullyRefunded ? 'active' : 'future'} date={isFullyRefunded && updatedAt ? fmt(updatedAt) : undefined} hue="orange" />
+                    </div>
                 </div>
             </div>
         );

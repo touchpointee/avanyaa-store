@@ -27,10 +27,11 @@ export interface ProductWithId extends Omit<IProduct, '_id'> {
   colorImages: { color: string; image: string }[];
 }
 
-export interface OrderWithId extends Omit<IOrder, '_id' | 'userId' | 'status' | 'createdAt' | 'updatedAt'> {
+export interface OrderWithId extends Omit<IOrder, '_id' | 'userId' | 'status' | 'createdAt' | 'updatedAt' | 'deliveredAt'> {
   _id: string;
   userId?: string;
-  status: 'placed' | 'packed' | 'shipped' | 'out_for_delivery' | 'delivered' | 'cancelled' | 'returned';
+  status: 'placed' | 'packed' | 'shipped' | 'out_for_delivery' | 'delivered' | 'cancelled' | 'returned' | 'return_requested';
+  deliveredAt?: string;
   createdAt: string;
   updatedAt: string;
 }

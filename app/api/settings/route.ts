@@ -89,6 +89,13 @@ export async function GET() {
       faqCategories: doc?.faqCategories?.length ? doc.faqCategories : DEFAULT_FAQ_CATEGORIES,
       shippingCharge: doc?.shippingCharge || 0,
       freeShippingThreshold: doc?.freeShippingThreshold || 0,
+      invoiceStoreName: doc?.invoiceStoreName || 'Avanyaa',
+      invoiceSubText: doc?.invoiceSubText || 'Premium Fashion Avenue',
+      invoiceEmail: doc?.invoiceEmail || 'support@avanyaa.com',
+      invoicePhone: doc?.invoicePhone || '',
+      invoiceAddress: doc?.invoiceAddress || '',
+      invoiceTaxId: doc?.invoiceTaxId || '',
+      invoiceFooterNote: doc?.invoiceFooterNote || 'Thank you for shopping with us!',
     });
   } catch {
     return NextResponse.json({
@@ -99,6 +106,13 @@ export async function GET() {
       faqCategories: DEFAULT_FAQ_CATEGORIES,
       shippingCharge: 0,
       freeShippingThreshold: 0,
+      invoiceStoreName: 'Avanyaa',
+      invoiceSubText: 'Premium Fashion Avenue',
+      invoiceEmail: 'support@avanyaa.com',
+      invoicePhone: '',
+      invoiceAddress: '',
+      invoiceTaxId: '',
+      invoiceFooterNote: 'Thank you for shopping with us!',
     });
   }
 }
@@ -113,7 +127,7 @@ export async function PUT(req: NextRequest) {
 
     await connectDB();
     const body = await req.json();
-    const { trustBadges, marqueeMessages, testimonials, whyCards, faqCategories, shippingCharge, freeShippingThreshold } = body;
+    const { trustBadges, marqueeMessages, testimonials, whyCards, faqCategories, shippingCharge, freeShippingThreshold, invoiceStoreName, invoiceSubText, invoiceEmail, invoicePhone, invoiceAddress, invoiceTaxId, invoiceFooterNote } = body;
 
     const updateData: Record<string, any> = {};
     if (trustBadges !== undefined) updateData.trustBadges = trustBadges;
@@ -123,6 +137,13 @@ export async function PUT(req: NextRequest) {
     if (faqCategories !== undefined) updateData.faqCategories = faqCategories;
     if (shippingCharge !== undefined) updateData.shippingCharge = shippingCharge;
     if (freeShippingThreshold !== undefined) updateData.freeShippingThreshold = freeShippingThreshold;
+    if (invoiceStoreName !== undefined) updateData.invoiceStoreName = invoiceStoreName;
+    if (invoiceSubText !== undefined) updateData.invoiceSubText = invoiceSubText;
+    if (invoiceEmail !== undefined) updateData.invoiceEmail = invoiceEmail;
+    if (invoicePhone !== undefined) updateData.invoicePhone = invoicePhone;
+    if (invoiceAddress !== undefined) updateData.invoiceAddress = invoiceAddress;
+    if (invoiceTaxId !== undefined) updateData.invoiceTaxId = invoiceTaxId;
+    if (invoiceFooterNote !== undefined) updateData.invoiceFooterNote = invoiceFooterNote;
 
     const doc = await Settings.findOneAndUpdate(
       { key: 'global' },
@@ -138,6 +159,13 @@ export async function PUT(req: NextRequest) {
       faqCategories: doc.faqCategories,
       shippingCharge: doc.shippingCharge,
       freeShippingThreshold: doc.freeShippingThreshold,
+      invoiceStoreName: doc.invoiceStoreName,
+      invoiceSubText: doc.invoiceSubText,
+      invoiceEmail: doc.invoiceEmail,
+      invoicePhone: doc.invoicePhone,
+      invoiceAddress: doc.invoiceAddress,
+      invoiceTaxId: doc.invoiceTaxId,
+      invoiceFooterNote: doc.invoiceFooterNote,
     });
   } catch (error: any) {
     return NextResponse.json({ error: error.message || 'Failed to save' }, { status: 500 });

@@ -168,6 +168,7 @@ export default function GuestOrderLookupPage() {
                   status={order.status as Parameters<typeof OrderTracker>[0]['status']}
                   createdAt={order.createdAt}
                   updatedAt={order.updatedAt}
+                  isRefunded={order.isRefunded}
                 />
 
                 <Separator />

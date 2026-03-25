@@ -39,6 +39,13 @@ export interface ISettings extends Document {
   aboutPage?: Record<string, any>;
   shippingCharge?: number;
   freeShippingThreshold?: number;
+  invoiceStoreName?: string;
+  invoiceSubText?: string;
+  invoiceEmail?: string;
+  invoicePhone?: string;
+  invoiceAddress?: string;
+  invoiceTaxId?: string;
+  invoiceFooterNote?: string;
 }
 
 const TrustBadgeSchema = new Schema<ITrustBadge>({
@@ -80,6 +87,13 @@ const SettingsSchema = new Schema<ISettings>({
   aboutPage: { type: mongoose.Schema.Types.Mixed, default: null },
   shippingCharge: { type: Number, default: 0 },
   freeShippingThreshold: { type: Number, default: 0 },
+  invoiceStoreName: { type: String, default: 'Avanyaa' },
+  invoiceSubText: { type: String, default: 'Premium Fashion Avenue' },
+  invoiceEmail: { type: String, default: 'support@avanyaa.com' },
+  invoicePhone: { type: String, default: '' },
+  invoiceAddress: { type: String, default: '' },
+  invoiceTaxId: { type: String, default: '' },
+  invoiceFooterNote: { type: String, default: 'Thank you for shopping with us!' },
 });
 
 if (mongoose.models.Settings) {

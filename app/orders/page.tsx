@@ -26,6 +26,16 @@ const CANCEL_REASONS = [
   'Other',
 ];
 
+/* ─── Return reasons ──────────────────────────────────────────── */
+const RETURN_REASONS = [
+  'Defective/Damaged product',
+  'Wrong item delivered',
+  'Size/Fit issue',
+  'Quality not as expected',
+  'Product looks different from image',
+  'Other',
+];
+
 /* ─── Cancellation modal ──────────────────────────────────────── */
 function CancelModal({
   orderId,
@@ -172,14 +182,143 @@ function CancelModal({
   );
 }
 
+/* ─── Return modal ────────────────────────────────────────────── */
+function ReturnModal({
+  orderId,
+  orderRef,
+  onClose,
+  onReturned,
+}: {
+  orderId: string;
+  orderRef: string;
+  onClose: () => void;
+  onReturned: (orderId: string) => void;
+}) {
+  const { toast } = useToast();
+  const [reason, setReason] = useState('');
+  const [otherText, setOtherText] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState('');
+
+  const handleConfirm = async () => {
+    const finalReason = reason === 'Other' ? otherText.trim() : reason;
+    if (!reason) { setError('Please select a reason.'); return; }
+    if (reason === 'Other' && !finalReason) { setError('Please describe your reason.'); return; }
+
+    setError('');
+    setSubmitting(true);
+
+    try {
+      const res = await fetch(`/api/orders/${orderId}/return`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ returnReason: finalReason }),
+      });
+
+      if (res.ok) {
+        onReturned(orderId);
+        onClose();
+        toast({ title: 'Return requested', description: `Return request for Order #${orderRef} has been submitted.` });
+      } else {
+        const data = await res.json();
+        setError(data.error ?? 'Failed to request return. Please try again.');
+      }
+    } catch {
+      setError('Network error. Please try again.');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm px-4"
+      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+    >
+      <div className="relative w-full max-w-md rounded-2xl border border-border bg-card shadow-2xl p-6 space-y-5 animate-in fade-in zoom-in-95 duration-200">
+        <button
+          onClick={onClose}
+          className="absolute top-4 right-4 p-1 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors"
+        >
+          <X className="h-4 w-4" />
+        </button>
+
+        <div className="flex items-start gap-3">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-purple-100 dark:bg-purple-900/30">
+            <Package className="h-5 w-5 text-purple-600 dark:text-purple-400" />
+          </div>
+          <div>
+            <h2 className="font-heading font-semibold text-lg">Return Order</h2>
+            <p className="text-sm text-muted-foreground mt-0.5">Order #{orderRef}</p>
+          </div>
+        </div>
+
+        <p className="text-sm text-muted-foreground">
+          Why do you want to return this product? Please select a reason below.
+        </p>
+
+        <div className="space-y-2.5 max-h-[300px] overflow-y-auto pr-2">
+          {RETURN_REASONS.map((r) => (
+            <label
+              key={r}
+              className={`flex items-center gap-3 rounded-lg border px-4 py-3 cursor-pointer transition-colors ${reason === r
+                ? 'border-purple-600/60 bg-purple-50 dark:bg-purple-900/10'
+                : 'border-border hover:bg-muted/40'
+                }`}
+            >
+              <input
+                type="radio"
+                name="return-reason"
+                value={r}
+                checked={reason === r}
+                onChange={() => { setReason(r); setError(''); }}
+                className="accent-purple-600"
+              />
+              <span className="text-sm">{r}</span>
+            </label>
+          ))}
+        </div>
+
+        {reason === 'Other' && (
+          <textarea
+            placeholder="Please describe your reason in detail…"
+            value={otherText}
+            onChange={(e) => { setOtherText(e.target.value); setError(''); }}
+            rows={3}
+            className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm resize-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-600 placeholder:text-muted-foreground"
+          />
+        )}
+
+        {error && <p className="text-sm text-destructive font-medium">{error}</p>}
+
+        <div className="flex gap-3 pt-1">
+          <Button variant="outline" className="flex-1 rounded-lg" onClick={onClose} disabled={submitting}>
+            Cancel
+          </Button>
+          <Button
+            className="flex-1 rounded-lg bg-purple-600 text-white hover:bg-purple-700"
+            onClick={handleConfirm}
+            disabled={submitting}
+          >
+            {submitting ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Submitting…</> : 'Submit Request'}
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 /* ─── Main page ───────────────────────────────────────────────── */
 export default function OrdersPage() {
+  const { toast } = useToast();
   const { data: session, status } = useSession();
   const router = useRouter();
   const [orders, setOrders] = useState<OrderWithId[]>([]);
   const [loading, setLoading] = useState(true);
   const [cancelTarget, setCancelTarget] = useState<{ id: string; ref: string } | null>(null);
+  const [returnTarget, setReturnTarget] = useState<{ id: string; ref: string } | null>(null);
   const [showCancelPopup, setShowCancelPopup] = useState(false);
+  const [cancelReturnLoading, setCancelReturnLoading] = useState<string | null>(null);
 
   /* Review modal state */
   const [reviewTarget, setReviewTarget] = useState<{
@@ -221,17 +360,58 @@ export default function OrdersPage() {
     setShowCancelPopup(true);
   };
 
+  const handleReturned = (orderId: string) => {
+    setOrders((prev) =>
+      prev.map((o) => (o._id === orderId ? { ...o, status: 'return_requested' } : o))
+    );
+    toast({ title: 'Return requested successfully', description: 'Our team will review your request shortly.' });
+  };
+
+  const handleCancelReturn = async (orderId: string) => {
+    if (!confirm('Are you sure you want to cancel this return request?')) return;
+    setCancelReturnLoading(orderId);
+    try {
+      const res = await fetch(`/api/orders/${orderId}/return`, { method: 'DELETE' });
+      if (res.ok) {
+        setOrders((prev) => prev.map((o) => (o._id === orderId ? { ...o, status: 'delivered' } : o)));
+        toast({ title: 'Return request cancelled', description: 'Your order is back to delivered state.' });
+      } else {
+        const data = await res.json();
+        toast({ title: 'Failed to cancel', description: data.error, variant: 'destructive' });
+      }
+    } catch {
+      toast({ title: 'Network error', variant: 'destructive' });
+    } finally {
+      setCancelReturnLoading(null);
+    }
+  };
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'placed': return 'bg-blue-500';
       case 'shipped': return 'bg-yellow-500';
       case 'delivered': return 'bg-green-500';
+      case 'return_requested': return 'bg-purple-500';
+      case 'returned': return 'bg-gray-600';
       case 'cancelled': return 'bg-red-500';
       default: return 'bg-gray-500';
     }
   };
 
   const canCancel = (status: string) => ['placed', 'pending'].includes(status);
+  
+  const checkReturnEligibility = (order: any) => {
+    if (order.status !== 'delivered') return { eligible: false, reason: 'unmet_status' };
+    
+    // Fallback to updatedAt for legacy orders that were delivered before we added deliveredAt tracking
+    const deliveryDate = order.deliveredAt ? new Date(order.deliveredAt) : new Date(order.updatedAt);
+    
+    const diff = Date.now() - deliveryDate.getTime();
+    if (diff > 10 * 24 * 60 * 60 * 1000) {
+      return { eligible: false, reason: 'expired' };
+    }
+    return { eligible: true, reason: 'ok' };
+  };
 
   /* ── Loading skeleton ────────────────── */
   if (loading) {
@@ -298,6 +478,16 @@ export default function OrdersPage() {
         />
       )}
 
+      {/* Return modal */}
+      {returnTarget && (
+        <ReturnModal
+          orderId={returnTarget.id}
+          orderRef={returnTarget.ref}
+          onClose={() => setReturnTarget(null)}
+          onReturned={handleReturned}
+        />
+      )}
+
       <div className="container mx-auto px-4 py-6 md:py-8">
         <h1 className="font-heading text-2xl md:text-3xl font-semibold mb-6 tracking-tight">My Orders</h1>
 
@@ -319,8 +509,19 @@ export default function OrdersPage() {
                   {/* Status badge + cancel button side-by-side */}
                   <div className="flex items-center gap-2 flex-wrap">
                     <Badge className={`${getStatusColor(order.status)} rounded-lg`}>
-                      {order.status.toUpperCase()}
+                      {order.status.replace('_', ' ').toUpperCase()}
                     </Badge>
+
+                    {order.isPaid && (
+                      <Link
+                        href={`/orders/${order._id}/invoice`}
+                        target="_blank"
+                        className="text-xs font-medium text-blue-600 border border-blue-200 rounded-lg px-3 py-1 hover:bg-blue-50 transition-colors"
+                      >
+                        Download Invoice
+                      </Link>
+                    )}
+                    
                     {canCancel(order.status) && (
                       <button
                         onClick={() => setCancelTarget({ id: order._id, ref: order.orderId })}
@@ -329,6 +530,28 @@ export default function OrdersPage() {
                         Cancel Order
                       </button>
                     )}
+
+                    {order.status === 'delivered' && (() => {
+                      const eligibility = checkReturnEligibility(order);
+                      if (eligibility.eligible) {
+                        return (
+                          <button
+                            onClick={() => setReturnTarget({ id: order._id, ref: order.orderId })}
+                            className="text-xs font-medium text-purple-600 border border-purple-200 rounded-lg px-3 py-1 hover:bg-purple-50 transition-colors"
+                          >
+                            Return Order
+                          </button>
+                        );
+                      } else if (eligibility.reason === 'expired') {
+                        return (
+                          <span className="text-xs font-medium text-muted-foreground border border-border rounded-lg px-3 py-1 bg-muted/30 cursor-not-allowed">
+                            Return Window Closed
+                          </span>
+                        );
+                      }
+                      return null;
+                    })()}
+
                   </div>
                 </div>
               </CardHeader>
@@ -392,11 +615,53 @@ export default function OrdersPage() {
 
                 <Separator className="bg-border" />
 
+                {/* ── Return Instructions ── */}
+                {order.status === 'return_requested' && (
+                  <div className="rounded-xl border border-purple-200 bg-purple-50/50 dark:bg-purple-900/10 p-5">
+                    <div className="flex items-start gap-4">
+                      <div className="h-10 w-10 shrink-0 flex items-center justify-center rounded-full bg-purple-100 dark:bg-purple-900/40">
+                        <Package className="h-5 w-5 text-purple-600 dark:text-purple-400" />
+                      </div>
+                      <div className="min-w-0">
+                        <h4 className="font-heading font-semibold text-purple-900 dark:text-purple-300">Action Required: Ship Your Return</h4>
+                        <p className="text-sm text-purple-800/80 dark:text-purple-300/80 mt-1.5 leading-relaxed">
+                          Your return request has been submitted. Please securely package the items and ship them via any postal service to our receiving address below. Once we receive and verify the item, your full refund will be processed back to your original payment method.
+                        </p>
+                        <div className="mt-4 bg-white dark:bg-card p-4 rounded-xl border border-purple-100 dark:border-purple-900/50 text-sm font-medium shadow-sm">
+                          <p className="font-bold mb-1">AVANYAA Fashion Returns</p>
+                          <p className="text-muted-foreground font-normal">
+                            Murukkumpuzha<br />
+                            Thiruvananthapuram, India<br />
+                            <a href="mailto:support@avanyaa.in" className="text-purple-600 hover:underline mt-1 inline-block">support@avanyaa.in</a>
+                          </p>
+                        </div>
+                        <div className="mt-4 pt-4 border-t border-purple-200 dark:border-purple-900/50 flex justify-end">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="bg-transparent text-purple-700 border-purple-300 hover:bg-purple-100 dark:text-purple-300 dark:border-purple-800 dark:hover:bg-purple-900/40"
+                            onClick={() => handleCancelReturn(order._id)}
+                            disabled={cancelReturnLoading === order._id}
+                          >
+                            {cancelReturnLoading === order._id ? (
+                              <><Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" /> Cancelling…</>
+                            ) : (
+                              'Cancel Return Request'
+                            )}
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+                {order.status === 'return_requested' && <Separator className="bg-border" />}
+
                 {/* ── Order Tracker ── */}
                 <OrderTracker
                   status={order.status as Parameters<typeof OrderTracker>[0]['status']}
                   createdAt={order.createdAt}
                   updatedAt={order.updatedAt}
+                  isRefunded={order.isRefunded}
                 />
 
                 <Separator className="bg-border" />

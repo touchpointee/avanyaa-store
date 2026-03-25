@@ -27,12 +27,15 @@ export interface IOrder extends Document {
   totalAmount: number;
   shippingFee: number;
   address: IAddress;
-  status: 'placed' | 'packed' | 'shipped' | 'out_for_delivery' | 'delivered' | 'cancelled' | 'returned';
+  status: 'placed' | 'packed' | 'shipped' | 'out_for_delivery' | 'delivered' | 'cancelled' | 'returned' | 'return_requested';
   paymentMethod: 'razorpay';
   isPaid: boolean;
+  deliveredAt?: Date;
   razorpayOrderId?: string;
   razorpayPaymentId?: string;
   razorpaySignature?: string;
+  isRefunded?: boolean;
+  razorpayRefundId?: string;
   cancellationReason?: string;
   createdAt: Date;
   updatedAt: Date;
@@ -138,8 +141,11 @@ const OrderSchema = new Schema<IOrder>(
     },
     status: {
       type: String,
-      enum: ['placed', 'packed', 'shipped', 'out_for_delivery', 'delivered', 'cancelled', 'returned'],
+      enum: ['placed', 'packed', 'shipped', 'out_for_delivery', 'delivered', 'cancelled', 'returned', 'return_requested'],
       default: 'placed',
+    },
+    deliveredAt: {
+      type: Date,
     },
     paymentMethod: {
       type: String,
@@ -157,6 +163,16 @@ const OrderSchema = new Schema<IOrder>(
       type: String,
     },
     razorpaySignature: {
+      type: String,
+    },
+    isRefunded: {
+      type: Boolean,
+      default: false,
+    },
+    razorpayRefundId: {
+      type: String,
+    },
+    cancellationReason: {
       type: String,
     },
   },

@@ -9,7 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Dialog
 import { formatPrice } from '@/lib/utils';
 import {
   Loader2, Search, ChevronRight, Package,
-  RefreshCw, ShoppingBag, TrendingUp, Clock, CheckCircle2, Settings
+  RefreshCw, ShoppingBag, TrendingUp, Clock, CheckCircle2, Settings, Printer
 } from 'lucide-react';
 
 interface OrderSummary {
@@ -21,6 +21,9 @@ interface OrderSummary {
   createdAt: string;
   address: { fullName: string; email: string; phone: string; city: string; state: string };
   items: { productName: string; quantity: number; productImage?: string }[];
+  cancellationReason?: string;
+  isPaid?: boolean;
+  isRefunded?: boolean;
 }
 
 const STATUS_CFG: Record<string, { label: string; pill: string; dot: string; row: string }> = {
@@ -29,6 +32,7 @@ const STATUS_CFG: Record<string, { label: string; pill: string; dot: string; row
   shipped:          { label: 'Shipped',          pill: 'bg-amber-100 text-amber-700 border-amber-200',    dot: 'bg-amber-500',  row: 'hover:border-amber-300' },
   out_for_delivery: { label: 'Out for Delivery', pill: 'bg-orange-100 text-orange-700 border-orange-200', dot: 'bg-orange-500', row: 'hover:border-orange-300' },
   delivered:        { label: 'Delivered',        pill: 'bg-emerald-100 text-emerald-700 border-emerald-200', dot: 'bg-emerald-500', row: 'hover:border-emerald-300' },
+  return_requested: { label: 'Return Req.',      pill: 'bg-purple-100 text-purple-700 border-purple-200', dot: 'bg-purple-500', row: 'hover:border-purple-300' },
   cancelled:        { label: 'Cancelled',        pill: 'bg-red-100 text-red-700 border-red-200',          dot: 'bg-red-500',    row: 'hover:border-red-300' },
   returned:         { label: 'Returned',         pill: 'bg-gray-100 text-gray-600 border-gray-300',       dot: 'bg-gray-400',   row: 'hover:border-gray-300' },
 };
@@ -69,10 +73,28 @@ export default function AdminOrdersPage() {
 
   const [shippingCharge, setShippingCharge] = useState(0);
   const [freeShippingThreshold, setFreeShippingThreshold] = useState(0);
+  const [invoiceStoreName, setInvoiceStoreName] = useState('Avanyaa');
+  const [invoiceSubText, setInvoiceSubText] = useState('Premium Fashion Avenue');
+  const [invoiceEmail, setInvoiceEmail] = useState('support@avanyaa.com');
+  const [invoicePhone, setInvoicePhone] = useState('');
+  const [invoiceAddress, setInvoiceAddress] = useState('');
+  const [invoiceTaxId, setInvoiceTaxId] = useState('');
+  const [invoiceFooterNote, setInvoiceFooterNote] = useState('Thank you for shopping with us!');
   const [savingSettings, setSavingSettings] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isInvoiceConfigOpen, setIsInvoiceConfigOpen] = useState(false);
 
-  useEffect(() => { fetchOrders(); fetchSettings(); }, []);
+  useEffect(() => { 
+    fetchOrders('initial'); 
+    fetchSettings(); 
+
+    // Auto-poll for new orders every 10 seconds silently
+    const interval = setInterval(() => {
+      fetchOrders('background');
+    }, 10000);
+
+    return () => clearInterval(interval);
+  }, []);
 
   useEffect(() => {
     let result = orders;
@@ -89,12 +111,17 @@ export default function AdminOrdersPage() {
     setFiltered(result);
   }, [orders, search, statusFilter]);
 
-  const fetchOrders = async (isRefresh = false) => {
-    if (isRefresh) setRefreshing(true); else setLoading(true);
+  const fetchOrders = async (mode: 'initial' | 'refresh' | 'background' = 'initial') => {
+    if (mode === 'refresh') setRefreshing(true); 
+    else if (mode === 'initial') setLoading(true);
+
     try {
       const res = await fetch('/api/orders');
       if (res.ok) setOrders(await res.json());
-    } catch { } finally { setLoading(false); setRefreshing(false); }
+    } catch { } finally { 
+      if (mode === 'initial') setLoading(false);
+      if (mode === 'refresh') setRefreshing(false); 
+    }
   };
 
   const fetchSettings = async () => {
@@ -104,6 +131,13 @@ export default function AdminOrdersPage() {
         const data = await res.json();
         setShippingCharge(data.shippingCharge || 0);
         setFreeShippingThreshold(data.freeShippingThreshold || 0);
+        setInvoiceStoreName(data.invoiceStoreName || 'Avanyaa');
+        setInvoiceSubText(data.invoiceSubText || 'Premium Fashion Avenue');
+        setInvoiceEmail(data.invoiceEmail || 'support@avanyaa.com');
+        setInvoicePhone(data.invoicePhone || '');
+        setInvoiceAddress(data.invoiceAddress || '');
+        setInvoiceTaxId(data.invoiceTaxId || '');
+        setInvoiceFooterNote(data.invoiceFooterNote || 'Thank you for shopping with us!');
       }
     } catch {}
   };
@@ -114,16 +148,24 @@ export default function AdminOrdersPage() {
       const res = await fetch('/api/settings', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ shippingCharge, freeShippingThreshold }),
+        body: JSON.stringify({ 
+          shippingCharge, freeShippingThreshold, invoiceStoreName, 
+          invoiceSubText, invoiceEmail, invoicePhone, 
+          invoiceAddress, invoiceTaxId, invoiceFooterNote 
+        }),
       });
-      if (res.ok) setIsSettingsOpen(false);
+      if (res.ok) {
+        setIsSettingsOpen(false);
+        setIsInvoiceConfigOpen(false);
+      }
     } catch {} finally {
       setSavingSettings(false);
     }
   };
 
   /* ── Derived stats ── */
-  const totalRevenue = orders.filter(o => o.status === 'delivered').reduce((s, o) => s + o.totalAmount, 0);
+  const totalRevenue = orders.filter(o => o.isPaid && !o.isRefunded).reduce((s, o) => s + o.totalAmount, 0);
+  const refundedAmount = orders.filter(o => o.isRefunded).reduce((s, o) => s + o.totalAmount, 0);
   const pending = orders.filter(o => ['placed', 'packed', 'shipped', 'out_for_delivery'].includes(o.status)).length;
   const delivered = orders.filter(o => o.status === 'delivered').length;
 
@@ -143,6 +185,66 @@ export default function AdminOrdersPage() {
           <p className="text-sm text-muted-foreground mt-1">{orders.length} total order{orders.length !== 1 ? 's' : ''} received</p>
         </div>
         <div className="flex gap-2 items-center">
+          {/* Invoice Config Button */}
+          <Dialog open={isInvoiceConfigOpen} onOpenChange={setIsInvoiceConfigOpen}>
+            <DialogTrigger asChild>
+              <Button variant="outline" size="sm" className="bg-purple-50 text-purple-700 hover:bg-purple-100 border-purple-200 dark:bg-purple-900/30 dark:text-purple-400 dark:border-purple-900/50">
+                <Printer className="h-4 w-4 mr-2" />
+                Invoice Template Data
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Invoice Branding</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4 py-4 max-h-[70vh] overflow-y-auto pr-2">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Store Name</label>
+                  <Input value={invoiceStoreName} onChange={e => setInvoiceStoreName(e.target.value)} />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Subtitle / Tagline</label>
+                  <Input value={invoiceSubText} onChange={e => setInvoiceSubText(e.target.value)} />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Store Address / GST info</label>
+                  <textarea 
+                    className="flex min-h-[60px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                    placeholder="123 Retail Street, City, State&#10;GSTIN: 22AAAAA0000A1Z5"
+                    value={invoiceAddress} 
+                    onChange={e => setInvoiceAddress(e.target.value)} 
+                    rows={3}
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Contact Email</label>
+                    <Input type="email" value={invoiceEmail} onChange={e => setInvoiceEmail(e.target.value)} />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Contact Phone</label>
+                    <Input value={invoicePhone} onChange={e => setInvoicePhone(e.target.value)} />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Tax ID / GST Number (Optional)</label>
+                  <Input placeholder="e.g. GSTIN: 22ABCDE1234F1Z5" value={invoiceTaxId} onChange={e => setInvoiceTaxId(e.target.value)} />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Custom Footer Note</label>
+                  <Input value={invoiceFooterNote} onChange={e => setInvoiceFooterNote(e.target.value)} />
+                </div>
+              </div>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setIsInvoiceConfigOpen(false)}>Cancel</Button>
+                <Button onClick={saveSettings} disabled={savingSettings}>
+                  {savingSettings && <Loader2 className="h-4 w-4 mr-2 animate-spin" />} Save
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+
+          {/* Shipping Config Button */}
           <Dialog open={isSettingsOpen} onOpenChange={setIsSettingsOpen}>
             <DialogTrigger asChild>
               <Button variant="outline" size="sm">
@@ -173,7 +275,7 @@ export default function AdminOrdersPage() {
               </DialogFooter>
             </DialogContent>
           </Dialog>
-          <Button variant="outline" size="sm" onClick={() => fetchOrders(true)} disabled={refreshing}>
+          <Button variant="outline" size="sm" onClick={() => fetchOrders('refresh')} disabled={refreshing}>
             <RefreshCw className={`h-4 w-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
             Refresh
           </Button>
@@ -181,11 +283,12 @@ export default function AdminOrdersPage() {
       </div>
 
       {/* ── Stat cards ── */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
         <StatCard icon={ShoppingBag}   label="Total Orders"    value={orders.length}        color="bg-blue-500" />
         <StatCard icon={Clock}         label="Active Orders"   value={pending}              color="bg-amber-500" sub="Placed to Out for Delivery" />
         <StatCard icon={CheckCircle2}  label="Delivered"       value={delivered}            color="bg-emerald-500" />
-        <StatCard icon={TrendingUp}    label="Revenue (COD)"   value={formatPrice(totalRevenue)} color="bg-violet-500" sub="Delivered orders only" />
+        <StatCard icon={Package}       label="Returns"         value={orders.filter(o => ['return_requested', 'returned'].includes(o.status)).length} color="bg-purple-500" sub={`Refunded: ${formatPrice(refundedAmount)}`} />
+        <StatCard icon={TrendingUp}    label="Net Revenue"     value={formatPrice(totalRevenue)} color="bg-violet-500" sub="All settled orders, minus refunds" />
       </div>
 
       {/* ── Status filter chips ── */}
@@ -277,7 +380,6 @@ export default function AdminOrdersPage() {
                   className={`w-full grid grid-cols-[2fr_1fr_auto_auto_24px] gap-4 items-center px-5 py-4 text-left transition-all group border-l-2 border-l-transparent ${cfg.row}`}
                   style={{ animationDelay: `${idx * 30}ms` }}
                 >
-                  {/* Col 1 — order + customer */}
                   <div className="min-w-0">
                     <div className="flex items-center gap-2">
                       <span className="font-bold text-sm">#{order.orderId}</span>
@@ -289,6 +391,15 @@ export default function AdminOrdersPage() {
                     </div>
                     <p className="text-sm font-semibold mt-0.5 truncate leading-tight">{order.address.fullName}</p>
                     <p className="text-xs text-muted-foreground truncate">{order.address.email}</p>
+                    
+                    {/* Expose Return/Cancel reason inline */}
+                    {(order.status === 'return_requested' || order.status === 'returned') && (
+                      <p className="text-[11px] font-medium text-purple-700 dark:text-purple-400 mt-1 truncate bg-purple-100 dark:bg-purple-900/30 inline-flex px-1.5 py-0.5 rounded w-fit max-w-xs">
+                        {order.cancellationReason 
+                          ? `Reason: ${order.cancellationReason.replace('Return Request: ', '')}`
+                          : 'Reason: No reason provided'}
+                      </p>
+                    )}
                   </div>
 
                   {/* Col 2 — items */}
