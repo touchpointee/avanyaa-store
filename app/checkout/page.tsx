@@ -413,9 +413,6 @@ export default function CheckoutPage() {
           email: address.email,
           contact: address.phone,
         },
-        theme: {
-          color: "#000000",
-        },
         modal: {
           ondismiss: function() {
             setLoading(false);
