@@ -30,19 +30,28 @@ export default function ProductDetailPage() {
   const [reviewStats, setReviewStats] = useState({ total: 0, avg: 0 });
   const [lightboxOpen, setLightboxOpen] = useState(false);
 
+  const handleImageChange = (index: number) => {
+    setSelectedImage(index);
+    if (!product) return;
+    const colorMap = (product.colorImages || []).find((ci) => ci.image === product.images[index]);
+    if (colorMap?.color) {
+      setSelectedColor(colorMap.color);
+    }
+  };
+
   // Close lightbox on Escape key
   useEffect(() => {
     const handleKey = (e: KeyboardEvent) => {
       if (!lightboxOpen) return;
       if (e.key === 'Escape') setLightboxOpen(false);
       if (e.key === 'ArrowRight' && product)
-        setSelectedImage((i) => (i + 1) % product.images.length);
+        handleImageChange((selectedImage + 1) % product.images.length);
       if (e.key === 'ArrowLeft' && product)
-        setSelectedImage((i) => (i - 1 + product.images.length) % product.images.length);
+        handleImageChange((selectedImage - 1 + product.images.length) % product.images.length);
     };
     window.addEventListener('keydown', handleKey);
     return () => window.removeEventListener('keydown', handleKey);
-  }, [lightboxOpen, product]);
+  }, [lightboxOpen, product, selectedImage]);
 
   const addToCart = useCartStore((state) => state.addItem);
   const toggleWishlist = useWishlistStore((state) => state.toggleItem);
@@ -115,6 +124,12 @@ export default function ProductDetailPage() {
   };
 
   const currentStock = getVariantStock();
+  const selectedVariant = product?.variants?.find(
+    (v) => (!v.size || v.size === selectedSize) && (!v.color || v.color === selectedColor)
+  );
+
+  const displayPrice = selectedVariant?.price ?? product?.price ?? 0;
+  const displayCompareAtPrice = selectedVariant?.compareAtPrice ?? product?.compareAtPrice;
 
   const handleAddToCart = () => {
     if (!product) return;
@@ -146,7 +161,7 @@ export default function ProductDetailPage() {
     addToCart({
       productId: product._id,
       name: product.name,
-      price: product.price,
+      price: displayPrice,
       image: product.images[selectedImage] || product.images[0],
       size: selectedSize || undefined,
       color: selectedColor || undefined,
@@ -208,8 +223,8 @@ export default function ProductDetailPage() {
     return null;
   }
 
-  const discountPercent = product.compareAtPrice
-    ? Math.round(((product.compareAtPrice - product.price) / product.compareAtPrice) * 100)
+  const discountPercent = displayCompareAtPrice
+    ? Math.round(((displayCompareAtPrice - displayPrice) / displayCompareAtPrice) * 100)
     : 0;
 
   return (
@@ -270,7 +285,7 @@ export default function ProductDetailPage() {
                 <button
                   key={index}
                   type="button"
-                  onClick={() => setSelectedImage(index)}
+                  onClick={() => handleImageChange(index)}
                   className={`relative w-20 h-20 lg:w-32 lg:h-32 shrink-0 rounded-xl overflow-hidden border-2 transition-all ${
                     selectedImage === index
                       ? 'border-primary ring-2 ring-primary/20 scale-105'
@@ -309,10 +324,10 @@ export default function ProductDetailPage() {
           </div>
 
           <div className="flex items-center gap-3">
-            <span className="text-2xl font-semibold">{formatPrice(product.price)}</span>
-            {product.compareAtPrice && (
+            <span className="text-2xl font-semibold">{formatPrice(displayPrice)}</span>
+            {displayCompareAtPrice && (
               <span className="text-lg text-muted-foreground line-through">
-                {formatPrice(product.compareAtPrice)}
+                {formatPrice(displayCompareAtPrice)}
               </span>
             )}
           </div>
@@ -416,7 +431,7 @@ export default function ProductDetailPage() {
           {product.images.length > 1 && (
             <button
               className="absolute left-3 md:left-6 z-10 bg-white/10 hover:bg-white/25 text-white rounded-full p-2 transition-colors"
-              onClick={(e) => { e.stopPropagation(); setSelectedImage((i) => (i - 1 + product.images.length) % product.images.length); }}
+              onClick={(e) => { e.stopPropagation(); handleImageChange((selectedImage - 1 + product.images.length) % product.images.length); }}
               aria-label="Previous image"
             >
               <ChevronLeft className="h-7 w-7" />
@@ -449,7 +464,7 @@ export default function ProductDetailPage() {
           {product.images.length > 1 && (
             <button
               className="absolute right-3 md:right-6 z-10 bg-white/10 hover:bg-white/25 text-white rounded-full p-2 transition-colors"
-              onClick={(e) => { e.stopPropagation(); setSelectedImage((i) => (i + 1) % product.images.length); }}
+              onClick={(e) => { e.stopPropagation(); handleImageChange((selectedImage + 1) % product.images.length); }}
               aria-label="Next image"
             >
               <ChevronRight className="h-7 w-7" />
@@ -462,7 +477,7 @@ export default function ProductDetailPage() {
               {product.images.map((_, idx) => (
                 <button
                   key={idx}
-                  onClick={(e) => { e.stopPropagation(); setSelectedImage(idx); }}
+                  onClick={(e) => { e.stopPropagation(); handleImageChange(idx); }}
                   className={`w-2 h-2 rounded-full transition-all ${
                     idx === selectedImage ? 'bg-white scale-125' : 'bg-white/40'
                   }`}

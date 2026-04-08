@@ -30,7 +30,7 @@ export default function EditProductPage() {
     colors: [] as string[],
     images: [] as string[],
     featured: false,
-    variants: [] as { size: string; color: string; stock: string | number }[],
+    variants: [] as { size: string; color: string; stock: string | number; price?: string | number; compareAtPrice?: string | number }[],
     colorImages: [] as { color: string; image: string }[],
   });
 
@@ -132,7 +132,11 @@ export default function EditProductPage() {
           colors: Array.from(new Set([...(data.colors || []), ...(data.variants || []).map((v: any) => v.color).filter(Boolean)])),
           images: data.images,
           featured: data.featured,
-          variants: data.variants || [],
+          variants: (data.variants || []).map((v: any) => ({
+            ...v,
+            price: v.price?.toString() || '',
+            compareAtPrice: v.compareAtPrice?.toString() || '',
+          })),
           colorImages: (data.colorImages || []).map((ci: any) => ({ color: ci.color, image: ci.image })),
         });
       } else {
@@ -238,7 +242,12 @@ export default function EditProductPage() {
           price: parseFloat(formData.price),
           compareAtPrice: formData.compareAtPrice ? parseFloat(formData.compareAtPrice) : undefined,
           stock: formData.variants.reduce((sum, v) => sum + (parseInt(String(v.stock)) || 0), 0),
-          variants: formData.variants.map(v => ({ ...v, stock: parseInt(String(v.stock)) || 0 })),
+          variants: formData.variants.map(v => ({
+            ...v,
+            stock: parseInt(String(v.stock)) || 0,
+            price: v.price ? parseFloat(String(v.price)) : undefined,
+            compareAtPrice: v.compareAtPrice ? parseFloat(String(v.compareAtPrice)) : undefined,
+          })),
           colorImages: formData.colorImages,
         }),
       });
@@ -441,14 +450,16 @@ export default function EditProductPage() {
             <div className="border-b border-border" />
             {formData.variants.length > 0 ? (
               <div className="space-y-3">
-                <div className="grid grid-cols-4 gap-4 font-medium text-sm text-muted-foreground pb-2 border-b">
+                <div className="grid grid-cols-[1fr_1fr_80px_100px_100px_40px] gap-3 font-medium text-sm text-muted-foreground pb-2 border-b">
                   <div>Size</div>
                   <div>Color</div>
                   <div>Stock</div>
+                  <div>Price (₹)</div>
+                  <div>CMP (₹)</div>
                   <div></div>
                 </div>
                 {formData.variants.map((v, idx) => (
-                  <div key={idx} className="grid grid-cols-4 gap-4 items-center">
+                  <div key={idx} className="grid grid-cols-[1fr_1fr_80px_100px_100px_40px] gap-3 items-center">
                     <Select
                       value={v.size || undefined}
                       onValueChange={(val) => {
@@ -458,7 +469,7 @@ export default function EditProductPage() {
                       }}
                     >
                       <SelectTrigger>
-                        <SelectValue placeholder="Select size" />
+                        <SelectValue placeholder="Size" />
                       </SelectTrigger>
                       <SelectContent>
                         {sizes.map((s) => (
@@ -475,7 +486,7 @@ export default function EditProductPage() {
                       }}
                     >
                       <SelectTrigger>
-                        <SelectValue placeholder="Select color" />
+                        <SelectValue placeholder="Color" />
                       </SelectTrigger>
                       <SelectContent>
                         {colors.map((c) => (
@@ -486,10 +497,35 @@ export default function EditProductPage() {
                     <Input
                       type="number"
                       min="0"
+                      placeholder="0"
                       value={String(v.stock)}
                       onChange={(e) => {
                         const newVariants = [...formData.variants];
                         newVariants[idx] = { ...newVariants[idx], stock: e.target.value };
+                        setFormData({ ...formData, variants: newVariants });
+                      }}
+                    />
+                    <Input
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      placeholder="Base"
+                      value={String(v.price || '')}
+                      onChange={(e) => {
+                        const newVariants = [...formData.variants];
+                        newVariants[idx] = { ...newVariants[idx], price: e.target.value };
+                        setFormData({ ...formData, variants: newVariants });
+                      }}
+                    />
+                    <Input
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      placeholder="Base"
+                      value={String(v.compareAtPrice || '')}
+                      onChange={(e) => {
+                        const newVariants = [...formData.variants];
+                        newVariants[idx] = { ...newVariants[idx], compareAtPrice: e.target.value };
                         setFormData({ ...formData, variants: newVariants });
                       }}
                     />
@@ -521,7 +557,7 @@ export default function EditProductPage() {
               onClick={() => {
                 setFormData({
                   ...formData,
-                  variants: [...formData.variants, { size: formData.sizes[0] || '', color: formData.colors[0] || '', stock: '' }]
+                  variants: [...formData.variants, { size: formData.sizes[0] || '', color: formData.colors[0] || '', stock: '', price: '', compareAtPrice: '' }]
                 });
               }}
             >

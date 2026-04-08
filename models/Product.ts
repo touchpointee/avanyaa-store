@@ -16,6 +16,8 @@ export interface IProduct extends Document {
     size: string;
     color: string;
     stock: number;
+    price?: number;
+    compareAtPrice?: number;
   }[];
   stock: number;
   featured: boolean;
@@ -81,7 +83,9 @@ const ProductSchema = new Schema<IProduct>(
       {
         size: { type: String, required: true },
         color: { type: String, required: true },
-        stock: { type: Number, required: true, default: 0, min: 0 }
+        stock: { type: Number, required: true, default: 0, min: 0 },
+        price: { type: Number, min: 0 },
+        compareAtPrice: { type: Number, min: 0 },
       }
     ],
     colorImages: [
